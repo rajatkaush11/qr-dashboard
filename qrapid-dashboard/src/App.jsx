@@ -1,103 +1,38 @@
-import React, { Suspense, lazy, useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import './App.css';
-
-// Lazy loading components
-const Navbar = lazy(() => import('./Navbar'));
-const TableOverview = lazy(() => import('./TableOverview'));
-const TableDetails = lazy(() => import('./TableDetails'));
-const Menu = lazy(() => import('./Menu'));
-const ItemList = lazy(() => import('./ItemList'));
-const RestaurantDetails = lazy(() => import('./Register'));
-const LoginPage = lazy(() => import('./Login'));
-
-function Home() {
-  return (
-    <div className="card">
-      <p>Edit <code>src/App.jsx</code> and save to test HMR</p>
-    </div>
-  );
-}
+import React, { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Route, Routes, Redirect } from 'react-router-dom';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth, db } from './firebase-config';
+import { doc, getDoc } from 'firebase/firestore';
+import Login from './Login';
+import Register from './Register';
+import TableOverview from './TableOverview';
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [tables, setTables] = useState(Array.from({ length: 15 }, (_, index) => `T${index + 1}`));
-  const [selectedTable, setSelectedTable] = useState(null);
-  const [tableColors, setTableColors] = useState(Array(15).fill('blank'));
+  const [user, setUser] = useState(null);
   const [restaurantName, setRestaurantName] = useState('');
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      setIsAuthenticated(true);
-    }
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setUser(user);
+        const docRef = doc(db, "restaurants", user.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setRestaurantName(docSnap.data().restaurantName);
+        }
+      } else {
+        setUser(null);
+      }
+    });
   }, []);
-
-  const handleLogin = (token) => {
-    localStorage.setItem('token', token);
-    setIsAuthenticated(true);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    setIsAuthenticated(false);
-  };
-
-  const handleSelectTable = (tableId) => {
-    setSelectedTable(tableId);
-  };
-
-  const updateTableColor = (tableId, color) => {
-    const index = tables.findIndex(t => t === tableId);
-    const newColors = [...tableColors];
-    newColors[index] = color;
-    setTableColors(newColors);
-  };
-
-  const handleGenerateKOT = (tableId) => {
-    updateTableColor(tableId, 'running-kot');
-  };
-
-  const handleGenerateBill = (tableId) => {
-    updateTableColor(tableId, 'printed');
-  };
-
-  const handleCompleteOrder = (tableId) => {
-    updateTableColor(tableId, 'paid');
-    setTimeout(() => {
-      updateTableColor(tableId, 'blank');
-    }, 6000);
-  };
 
   return (
     <Router>
-      <Suspense fallback={<div>Loading...</div>}>
-        <Navbar isAuthenticated={isAuthenticated} onLogout={handleLogout} />
-        <div className="app-content">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
-            <Route path="/register" element={<RestaurantDetails />} />
-            <Route path="/menu" element={<Menu />} />
-            <Route path="/table/:tableId" element={
-              <TableDetails
-                onGenerateKOT={handleGenerateKOT}
-                onGenerateBill={handleGenerateBill}
-                onCompleteOrder={handleCompleteOrder}
-              />
-            } />
-            <Route path="/category/:categoryId/items" element={<ItemList />} />
-            <Route path="/table-overview" element={
-              <TableOverview
-                tables={tables}
-                onSelectTable={handleSelectTable}
-                tableColors={tableColors}
-                onLogout={handleLogout}
-              />
-            } />
-          </Routes>
-        </div>
-      </Suspense>
+      <Routes>
+        <Route path="/login" element={user ? <Redirect to="/" /> : <Login onLogin={() => setUser(true)} />} />
+        <Route path="/register" element={user ? <Redirect to="/" /> : <Register />} />
+        <Route path="/" element={user ? <TableOverview restaurantName={restaurantName} /> : <Redirect to="/login" />} />
+      </Routes>
     </Router>
   );
 }

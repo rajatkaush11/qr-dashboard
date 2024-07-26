@@ -1,0 +1,111 @@
+.menu-container {
+    padding: 20px;
+}
+
+.menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.add-food-category-btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.add-food-category-btn:hover {
+    background-color: #218838;
+}
+
+.menu-tabs {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.menu-tabs a {
+    text-decoration: none;
+    padding: 10px 20px;
+    background-color: #f8f9fa;
+    color: #007bff;
+    border-radius: 5px;
+}
+
+.menu-tabs a.active {
+    background-color: #007bff;
+    color: white;
+}
+
+.new-category-item {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.new-category-input {
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+}
+
+.add-category-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.add-category-btn:hover {
+    background-color: #0056b3;
+}
+
+.menu-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.menu-item {
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 200px;
+}
+
+.menu-item img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 5px;
+}
+
+.menu-item-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.edit-category-btn {
+    background-color: #ffc107;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.edit-category-btn:hover {
+    background-color: #e0a800;
+}

@@ -1,0 +1,110 @@
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Work Sans', sans-serif;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8f8f8;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 10px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    font-family: 'Work Sans', sans-serif;
+}
+
+.brand {
+    font-size: 18px;
+    font-weight: bold;
+    color: black;
+    margin-left: 10px; /* Adjust for spacing */
+}
+
+.nav-links {
+    display: flex;
+    gap: 15px;
+}
+
+.nav-links a {
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    color: black;
+    padding: 0 20px;
+    height: 32px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-links .active-link {
+    color: green;
+    font-weight: bold; /* Optional to make it more prominent */
+}
+
+.right-icons {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.search-input {
+    border: none;
+    padding: 8px;
+    border-radius: 5px;
+    display: none;
+    transition: width 0.3s;
+    width: 0;
+}
+
+.search-input.active {
+    display: block;
+    width: 200px;
+}
+
+.icon {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    background-color: #E8EDF2;
+    border-radius: 5px;
+    padding: 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.user-icon {
+    width: 32px; /* Adjust for larger profile picture */
+    height: 32px; /* Adjust for larger profile picture */
+    cursor: pointer;
+    border-radius: 50%;
+    background-size: cover;
+}
+
+.navbar img {
+    width: 32px; /* Adjust for larger profile picture */
+    height: 32px; /* Adjust for larger profile picture */
+    cursor: pointer;
+}
+
+.navbar .clerk-user-button {
+    margin-right: 10px; /* Adjust for spacing */
+}
+
+.clerk-user-button .clerk-avatar {
+    width: 32px; /* Adjust for larger profile picture */
+    height: 32px; /* Adjust for larger profile picture */
+    border-radius: 50%;
+}

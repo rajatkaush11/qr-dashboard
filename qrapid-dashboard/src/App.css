@@ -1,40 +1,75 @@
 #root {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem; /* reduced padding */
   text-align: center;
 }
 
 .logo {
-  height: 6em;
-  padding: 1.5em;
+  height: 4em;
+  padding: 0.5em; /* reduced padding */
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
+}
+.signin-container {
+  color: black;
+  background-color: #FFF;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  text-align: center;
+}
+
+.signin-container h1 {
+  margin-bottom: 20px;
+  color: #000;
+}.signin-container .clerk-sign-in-button {
+  background-color: #00BF63; /* Coral background color */
+  border: none;
+  border-radius: 5px;
+  color: white;
+  font-size: 16px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.signin-container .clerk-sign-in-button:hover {
+  background-color: #000; /* Dar00ker coral on hover */
+}
+
+.signin-container .clerk-sign-in-button:focus {
+  outline: none;
+  box-shadow: 0 0 5px rgba(255, 127, 80, 0.5);
 }
 
 @keyframes logo-spin {
   from {
-    transform: rotate(0deg);
+      transform: rotate(0deg);
   }
   to {
-    transform: rotate(360deg);
+      transform: rotate(360deg);
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
   a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+      animation: logo-spin infinite 20s linear;
   }
 }
 
 .card {
-  padding: 2em;
+  padding: 1em; /* reduced padding */
 }
 
 .read-the-docs {

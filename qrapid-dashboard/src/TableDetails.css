@@ -1,0 +1,131 @@
+.table-details {
+    padding: 15px; /* reduced padding for better spacing */
+    max-width: 1000px; /* adjusted max-width to fit the screen better */
+    margin: 0 auto; /* centered the container */
+    text-align: left;
+    background-color: #f9f9f9; /* light gray background for better contrast */
+    border: 1px solid #ddd; /* subtle border for definition */
+    border-radius: 10px; /* slight radius for a softer look */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* subtle shadow for depth */
+}
+
+.back-button-container {
+    margin-bottom: 20px; /* reduced margin for better spacing */
+}
+
+.back-button {
+    display: flex;
+    align-items: center;
+    background-color: #f7f7f7; /* light background color for a more premium look */
+    border: none;
+    border-radius: 20px; /* increased radius for a softer look */
+    padding: 10px 20px; /* adjusted padding for better spacing */
+    font-size: 16px; /* adjusted font size for better readability */
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.back-button:hover {
+    background-color: #e5e5e5; /* light hover color for a more premium look */
+}
+
+.back-button span {
+    margin-left: 10px; /* adjusted margin for better spacing */
+}
+
+.table-title {
+    margin-top: 0;
+    font-size: 24px; /* adjusted font size for better readability */
+    font-weight: bold; /* bold font weight for emphasis */
+    color: #333; /* dark text color for better contrast */
+    margin-bottom: 20px; /* added margin-bottom to create space between table title and current orders */
+}
+
+.current-orders, .kot-generated {
+    margin-bottom: 20px; /* adjusted margin for better spacing */
+}
+
+.current-orders h3, .kot-generated h3 {
+    margin-bottom: 10px; /* adjusted margin for better spacing */
+    font-size: 18px; /* adjusted font size for better readability */
+    font-weight: bold; /* bold font weight for emphasis */
+    color: #333; /* dark text color for better contrast */
+}
+
+.order-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px; /* adjusted padding for better spacing */
+    border: 1px solid #ccc;
+    border-radius: 10px; /* increased radius for a softer look */
+    margin-bottom: 10px; /* adjusted margin for better spacing */
+    background-color: #f8f8f8;
+    transition: background-color 0.3s; /* smoother hover effect */
+}
+
+.order-item.active {
+    background-color: #d4edda;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); /* subtle shadow for emphasis */
+}
+
+.order-text {
+    display: flex;
+    justify-content: space-between;
+    flex: 1;
+    margin-right: 10px; /* added margin-right for spacing between price and delete button */
+}
+
+.delete-button {
+    background-color: #00BF63; /* premium red color for delete button */
+    border: none;
+    border-radius: 5px; /* slight radius for a softer look */
+    color: white;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+.delete-button:hover {
+    background-color: #ff1a1a; /* darker red on hover for a premium look */
+}
+
+.actions {
+    margin-bottom: 20px; /* add space between Add Item and other buttons */
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px; /* gap between buttons for equal spacing */
+}
+
+.action-button {
+    display: inline-block;
+    padding: 10px 20px; /* adjusted padding for better spacing */
+    border: none;
+    border-radius: 20px; /* increased radius for a softer look */
+    cursor: pointer;
+    font-size: 16px; /* adjusted font size for better readability */
+    transition: background-color 0.3s; /* smoother hover effect */
+    text-align: center; /* center text */
+}
+
+.action-button.add-item {
+    background-color: #000;
+    color: #fff;
+}
+
+.action-button.generate-kot {
+    background-color: #ffc107;
+}
+
+.action-button.generate-bill {
+    background-color: #28a745;
+}
+
+.action-button.complete {
+    background-color: #17a2b8;
+    color: #fff;
+    font-weight: bold; /* bold font weight for emphasis */
+}

@@ -1,47 +1,103 @@
-import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
-import reactLogo from './assets/react.svg';
-import viteLogo from '/vite.svg';
+import React, { Suspense, lazy, useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import './App.css';
 
-const Login = lazy(() => import('./Login'));
-const Register = lazy(() => import('./Register'));
+// Lazy loading components
+const Navbar = lazy(() => import('./components/Navbar'));
+const TableOverview = lazy(() => import('./components/TableOverview'));
+const TableDetails = lazy(() => import('./components/TableDetails'));
+const Menu = lazy(() => import('./components/Menu'));
+const ItemList = lazy(() => import('./components/ItemList'));
+const RestaurantDetails = lazy(() => import('./components/RestaurantDetails'));
+const LoginPage = lazy(() => import('./components/LoginPage'));
 
 function Home() {
   return (
     <div className="card">
-      <p>
-        Edit <code>src/App.jsx</code> and save to test HMR
-      </p>
+      <p>Edit <code>src/App.jsx</code> and save to test HMR</p>
     </div>
   );
 }
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [tables, setTables] = useState(Array.from({ length: 15 }, (_, index) => `T${index + 1}`));
+  const [selectedTable, setSelectedTable] = useState(null);
+  const [tableColors, setTableColors] = useState(Array(15).fill('blank'));
+  const [restaurantName, setRestaurantName] = useState('');
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  const handleLogin = (token) => {
+    localStorage.setItem('token', token);
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setIsAuthenticated(false);
+  };
+
+  const handleSelectTable = (tableId) => {
+    setSelectedTable(tableId);
+  };
+
+  const updateTableColor = (tableId, color) => {
+    const index = tables.findIndex(t => t === tableId);
+    const newColors = [...tableColors];
+    newColors[index] = color;
+    setTableColors(newColors);
+  };
+
+  const handleGenerateKOT = (tableId) => {
+    updateTableColor(tableId, 'running-kot');
+  };
+
+  const handleGenerateBill = (tableId) => {
+    updateTableColor(tableId, 'printed');
+  };
+
+  const handleCompleteOrder = (tableId) => {
+    updateTableColor(tableId, 'paid');
+    setTimeout(() => {
+      updateTableColor(tableId, 'blank');
+    }, 6000);
+  };
+
   return (
     <Router>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <nav>
-        <Link to="/">Home</Link> | <Link to="/login">Login</Link> | <Link to="/register">Register</Link>
-      </nav>
       <Suspense fallback={<div>Loading...</div>}>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-        </Routes>
+        <Navbar isAuthenticated={isAuthenticated} onLogout={handleLogout} />
+        <div className="app-content">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
+            <Route path="/register" element={<RestaurantDetails />} />
+            <Route path="/menu" element={<Menu />} />
+            <Route path="/table/:tableId" element={
+              <TableDetails
+                onGenerateKOT={handleGenerateKOT}
+                onGenerateBill={handleGenerateBill}
+                onCompleteOrder={handleCompleteOrder}
+              />
+            } />
+            <Route path="/category/:categoryId/items" element={<ItemList />} />
+            <Route path="/table-overview" element={
+              <TableOverview
+                tables={tables}
+                onSelectTable={handleSelectTable}
+                tableColors={tableColors}
+                onLogout={handleLogout}
+              />
+            } />
+          </Routes>
+        </div>
       </Suspense>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </Router>
   );
 }

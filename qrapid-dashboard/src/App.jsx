@@ -3,13 +3,13 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import './App.css';
 
 // Lazy loading components
-const Navbar = lazy(() => import('./components/Navbar'));
-const TableOverview = lazy(() => import('./components/TableOverview'));
-const TableDetails = lazy(() => import('./components/TableDetails'));
-const Menu = lazy(() => import('./components/Menu'));
-const ItemList = lazy(() => import('./components/ItemList'));
-const RestaurantDetails = lazy(() => import('./components/RestaurantDetails'));
-const LoginPage = lazy(() => import('./components/LoginPage'));
+const Navbar = lazy(() => import('./Navbar'));
+const TableOverview = lazy(() => import('./TableOverview'));
+const TableDetails = lazy(() => import('./TableDetails'));
+const Menu = lazy(() => import('./Menu'));
+const ItemList = lazy(() => import('./ItemList'));
+const RestaurantDetails = lazy(() => import('./RestaurantDetails'));
+const LoginPage = lazy(() => import('./LoginPage'));
 
 function Home() {
   return (

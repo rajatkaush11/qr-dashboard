@@ -9,7 +9,7 @@ const TableDetails = lazy(() => import('./TableDetails'));
 const Menu = lazy(() => import('./Menu'));
 const ItemList = lazy(() => import('./ItemList'));
 const RestaurantDetails = lazy(() => import('./RestaurantDetails'));
-const LoginPage = lazy(() => import('./LoginPage'));
+const LoginPage = lazy(() => import('./Login'));
 
 function Home() {
   return (

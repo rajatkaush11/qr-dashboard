@@ -1,10 +1,43 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+import { db } from './firebase-config';
+import { collection, addDoc, onSnapshot } from 'firebase/firestore';
 import reactLogo from './assets/react.svg';
 import viteLogo from '/vite.svg';
 import './App.css';
 import Login from './Login';
 import Register from './Register';
+
+function Home() {
+  const [messages, setMessages] = useState([]);
+  const messagesCollectionRef = collection(db, 'messages');
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(messagesCollectionRef, (snapshot) => {
+      setMessages(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })));
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const addMessage = async () => {
+    await addDoc(messagesCollectionRef, { text: 'Hello World!' });
+  };
+
+  return (
+    <div className="card">
+      <button onClick={addMessage}>Add Message</button>
+      <ul>
+        {messages.map(message => (
+          <li key={message.id}>{message.text}</li>
+        ))}
+      </ul>
+      <p>
+        Edit <code>src/App.jsx</code> and save to test HMR
+      </p>
+    </div>
+  );
+}
 
 function App() {
   return (
@@ -30,16 +63,6 @@ function App() {
         Click on the Vite and React logos to learn more
       </p>
     </Router>
-  );
-}
-
-function Home() {
-  return (
-    <div className="card">
-      <p>
-        Edit <code>src/App.jsx</code> and save to test HMR
-      </p>
-    </div>
   );
 }
 

@@ -1,0 +1,65 @@
+/* register.css */
+.restaurant-details {
+    padding: 40px;
+    max-width: 700px;
+    margin: 0 auto;
+    background-color: #F7F7F7;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .restaurant-details h2 {
+    margin-bottom: 40px;
+    font-size: 32px;
+    color: #333;
+    font-weight: bold;
+  }
+  
+  .restaurant-details form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .restaurant-details .input-group {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  
+  .restaurant-details label {
+    margin-bottom: 5px;
+    font-size: 18px;
+    color: #333;
+    font-weight: bold;
+  }
+  
+  .restaurant-details input {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background-color: #F2F2F2;
+  }
+  
+  .restaurant-details input::placeholder {
+    color: #8B9467;
+    font-size: 14px;
+    font-style: italic;
+  }
+  
+  .restaurant-details button {
+    padding: 20px 40px;
+    font-size: 18px;
+    color: #fff;
+    background-color: #34C759;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  
+  .restaurant-details button:hover {
+    background-color: #2E865F;
+  }
+  

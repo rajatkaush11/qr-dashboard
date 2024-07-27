@@ -28,7 +28,7 @@ const Register = () => {
         address,
         description,
         timing,
-        email
+        email: user.email // Use the email from userCredential
       });
 
       // Display alert and redirect after successful registration

@@ -21,17 +21,28 @@ const ItemList = () => {
   const fetchItems = async () => {
     console.log(`Fetching items for category ID: ${categoryId}`);
     try {
+      // Fetch items from Firestore
+      const user = auth.currentUser;
+      if (user) {
+        const itemsRef = collection(db, 'restaurants', user.uid, 'categories', categoryId, 'items');
+        const querySnapshot = await getDocs(itemsRef);
+        const itemsData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+        setItems(itemsData);
+      }
+
+      // Fetch items from MongoDB
       const response = await fetch(`${apiBaseUrl}/api/items/${categoryId}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`, // Add token if required
         },
       });
+
       if (response.ok) {
         const data = await response.json();
         setItems(data);
       } else {
-        console.error('Failed to fetch items');
+        console.error('Failed to fetch items from MongoDB');
       }
     } catch (error) {
       console.error('Error fetching items:', error);

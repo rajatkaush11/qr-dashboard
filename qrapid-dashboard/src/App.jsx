@@ -8,6 +8,7 @@ import WelcomeHome from './WelcomeHome';
 import Navbar from './Navbar';
 import Menu from './Menu';
 import TableOverview from './TableOverview';
+import ItemList from './ItemList';
 import './index.css';
 
 function App() {
@@ -38,6 +39,7 @@ function App() {
           <Route path="/home" element={user ? <WelcomeHome /> : <Navigate to="/login" replace />} />
           <Route path="/menu" element={user ? <Menu /> : <Navigate to="/login" replace />} />
           <Route path="/table" element={user ? <WelcomeHome /> : <Navigate to="/login" replace />} />
+          <Route path="/category/:categoryId/items" element={user ? <ItemList /> : <Navigate to="/login" replace />} />
           <Route path="/" element={<Navigate to="/login" replace />} /> {/* Redirect to login if not authenticated */}
         </Routes>
       </div>

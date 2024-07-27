@@ -27,13 +27,7 @@ const Navbar = ({ activePage, onLinkClick }) => {
     <div className="navbar">
       <div className="brand">QRAPID</div>
       <div className="nav-links">
-        <a
-          href="#"
-          onClick={() => handleLinkClick('Home')}
-          className={activePage === 'Home' ? 'active-link' : ''}
-        >
-          Home
-        </a>
+        
         <a
           href="#"
           onClick={() => handleLinkClick('Table')}

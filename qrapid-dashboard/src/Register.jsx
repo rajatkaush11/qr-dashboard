@@ -18,6 +18,7 @@ const Register = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
+      // Create user with email and password
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
@@ -42,12 +43,48 @@ const Register = () => {
     <div className="restaurant-details">
       <h2>Register Restaurant</h2>
       <form onSubmit={handleRegister}>
-        <input type="text" placeholder="Name of the Restaurant" value={restaurantName} onChange={(e) => setRestaurantName(e.target.value)} required />
-        <input type="text" placeholder="Address of the Restaurant" value={address} onChange={(e) => setAddress(e.target.value)} required />
-        <input type="text" placeholder="Description of the Restaurant" value={description} onChange={(e) => setDescription(e.target.value)} required />
-        <input type="text" placeholder="Timing of the Restaurant" value={timing} onChange={(e) => setTiming(e.target.value)} required />
-        <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <input
+          type="text"
+          placeholder="Name of the Restaurant"
+          value={restaurantName}
+          onChange={(e) => setRestaurantName(e.target.value)}
+          required
+        />
+        <input
+          type="text"
+          placeholder="Address of the Restaurant"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          required
+        />
+        <input
+          type="text"
+          placeholder="Description of the Restaurant"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          required
+        />
+        <input
+          type="text"
+          placeholder="Timing of the Restaurant"
+          value={timing}
+          onChange={(e) => setTiming(e.target.value)}
+          required
+        />
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
         <button type="submit">Register</button>
         {message && <p className="message">{message}</p>}
       </form>

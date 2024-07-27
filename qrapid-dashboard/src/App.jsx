@@ -5,10 +5,12 @@ import { auth } from './firebase-config';
 import Login from './Login';
 import Register from './Register';
 import WelcomeHome from './WelcomeHome';
+import Navbar from './Navbar';
 import './index.css'; // Ensure global styles are applied
 
 function App() {
   const [user, setUser] = useState(null);
+  const [activePage, setActivePage] = useState('Table');
 
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
@@ -20,9 +22,14 @@ function App() {
     });
   }, []);
 
+  const handleNavClick = (page) => {
+    setActivePage(page);
+  };
+
   return (
     <Router>
       <div className="app-container">
+        {user && <Navbar activePage={activePage} onLinkClick={handleNavClick} />}
         <Routes>
           <Route path="/login" element={user ? <Navigate to="/home" replace /> : <Login onLogin={() => setUser(true)} />} />
           <Route path="/register" element={user ? <Navigate to="/home" replace /> : <Register />} />

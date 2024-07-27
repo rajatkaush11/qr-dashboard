@@ -19,9 +19,10 @@
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
+
 .signin-container {
   color: black;
-  background-color: #FFF;
+  background-color: #FFF; /* Background color set to white */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -33,7 +34,9 @@
 .signin-container h1 {
   margin-bottom: 20px;
   color: #000;
-}.signin-container .clerk-sign-in-button {
+}
+
+.signin-container .clerk-sign-in-button {
   background-color: #00BF63; /* Coral background color */
   border: none;
   border-radius: 5px;
@@ -45,7 +48,7 @@
 }
 
 .signin-container .clerk-sign-in-button:hover {
-  background-color: #000; /* Dar00ker coral on hover */
+  background-color: #000; /* Darker on hover */
 }
 
 .signin-container .clerk-sign-in-button:focus {

@@ -6,22 +6,21 @@ import './ItemList.css';
 
 const ItemList = () => {
   const { categoryId } = useParams();
-  const navigate = useNavigate(); // useNavigate hook to handle navigation
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [newItem, setNewItem] = useState({ name: '', price: '', description: '', image: '', weight: '', unit: '' });
   const [editingItem, setEditingItem] = useState(null);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
-  const apiBaseUrl = import.meta.env.VITE_BACKEND_API; // Use the environment variable for the base URL
+  const apiBaseUrl = import.meta.env.VITE_BACKEND_API;
 
   useEffect(() => {
     fetchItems();
-  }, [categoryId]); // Adding categoryId here to refetch items on change
+  }, [categoryId]);
 
   const fetchItems = async () => {
     console.log(`Fetching items for category ID: ${categoryId}`);
     try {
-      // Fetch items from Firestore
       const user = auth.currentUser;
       if (user) {
         const itemsRef = collection(db, 'restaurants', user.uid, 'categories', categoryId, 'items');
@@ -30,11 +29,10 @@ const ItemList = () => {
         setItems(itemsData);
       }
 
-      // Fetch items from MongoDB
       const response = await fetch(`${apiBaseUrl}/api/items/${categoryId}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`, // Add token if required
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
       });
 
@@ -68,18 +66,16 @@ const ItemList = () => {
   const handleAddItem = async () => {
     if (newItem.name && newItem.price && newItem.description && newItem.weight && newItem.unit) {
       try {
-        // Save item in Firestore
         const user = auth.currentUser;
         if (user) {
           const itemsRef = collection(db, 'restaurants', user.uid, 'categories', categoryId, 'items');
           const docRef = await addDoc(itemsRef, newItem);
 
-          // Save item in MongoDB
           const response = await fetch(`${apiBaseUrl}/api/items`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('token')}`, // Add token if required
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
             },
             body: JSON.stringify({ ...newItem, categoryId }),
           });
@@ -108,18 +104,16 @@ const ItemList = () => {
   const handleUpdateItem = async () => {
     if (newItem.name && newItem.price && newItem.description && newItem.weight && newItem.unit && editingItem) {
       try {
-        // Update item in Firestore
         const user = auth.currentUser;
         if (user) {
           const itemDocRef = doc(db, 'restaurants', user.uid, 'categories', categoryId, 'items', editingItem.id);
           await setDoc(itemDocRef, newItem);
 
-          // Update item in MongoDB
           const response = await fetch(`${apiBaseUrl}/api/items/${editingItem.id}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('token')}`, // Add token if required
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
             },
             body: JSON.stringify({ ...newItem, categoryId }),
           });
@@ -144,17 +138,15 @@ const ItemList = () => {
   const handleDeleteItem = async () => {
     if (itemToDelete) {
       try {
-        // Delete item from Firestore
         const user = auth.currentUser;
         if (user) {
           const itemDocRef = doc(db, 'restaurants', user.uid, 'categories', categoryId, 'items', itemToDelete.id);
           await deleteDoc(itemDocRef);
 
-          // Delete item from MongoDB
           const response = await fetch(`${apiBaseUrl}/api/items/${itemToDelete._id}`, {
             method: 'DELETE',
             headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`, // Add token if required
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
             },
           });
 
@@ -185,7 +177,7 @@ const ItemList = () => {
   };
 
   const handleBack = () => {
-    navigate(-1); // Navigate back to the previous page
+    navigate(-1);
   };
 
   return (

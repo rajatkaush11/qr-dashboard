@@ -61,5 +61,5 @@ button:focus-visible {
   align-items: center;
   width: 100%;
   height: 100vh; /* Full viewport height */
-  padding-top: 40px; /* Adjust padding to account for the fixed navbar and reduce gap */
+  padding-top: 50px; /* Adjust padding to account for the fixed navbar and reduce gap */
 }

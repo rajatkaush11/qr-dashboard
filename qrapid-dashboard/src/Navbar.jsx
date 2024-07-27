@@ -14,8 +14,10 @@ const Navbar = ({ activePage, onLinkClick }) => {
 
   const handleLinkClick = (page) => {
     onLinkClick(page);
-    if (page === 'TableOverview') {
-      navigate('/tableoverview');
+    if (page === 'Home') {
+      navigate('/home');
+    } else if (page === 'Table') {
+      navigate('/table');
     } else {
       navigate(`/${page.toLowerCase()}`);
     }
@@ -25,35 +27,42 @@ const Navbar = ({ activePage, onLinkClick }) => {
     <div className="navbar">
       <div className="brand">QRAPID</div>
       <div className="nav-links">
-        <a 
+        <a
           href="#"
-          onClick={() => handleLinkClick('TableOverview')}
-          className={activePage === 'TableOverview' ? 'active-link' : ''}
+          onClick={() => handleLinkClick('Home')}
+          className={activePage === 'Home' ? 'active-link' : ''}
+        >
+          Home
+        </a>
+        <a
+          href="#"
+          onClick={() => handleLinkClick('Table')}
+          className={activePage === 'Table' ? 'active-link' : ''}
         >
           Table
         </a>
-        <a 
+        <a
           href="#"
           onClick={() => handleLinkClick('Dashboard')}
           className={activePage === 'Dashboard' ? 'active-link' : ''}
         >
           Dashboard
         </a>
-        <a 
+        <a
           href="#"
           onClick={() => handleLinkClick('Menu')}
           className={activePage === 'Menu' ? 'active-link' : ''}
         >
           Menu
         </a>
-        <a 
+        <a
           href="#"
           onClick={() => handleLinkClick('Orders')}
           className={activePage === 'Orders' ? 'active-link' : ''}
         >
           Orders
         </a>
-        <a 
+        <a
           href="#"
           onClick={() => handleLinkClick('Reports')}
           className={activePage === 'Reports' ? 'active-link' : ''}
@@ -63,10 +72,10 @@ const Navbar = ({ activePage, onLinkClick }) => {
       </div>
       <div className="right-icons">
         <FontAwesomeIcon icon={faSearch} onClick={handleSearchClick} className="icon" />
-        <input 
-          type="text" 
-          placeholder="Search..." 
-          className={`search-input ${searchActive ? 'active' : ''}`} 
+        <input
+          type="text"
+          placeholder="Search..."
+          className={`search-input ${searchActive ? 'active' : ''}`}
         />
         <FontAwesomeIcon icon={faBell} className="icon" />
       </div>

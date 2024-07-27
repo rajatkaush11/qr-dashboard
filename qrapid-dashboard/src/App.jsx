@@ -6,13 +6,13 @@ import Login from './Login';
 import Register from './Register';
 import WelcomeHome from './WelcomeHome';
 import Navbar from './Navbar';
-import Menu from './Menu'; // Import the Menu component
-import TableOverview from './TableOverview'; // Import the TableOverview component
-import './index.css'; // Ensure global styles are applied
+import Menu from './Menu';
+import TableOverview from './TableOverview';
+import './index.css';
 
 function App() {
   const [user, setUser] = useState(null);
-  const [activePage, setActivePage] = useState('Table');
+  const [activePage, setActivePage] = useState('Home');
 
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
@@ -37,7 +37,7 @@ function App() {
           <Route path="/register" element={user ? <Navigate to="/home" replace /> : <Register />} />
           <Route path="/home" element={user ? <WelcomeHome /> : <Navigate to="/login" replace />} />
           <Route path="/menu" element={user ? <Menu /> : <Navigate to="/login" replace />} />
-          <Route path="/tableoverview" element={user ? <TableOverview /> : <Navigate to="/login" replace />} />
+          <Route path="/table" element={user ? <WelcomeHome /> : <Navigate to="/login" replace />} />
           <Route path="/" element={<Navigate to="/login" replace />} /> {/* Redirect to login if not authenticated */}
         </Routes>
       </div>

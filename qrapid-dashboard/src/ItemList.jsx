@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { collection, addDoc, getDocs, doc, deleteDoc } from 'firebase/firestore';
+import { db, auth } from './firebase-config';
 import './ItemList.css';
 
 const ItemList = () => {
@@ -54,20 +56,31 @@ const ItemList = () => {
   const handleAddItem = async () => {
     if (newItem.name && newItem.price && newItem.description && newItem.weight && newItem.unit) {
       try {
-        const response = await fetch(`${apiBaseUrl}/api/items`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`, // Add token if required
-          },
-          body: JSON.stringify({ ...newItem, categoryId }),
-        });
-        if (response.ok) {
+        // Save item in Firestore
+        const user = auth.currentUser;
+        if (user) {
+          const itemsRef = collection(db, 'restaurants', user.uid, 'categories', categoryId, 'items');
+          await addDoc(itemsRef, newItem);
+
+          // Save item in MongoDB
+          const response = await fetch(`${apiBaseUrl}/api/items`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token')}`, // Add token if required
+            },
+            body: JSON.stringify({ ...newItem, categoryId }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to save item in MongoDB');
+          }
+
           const addedItem = await response.json();
           setItems([...items, addedItem]);
           setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '' });
         } else {
-          console.error('Failed to add item');
+          console.error('User not authenticated');
         }
       } catch (error) {
         console.error('Error adding item:', error);
@@ -78,18 +91,29 @@ const ItemList = () => {
   const handleDeleteItem = async () => {
     if (itemToDelete) {
       try {
-        const response = await fetch(`${apiBaseUrl}/api/items/${itemToDelete._id}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`, // Add token if required
-          },
-        });
-        if (response.ok) {
+        // Delete item from Firestore
+        const user = auth.currentUser;
+        if (user) {
+          const itemDocRef = doc(db, 'restaurants', user.uid, 'categories', categoryId, 'items', itemToDelete.id);
+          await deleteDoc(itemDocRef);
+
+          // Delete item from MongoDB
+          const response = await fetch(`${apiBaseUrl}/api/items/${itemToDelete._id}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`, // Add token if required
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to delete item in MongoDB');
+          }
+
           setItems(items.filter(item => item._id !== itemToDelete._id));
           setShowDeleteConfirmation(false);
           setItemToDelete(null);
         } else {
-          console.error('Failed to delete item');
+          console.error('User not authenticated');
         }
       } catch (error) {
         console.error('Error deleting item:', error);

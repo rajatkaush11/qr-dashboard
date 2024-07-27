@@ -3,7 +3,7 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from './firebase-config';
 import { doc, setDoc } from 'firebase/firestore';
 import './register.css';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate for redirection
+import { useNavigate } from 'react-router-dom';
 
 const Register = () => {
   const [email, setEmail] = useState('');
@@ -13,13 +13,14 @@ const Register = () => {
   const [description, setDescription] = useState('');
   const [timing, setTiming] = useState('');
   const [message, setMessage] = useState('');
-  const navigate = useNavigate(); // Hook for navigation
+  const navigate = useNavigate();
 
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+
       // Save additional data in Firestore
       await setDoc(doc(db, "restaurants", user.uid), {
         restaurantName,
@@ -28,6 +29,7 @@ const Register = () => {
         timing,
         email
       });
+
       // Display alert and redirect after successful registration
       alert('Registered successfully!');
       navigate('/login'); // Redirect to login page
@@ -47,7 +49,7 @@ const Register = () => {
         <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         <button type="submit">Register</button>
-        {message && <p>{message}</p>}
+        {message && <p className="message">{message}</p>}
       </form>
     </div>
   );

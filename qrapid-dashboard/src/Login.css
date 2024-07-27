@@ -39,6 +39,7 @@
     border: 1px solid #ccc;
     border-radius: 10px;
     background-color: #F2F2F2;
+    color: black;  /* Set the text color inside inputs to black */
   }
   
   .login-page button {

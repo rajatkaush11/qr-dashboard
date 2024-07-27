@@ -48,8 +48,10 @@
   }
   
   .item-list {
+    max-height: 60vh; /* Set the maximum height for the scrollable area */
+    overflow-y: auto; /* Enable vertical scrolling */
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column; /* Arrange items in a column */
     gap: 20px;
   }
   
@@ -58,10 +60,11 @@
     border: 1px solid #ced4da;
     border-radius: 10px;
     padding: 20px;
-    width: calc(33.333% - 20px);
     box-sizing: border-box;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s, box-shadow 0.3s;
+    display: flex; /* Ensure the flex layout */
+    align-items: center;
   }
   
   .item:hover {
@@ -70,10 +73,14 @@
   }
   
   .item img {
-    max-width: 100%;
+    max-width: 100px; /* Set a fixed width for the image */
     height: auto;
     border-radius: 5px;
-    margin-bottom: 10px;
+    margin-right: 20px; /* Add some space between the image and the details */
+  }
+  
+  .item-details {
+    flex-grow: 1;
   }
   
   .item-details h2 {

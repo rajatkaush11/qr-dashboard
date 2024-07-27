@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { collection, addDoc, getDocs, doc, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, deleteDoc, setDoc } from 'firebase/firestore';
 import { db, auth } from './firebase-config';
 import './ItemList.css';
 
@@ -9,6 +9,7 @@ const ItemList = () => {
   const navigate = useNavigate(); // useNavigate hook to handle navigation
   const [items, setItems] = useState([]);
   const [newItem, setNewItem] = useState({ name: '', price: '', description: '', image: '', weight: '', unit: '' });
+  const [editingItem, setEditingItem] = useState(null);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const apiBaseUrl = import.meta.env.VITE_BACKEND_API; // Use the environment variable for the base URL
@@ -60,7 +61,7 @@ const ItemList = () => {
         const user = auth.currentUser;
         if (user) {
           const itemsRef = collection(db, 'restaurants', user.uid, 'categories', categoryId, 'items');
-          await addDoc(itemsRef, newItem);
+          const docRef = await addDoc(itemsRef, newItem);
 
           // Save item in MongoDB
           const response = await fetch(`${apiBaseUrl}/api/items`, {
@@ -77,13 +78,54 @@ const ItemList = () => {
           }
 
           const addedItem = await response.json();
-          setItems([...items, addedItem]);
+          setItems([...items, { ...addedItem, id: docRef.id }]);
           setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '' });
         } else {
           console.error('User not authenticated');
         }
       } catch (error) {
         console.error('Error adding item:', error);
+      }
+    }
+  };
+
+  const handleEditItem = (item) => {
+    setEditingItem(item);
+    setNewItem({ name: item.name, price: item.price, description: item.description, image: item.image, weight: item.weight, unit: item.unit });
+  };
+
+  const handleUpdateItem = async () => {
+    if (newItem.name && newItem.price && newItem.description && newItem.weight && newItem.unit && editingItem) {
+      try {
+        // Update item in Firestore
+        const user = auth.currentUser;
+        if (user) {
+          const itemDocRef = doc(db, 'restaurants', user.uid, 'categories', categoryId, 'items', editingItem.id);
+          await setDoc(itemDocRef, newItem);
+
+          // Update item in MongoDB
+          const response = await fetch(`${apiBaseUrl}/api/items/${editingItem.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token')}`, // Add token if required
+            },
+            body: JSON.stringify({ ...newItem, categoryId }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to update item in MongoDB');
+          }
+
+          const updatedItems = items.map(item => (item.id === editingItem.id ? { ...newItem, id: editingItem.id } : item));
+          setItems(updatedItems);
+          setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '' });
+          setEditingItem(null);
+        } else {
+          console.error('User not authenticated');
+        }
+      } catch (error) {
+        console.error('Error updating item:', error);
       }
     }
   };
@@ -109,7 +151,7 @@ const ItemList = () => {
             throw new Error('Failed to delete item in MongoDB');
           }
 
-          setItems(items.filter(item => item._id !== itemToDelete._id));
+          setItems(items.filter(item => item.id !== itemToDelete.id));
           setShowDeleteConfirmation(false);
           setItemToDelete(null);
         } else {
@@ -146,7 +188,9 @@ const ItemList = () => {
         <input type="text" name="description" placeholder="Description" value={newItem.description} onChange={handleInputChange} />
         <input type="number" name="weight" placeholder="Weight" value={newItem.weight} onChange={handleInputChange} />
         <input type="text" name="unit" placeholder="Unit" value={newItem.unit} onChange={handleInputChange} />
-        <button onClick={handleAddItem}>Add Item</button>
+        <button onClick={editingItem ? handleUpdateItem : handleAddItem}>
+          {editingItem ? 'Update Item' : 'Add Item'}
+        </button>
       </div>
       <div className="item-list">
         {items.map((item, index) => (
@@ -158,6 +202,7 @@ const ItemList = () => {
               <p>Description: {item.description}</p>
               <p>Weight: {item.weight} {item.unit}</p>
               <div className="item-actions">
+                <button onClick={() => handleEditItem(item)}>Edit</button>
                 <button onClick={() => confirmDeleteItem(item)}>Delete</button>
               </div>
             </div>

@@ -5,8 +5,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase-config';
 import Login from './Login';
 import Register from './Register';
-import TableOverview from './TableOverview';
-import Navbar from './Navbar';
+import WelcomeHome from './WelcomeHome';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -14,9 +13,9 @@ function App() {
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        setUser(user);
+        setUser(user);  // Set user on successful authentication
       } else {
-        setUser(null);
+        setUser(null);  // Nullify user on logout or failed authentication
       }
     });
   }, []);
@@ -24,19 +23,13 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login onLogin={() => setUser(true)} />} />
-        <Route path="/register" element={user ? <Navigate to="/login" replace /> : <Register />} />
-        <Route path="/" element={user ? <Dashboard /> : <Navigate to="/login" replace />} />
+        <Route path="/login" element={user ? <Navigate to="/home" replace /> : <Login onLogin={() => setUser(true)} />} />
+        <Route path="/register" element={user ? <Navigate to="/home" replace /> : <Register />} />
+        <Route path="/home" element={user ? <WelcomeHome /> : <Navigate to="/login" replace />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />  // Redirect to login if not authenticated
       </Routes>
     </Router>
   );
 }
-
-const Dashboard = () => (
-  <>
-    <Navbar />
-    <TableOverview />
-  </>
-);
 
 export default App;

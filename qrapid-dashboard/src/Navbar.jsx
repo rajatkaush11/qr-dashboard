@@ -1,13 +1,20 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faBell } from '@fortawesome/free-solid-svg-icons';
+import { useNavigate } from 'react-router-dom';
 import './Navbar.css';
 
 const Navbar = ({ activePage, onLinkClick }) => {
   const [searchActive, setSearchActive] = useState(false);
+  const navigate = useNavigate();
 
   const handleSearchClick = () => {
     setSearchActive(!searchActive);
+  };
+
+  const handleLinkClick = (page) => {
+    onLinkClick(page);
+    navigate(`/${page.toLowerCase()}`);
   };
 
   return (
@@ -16,35 +23,35 @@ const Navbar = ({ activePage, onLinkClick }) => {
       <div className="nav-links">
         <a 
           href="#"
-          onClick={() => onLinkClick('TableOverview')}
+          onClick={() => handleLinkClick('TableOverview')}
           className={activePage === 'TableOverview' ? 'active-link' : ''}
         >
           Table
         </a>
         <a 
           href="#"
-          onClick={() => onLinkClick('Dashboard')}
+          onClick={() => handleLinkClick('Dashboard')}
           className={activePage === 'Dashboard' ? 'active-link' : ''}
         >
           Dashboard
         </a>
         <a 
           href="#"
-          onClick={() => onLinkClick('Menu')}
+          onClick={() => handleLinkClick('Menu')}
           className={activePage === 'Menu' ? 'active-link' : ''}
         >
           Menu
         </a>
         <a 
           href="#"
-          onClick={() => onLinkClick('Orders')}
+          onClick={() => handleLinkClick('Orders')}
           className={activePage === 'Orders' ? 'active-link' : ''}
         >
           Orders
         </a>
         <a 
           href="#"
-          onClick={() => onLinkClick('Reports')}
+          onClick={() => handleLinkClick('Reports')}
           className={activePage === 'Reports' ? 'active-link' : ''}
         >
           Reports

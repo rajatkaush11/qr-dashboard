@@ -1,10 +1,9 @@
-// Register.jsx
 import React, { useState } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from './firebase-config';
 import { doc, setDoc } from 'firebase/firestore';
 import './register.css';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate for redirection
 
 const Register = () => {
   const [email, setEmail] = useState('');
@@ -14,13 +13,14 @@ const Register = () => {
   const [description, setDescription] = useState('');
   const [timing, setTiming] = useState('');
   const [message, setMessage] = useState('');
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // Hook for navigation
 
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      // Save additional data in Firestore
       await setDoc(doc(db, "restaurants", user.uid), {
         restaurantName,
         address,
@@ -28,8 +28,9 @@ const Register = () => {
         timing,
         email
       });
-      alert('Registered successfully! You can now login.');
-      navigate('/login');
+      // Display alert and redirect after successful registration
+      alert('Registered successfully!');
+      navigate('/login'); // Redirect to login page
     } catch (error) {
       setMessage(error.message || 'Registration failed');
     }
@@ -39,9 +40,14 @@ const Register = () => {
     <div className="restaurant-details">
       <h2>Register Restaurant</h2>
       <form onSubmit={handleRegister}>
-        {/* Inputs for registration */}
+        <input type="text" placeholder="Name of the Restaurant" value={restaurantName} onChange={(e) => setRestaurantName(e.target.value)} required />
+        <input type="text" placeholder="Address of the Restaurant" value={address} onChange={(e) => setAddress(e.target.value)} required />
+        <input type="text" placeholder="Description of the Restaurant" value={description} onChange={(e) => setDescription(e.target.value)} required />
+        <input type="text" placeholder="Timing of the Restaurant" value={timing} onChange={(e) => setTiming(e.target.value)} required />
+        <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         <button type="submit">Register</button>
-        {message && <p className="message">{message}</p>}
+        {message && <p>{message}</p>}
       </form>
     </div>
   );

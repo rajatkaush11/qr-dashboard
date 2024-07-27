@@ -1,4 +1,3 @@
-// App.jsx
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -6,6 +5,7 @@ import { auth } from './firebase-config';
 import Login from './Login';
 import Register from './Register';
 import WelcomeHome from './WelcomeHome';
+import './index.css'; // Ensure global styles are applied
 
 function App() {
   const [user, setUser] = useState(null);
@@ -22,12 +22,14 @@ function App() {
 
   return (
     <Router>
-      <Routes>
-        <Route path="/login" element={user ? <Navigate to="/home" replace /> : <Login onLogin={() => setUser(true)} />} />
-        <Route path="/register" element={user ? <Navigate to="/home" replace /> : <Register />} />
-        <Route path="/home" element={user ? <WelcomeHome /> : <Navigate to="/login" replace />} />
-        <Route path="/" element={<Navigate to="/login" replace />} />  // Redirect to login if not authenticated
-      </Routes>
+      <div className="app-container">
+        <Routes>
+          <Route path="/login" element={user ? <Navigate to="/home" replace /> : <Login onLogin={() => setUser(true)} />} />
+          <Route path="/register" element={user ? <Navigate to="/home" replace /> : <Register />} />
+          <Route path="/home" element={user ? <WelcomeHome /> : <Navigate to="/login" replace />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />  // Redirect to login if not authenticated
+        </Routes>
+      </div>
     </Router>
   );
 }

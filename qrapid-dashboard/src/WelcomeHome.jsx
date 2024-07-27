@@ -1,13 +1,13 @@
-// WelcomeHome.jsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from './firebase-config';
-import Navbar from './Navbar'; // Make sure to import the Navbar component
+import Navbar from './Navbar'; // Ensure Navbar is imported correctly
 
 const WelcomeHome = () => {
   const navigate = useNavigate();
 
+  // Function to handle user logout
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -17,10 +17,9 @@ const WelcomeHome = () => {
     }
   };
 
-  // Function to handle navigation clicks in the navbar
+  // Function to manage navigation from the navbar
   const handleNavClick = (page) => {
-    // Implement navigation logic based on 'page'
-    console.log(`Navigate to ${page}`); // Placeholder for actual navigation
+    console.log(`Navigate to ${page}`); // Replace with actual navigation logic
   };
 
   return (

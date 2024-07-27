@@ -1,111 +1,128 @@
 .menu-container {
-    padding: 20px;
-}
-
-.menu-header {
+    padding: 20px 40px;
+    margin-top: 40px; /* Reduce gap between navbar and content */
+    text-align: center;
+  }
+  
+  .menu-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-}
-
-.add-food-category-btn {
-    background-color: #28a745;
+  }
+  
+  .menu-header h1 {
+    font-size: 2em;
+    color: black;
+  }
+  
+  .add-food-category-btn {
+    background-color: green;
     color: white;
     border: none;
+    border-radius: 5px;
     padding: 10px 20px;
     cursor: pointer;
-    border-radius: 5px;
-}
-
-.add-food-category-btn:hover {
-    background-color: #218838;
-}
-
-.menu-tabs {
+    transition: background-color 0.3s ease;
+  }
+  
+  .add-food-category-btn:hover {
+    background-color: darkgreen;
+  }
+  
+  .menu-tabs {
     display: flex;
+    justify-content: center;
     gap: 10px;
     margin: 20px 0;
-}
-
-.menu-tabs a {
+  }
+  
+  .menu-tabs a {
     text-decoration: none;
+    color: #000;
+    background-color: #f0f0f0;
     padding: 10px 20px;
-    background-color: #f8f9fa;
-    color: #007bff;
-    border-radius: 5px;
-}
-
-.menu-tabs a.active {
+    border-radius: 20px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .menu-tabs a.active {
     background-color: #007bff;
-    color: white;
-}
-
-.new-category-item {
+    color: #fff;
+  }
+  
+  .new-category-item {
     display: flex;
     flex-direction: column;
     gap: 10px;
     margin-bottom: 20px;
-}
-
-.new-category-input {
+  }
+  
+  .new-category-input {
     padding: 10px;
-    border: 1px solid #ced4da;
+    border: 1px solid #ddd;
     border-radius: 5px;
-}
-
-.add-category-btn {
-    background-color: #007bff;
+  }
+  
+  .add-category-btn {
+    background-color: green;
     color: white;
     border: none;
+    border-radius: 5px;
     padding: 10px 20px;
     cursor: pointer;
-    border-radius: 5px;
-}
-
-.add-category-btn:hover {
-    background-color: #0056b3;
-}
-
-.menu-items {
+    transition: background-color 0.3s ease;
+  }
+  
+  .add-category-btn:hover {
+    background-color: darkgreen;
+  }
+  
+  .menu-items {
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
-}
-
-.menu-item {
-    background-color: #f8f9fa;
-    border: 1px solid #ced4da;
-    border-radius: 5px;
+  }
+  
+  .menu-item {
+    background-color: #f8f8f8;
     padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 200px;
-}
-
-.menu-item img {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .menu-item:hover {
+    background-color: #e0e0e0;
+  }
+  
+  .menu-item img {
     max-width: 100%;
-    height: auto;
-    border-radius: 5px;
-}
-
-.menu-item-details {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
+    border-radius: 10px;
+  }
+  
+  .menu-item-details {
+    text-align: left;
     margin-top: 10px;
-}
-
-.edit-category-btn {
-    background-color: #ffc107;
+  }
+  
+  .menu-item-details h2 {
+    font-size: 1.5em;
+    color: black;
+  }
+  
+  .edit-category-btn, .delete-category-btn {
+    background-color: #007bff;
     color: white;
     border: none;
+    border-radius: 5px;
     padding: 5px 10px;
     cursor: pointer;
-    border-radius: 5px;
-}
-
-.edit-category-btn:hover {
-    background-color: #e0a800;
-}
+    transition: background-color 0.3s ease;
+    margin-right: 5px;
+  }
+  
+  .edit-category-btn:hover, .delete-category-btn:hover {
+    background-color: darkblue;
+  }
+  

@@ -13,7 +13,7 @@
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: black;
   text-decoration: inherit;
 }
 a:hover {
@@ -25,12 +25,13 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background-color: #ffffff; /* Ensure body background is white */
-  padding-top: 60px; /* Add padding to account for the fixed navbar */
+  padding-top: 0; /* Remove padding for fixed navbar */
 }
 
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
+  color: black;
 }
 
 button {
@@ -40,7 +41,8 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: black;
+  color: white;
   cursor: pointer;
   transition: border-color 0.25s;
 }
@@ -50,19 +52,6 @@ button:hover {
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
 }
 
 .app-container {

@@ -3,22 +3,23 @@
     flex-direction: column;
     align-items: center;
     padding: 10px;
-}
-
-.header {
+  }
+  
+  .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     width: 100%;
-}
-
-.header h1 {
+  }
+  
+  .header h1 {
     margin: 0;
-}
-
-.add-table-btn {
+    color: black;
+  }
+  
+  .add-table-btn {
     background-color: #007bff;
-    color: #000;
+    color: white;
     border: none;
     border-radius: 16px;
     padding: 5px 15px;
@@ -28,16 +29,30 @@
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.room-button-group {
+  }
+  
+  .logout-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 16px;
+    padding: 5px 15px;
+    height: 32px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .room-button-group {
     display: flex;
     gap: 10px;
     margin-top: 10px;
     margin-bottom: 10px;
-}
-
-.room-button-group button {
+  }
+  
+  .room-button-group button {
     padding: 5px 10px;
     height: 32px;
     border: none;
@@ -48,21 +63,21 @@
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.room-button-group button.active {
+  }
+  
+  .room-button-group button.active {
     background-color: black;
     color: white;
-}
-
-.main-container {
+  }
+  
+  .main-container {
     display: flex;
     justify-content: space-between;
     width: 100%;
     margin-top: 10px;
-}
-
-.left-container {
+  }
+  
+  .left-container {
     display: flex;
     flex-direction: column;
     gap: 5px;
@@ -71,9 +86,9 @@
     border-radius: 10px;
     background-color: #f8f8f8;
     width: 200px;
-}
-
-.side-button {
+  }
+  
+  .side-button {
     padding: 5px 10px;
     height: 32px;
     border: none;
@@ -84,16 +99,16 @@
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.table-container {
+  }
+  
+  .table-container {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 5px;
     margin-left: 10px;
-}
-
-.status-container {
+  }
+  
+  .status-container {
     display: flex;
     flex-direction: column;
     gap: 5px;
@@ -102,37 +117,38 @@
     border-radius: 10px;
     background-color: #f8f8f8;
     margin-left: 10px;
-}
-
-.status-item {
+  }
+  
+  .status-item {
     display: flex;
     align-items: center;
     font-size: 14px;
-}
-
-.status-color {
+  }
+  
+  .status-color {
     width: 12px;
     height: 12px;
     border-radius: 50%;
     margin-right: 8px;
-}
-
-.status-color.grey {
+  }
+  
+  .status-color.grey {
     background-color: grey;
-}
-
-.status-color.blue {
+  }
+  
+  .status-color.blue {
     background-color: blue;
-}
-
-.status-color.green {
+  }
+  
+  .status-color.green {
     background-color: green;
-}
-
-.status-color.yellow {
+  }
+  
+  .status-color.yellow {
     background-color: yellow;
-}
-
-.status-color.orange {
+  }
+  
+  .status-color.orange {
     background-color: orange;
-}
+  }
+  

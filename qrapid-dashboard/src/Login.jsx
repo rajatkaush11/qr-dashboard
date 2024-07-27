@@ -14,7 +14,7 @@ const Login = ({ onLogin }) => {
     e.preventDefault();
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      onLogin();  // Notify App of login
+      onLogin(); // Notify App of login
     } catch (error) {
       setError("Login failed. Please check your credentials.");
     }

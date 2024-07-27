@@ -10,28 +10,29 @@
     cursor: pointer;
     font-size: 18px;
     font-weight: bold;
-}
-
-.table-box.active {
+  }
+  
+  .table-box.active {
     background-color: limegreen;
-}
-
-.table-box.blank {
+  }
+  
+  .table-box.blank {
     background-color: #ccc; /* Change blank color to the original color */
-}
-
-.table-box.running {
+  }
+  
+  .table-box.running {
     background-color: blue;
-}
-
-.table-box.printed {
+  }
+  
+  .table-box.printed {
     background-color: green;
-}
-
-.table-box.paid {
+  }
+  
+  .table-box.paid {
     background-color: yellow;
-}
-
-.table-box.running-kot {
+  }
+  
+  .table-box.running-kot {
     background-color: orange;
-}
+  }
+  

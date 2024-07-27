@@ -15,9 +15,9 @@ function App() {
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        setUser(user);  // Set user on successful authentication
+        setUser(user); // Set user on successful authentication
       } else {
-        setUser(null);  // Nullify user on logout or failed authentication
+        setUser(null); // Nullify user on logout or failed authentication
       }
     });
   }, []);
@@ -34,7 +34,7 @@ function App() {
           <Route path="/login" element={user ? <Navigate to="/home" replace /> : <Login onLogin={() => setUser(true)} />} />
           <Route path="/register" element={user ? <Navigate to="/home" replace /> : <Register />} />
           <Route path="/home" element={user ? <WelcomeHome /> : <Navigate to="/login" replace />} />
-          <Route path="/" element={<Navigate to="/login" replace />} />  // Redirect to login if not authenticated
+          <Route path="/" element={<Navigate to="/login" replace />} /> // Redirect to login if not authenticated
         </Routes>
       </div>
     </Router>

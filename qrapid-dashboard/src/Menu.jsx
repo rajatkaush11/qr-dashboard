@@ -1,4 +1,3 @@
-// Menu.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, doc, addDoc, setDoc, getDocs, deleteDoc } from 'firebase/firestore';
@@ -12,6 +11,7 @@ const Menu = () => {
   const [editingCategory, setEditingCategory] = useState(null);
   const navigate = useNavigate();
   const userId = auth.currentUser ? auth.currentUser.uid : null; // Get current user's UID
+  const apiBaseUrl = import.meta.env.VITE_BACKEND_API; // Use the environment variable for the base URL
 
   useEffect(() => {
     if (userId) {
@@ -54,9 +54,28 @@ const Menu = () => {
   const handleAddCategory = async () => {
     if (newCategory.name && userId) {
       try {
+        // Save category in Firestore
         const categoriesRef = collection(db, 'restaurants', userId, 'categories');
         const docRef = await addDoc(categoriesRef, newCategory);
         setCategories([...categories, { ...newCategory, id: docRef.id }]);
+
+        // Save category in MongoDB
+        const response = await fetch(`${apiBaseUrl}/api/category`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            uid: userId,
+            name: newCategory.name,
+            image: newCategory.image
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to save category in MongoDB');
+        }
+
         setNewCategory({ name: '', image: '' });
         setShowCategoryInput(false);
       } catch (error) {
@@ -74,8 +93,27 @@ const Menu = () => {
   const handleUpdateCategory = async () => {
     if (newCategory.name && editingCategory && userId) {
       try {
+        // Update category in Firestore
         const categoryDocRef = doc(db, 'restaurants', userId, 'categories', editingCategory.id);
         await setDoc(categoryDocRef, newCategory);
+
+        // Update category in MongoDB
+        const response = await fetch(`${apiBaseUrl}/api/category/${editingCategory.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            uid: userId,
+            name: newCategory.name,
+            image: newCategory.image
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to update category in MongoDB');
+        }
+
         const updatedCategories = categories.map(cat => (cat.id === editingCategory.id ? { ...newCategory, id: editingCategory.id } : cat));
         setCategories(updatedCategories);
         setNewCategory({ name: '', image: '' });
@@ -91,8 +129,22 @@ const Menu = () => {
     const confirmed = window.confirm('Are you sure you want to delete this category?');
     if (confirmed) {
       try {
+        // Delete category from Firestore
         const categoryDocRef = doc(db, 'restaurants', userId, 'categories', categoryId);
         await deleteDoc(categoryDocRef);
+
+        // Delete category from MongoDB
+        const response = await fetch(`${apiBaseUrl}/api/category/${categoryId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to delete category in MongoDB');
+        }
+
         setCategories(categories.filter(category => category.id !== categoryId));
       } catch (error) {
         console.error('Error deleting category:', error);

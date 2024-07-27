@@ -14,6 +14,7 @@ const Register = () => {
   const [timing, setTiming] = useState('');
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
+  const apiBaseUrl = import.meta.env.VITE_BACKEND_API; // Use the environment variable for the base URL
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -30,6 +31,26 @@ const Register = () => {
         timing,
         email: user.email // Use the email from userCredential
       });
+
+      // Save additional data in MongoDB
+      const response = await fetch(`${apiBaseUrl}/api/restaurant`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          uid: user.uid,
+          restaurantName,
+          address,
+          description,
+          timing,
+          email: user.email
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save data in MongoDB');
+      }
 
       // Display alert and redirect after successful registration
       alert('Registered successfully!');

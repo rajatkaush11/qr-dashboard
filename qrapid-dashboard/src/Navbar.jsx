@@ -14,7 +14,11 @@ const Navbar = ({ activePage, onLinkClick }) => {
 
   const handleLinkClick = (page) => {
     onLinkClick(page);
-    navigate(`/${page.toLowerCase()}`);
+    if (page === 'TableOverview') {
+      navigate('/tableoverview');
+    } else {
+      navigate(`/${page.toLowerCase()}`);
+    }
   };
 
   return (

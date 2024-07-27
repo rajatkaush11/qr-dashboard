@@ -7,6 +7,7 @@ import Register from './Register';
 import WelcomeHome from './WelcomeHome';
 import Navbar from './Navbar';
 import Menu from './Menu'; // Import the Menu component
+import TableOverview from './TableOverview'; // Import the TableOverview component
 import './index.css'; // Ensure global styles are applied
 
 function App() {
@@ -36,6 +37,7 @@ function App() {
           <Route path="/register" element={user ? <Navigate to="/home" replace /> : <Register />} />
           <Route path="/home" element={user ? <WelcomeHome /> : <Navigate to="/login" replace />} />
           <Route path="/menu" element={user ? <Menu /> : <Navigate to="/login" replace />} />
+          <Route path="/tableoverview" element={user ? <TableOverview /> : <Navigate to="/login" replace />} />
           <Route path="/" element={<Navigate to="/login" replace />} /> {/* Redirect to login if not authenticated */}
         </Routes>
       </div>

@@ -1,72 +1,110 @@
-.restaurant-details {
-  padding: 40px;
-  max-width: 700px;
-  margin: 0 auto;
-  background-color: #F7F7F7;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-.restaurant-details h2 {
-  margin-bottom: 40px;
-  font-size: 32px;
-  color: #333;
-  font-weight: bold;
+body {
+  font-family: 'Work Sans', sans-serif;
 }
 
-.restaurant-details form {
+.navbar {
   display: flex;
-  flex-direction: column;
-  gap: 20px;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f8f8f8;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 10px 20px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  font-family: 'Work Sans', sans-serif;
 }
 
-.restaurant-details .input-group {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
-
-.restaurant-details label {
-  margin-bottom: 5px;
+.brand {
   font-size: 18px;
-  color: #333;
   font-weight: bold;
+  color: black;
+  margin-left: 10px; /* Adjust for spacing */
 }
 
-.restaurant-details input {
-  padding: 10px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  background-color: #F2F2F2;
-  color: black; /* Set input text color to black */
+.nav-links {
+  display: flex;
+  gap: 15px;
 }
 
-.restaurant-details input::placeholder {
-  color: #8B9467; /* Muted greenish tone for placeholder */
+.nav-links a {
+  text-decoration: none;
   font-size: 14px;
-  font-style: italic;
+  font-weight: 500;
+  color: black;
+  padding: 0 20px;
+  height: 32px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.restaurant-details button {
-  padding: 20px 40px;
-  font-size: 18px;
-  color: #fff;
-  background-color: black;
+.nav-links .active-link {
+  color: green;
+  font-weight: bold; /* Optional to make it more prominent */
+}
+
+.right-icons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.search-input {
   border: none;
-  border-radius: 10px;
+  padding: 8px;
+  border-radius: 5px;
+  display: none;
+  transition: width 0.3s;
+  width: 0;
+}
+
+.search-input.active {
+  display: block;
+  width: 200px;
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  background-color: #E8EDF2;
+  border-radius: 5px;
+  padding: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.user-icon {
+  width: 32px; /* Adjust for larger profile picture */
+  height: 32px; /* Adjust for larger profile picture */
+  cursor: pointer;
+  border-radius: 50%;
+  background-size: cover;
+}
+
+.navbar img {
+  width: 32px; /* Adjust for larger profile picture */
+  height: 32px; /* Adjust for larger profile picture */
   cursor: pointer;
 }
 
-.restaurant-details button:hover {
-  background-color: #2E865F;
+.navbar .clerk-user-button {
+  margin-right: 10px; /* Adjust for spacing */
 }
 
-/* Additional CSS for error or success messages */
-.message {
-  color: black; /* Ensuring message text is also black */
-  font-size: 16px;
-  text-align: center;
-  margin-top: 20px;
+.clerk-user-button .clerk-avatar {
+  width: 32px; /* Adjust for larger profile picture */
+  height: 32px; /* Adjust for larger profile picture */
+  border-radius: 50%;
 }

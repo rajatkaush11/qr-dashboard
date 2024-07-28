@@ -29,9 +29,9 @@ const WelcomeHome = () => {
         const order = doc.data();
         console.log('Order data:', order);
         const tableNo = order.tableNo;
-        const tableIndex = tables.findIndex(table => table === tableNo);
-        console.log(`Table index for ${tableNo}:`, tableIndex);
-        if (tableIndex >= 0 && tableIndex < updatedColors.length) {
+        const tableIndex = tables.indexOf(tableNo);
+        console.log(`TableNo: ${tableNo}, Table index: ${tableIndex}`);
+        if (tableIndex !== -1) {
           updatedColors[tableIndex] = 'blue'; // Change to blue when an order is placed
         }
       });

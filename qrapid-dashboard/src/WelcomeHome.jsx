@@ -19,25 +19,21 @@ const WelcomeHome = () => {
   useEffect(() => {
     const q = query(collection(db, 'orders'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      console.log('Snapshot received:', querySnapshot.docs.map(doc => doc.data()));
-      const updatedColors = [...tableColors];
+      const updatedColors = [...tableColors]; // Copy the current colors to update
       querySnapshot.forEach((doc) => {
         const order = doc.data();
-        console.log('Order data:', order);
-        const tableNo = order.tableNo;
-        const tableIndex = tables.indexOf(tableNo);
-        console.log(`TableNo: ${tableNo}, Table index: ${tableIndex}`);
+        const tableIndex = tables.findIndex(t => t === order.tableNo);
         if (tableIndex !== -1) {
           updatedColors[tableIndex] = 'blue'; // Change to blue when an order is placed
         }
       });
-      setTableColors(updatedColors);
+      setTableColors(updatedColors); // Update the state once after processing all documents
     }, (error) => {
       console.error('Error fetching snapshot:', error);
     });
 
-    return () => unsubscribe();
-  }, [tables, tableColors]);
+    return () => unsubscribe(); // Cleanup on unmount
+  }, [tables, tableColors]); // Only re-run the effect if `tables` or `tableColors` changes
 
   const handleLogout = async () => {
     try {
@@ -50,8 +46,8 @@ const WelcomeHome = () => {
 
   const addTable = () => {
     const newTableNumber = `T${tables.length + 1}`;
-    setTables([...tables, newTableNumber]);
-    setTableColors([...tableColors, 'blank']);
+    setTables(prevTables => [...prevTables, newTableNumber]);
+    setTableColors(prevColors => [...prevColors, 'blank']);
   };
 
   const handleTableClick = (tableNumber) => {
@@ -109,7 +105,7 @@ const WelcomeHome = () => {
                   tableNumber={tableNumber}
                   color={tableColors[index]}
                   isActive={selectedTable === tableNumber}
-                  onClick={() => handleTableClick(tableNumber)} // Update to call handleTableClick
+                  onClick={() => handleTableClick(tableNumber)}
                 />
               ))}
             </div>

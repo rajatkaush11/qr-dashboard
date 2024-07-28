@@ -10,7 +10,10 @@ import './TableOverview.css';
 const WelcomeHome = () => {
   const navigate = useNavigate();
   const [tables, setTables] = useState(Array(15).fill(null).map((_, i) => `T${i + 1}`));
-  const [tableColors, setTableColors] = useState(Array(15).fill('blank'));
+  const [tableColors, setTableColors] = useState(() => {
+    const cachedColors = sessionStorage.getItem('tableColors');
+    return cachedColors ? JSON.parse(cachedColors) : Array(15).fill('blank');
+  });
   const [restaurantName, setRestaurantName] = useState('QRapid');
   const [activeRoom, setActiveRoom] = useState('AC Premium');
   const [selectedTable, setSelectedTable] = useState(null);
@@ -27,6 +30,7 @@ const WelcomeHome = () => {
           updatedColors[tableIndex] = 'blue'; // Change to blue when an order is placed
         }
       });
+      sessionStorage.setItem('tableColors', JSON.stringify(updatedColors)); // Cache updated colors
       setTableColors(updatedColors); // Update the state once after processing all documents
     }, (error) => {
       console.error('Error fetching snapshot:', error);
@@ -47,7 +51,9 @@ const WelcomeHome = () => {
   const addTable = () => {
     const newTableNumber = `T${tables.length + 1}`;
     setTables(prevTables => [...prevTables, newTableNumber]);
-    setTableColors(prevColors => [...prevColors, 'blank']);
+    const newColors = [...tableColors, 'blank'];
+    sessionStorage.setItem('tableColors', JSON.stringify(newColors)); // Update cache with new table
+    setTableColors(newColors);
   };
 
   const handleTableClick = (tableNumber) => {

@@ -19,7 +19,7 @@ const WelcomeHome = () => {
   useEffect(() => {
     const q = query(collection(db, 'orders'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      console.log('Snapshot received:', querySnapshot); // Log the entire snapshot
+      console.log('Snapshot received:', querySnapshot.docs.map(doc => doc.data())); // Log the document data
       const updatedColors = [...tableColors];
       querySnapshot.forEach((doc) => {
         const order = doc.data();

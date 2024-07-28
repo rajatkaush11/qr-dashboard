@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from './firebase-config';
@@ -30,6 +30,7 @@ const WelcomeHome = () => {
 
   const handleTableClick = (tableNumber) => {
     setSelectedTable(tableNumber);
+    navigate(`/table/${tableNumber}`); // Navigate to TableDetails
   };
 
   const handleRoomClick = (room) => {
@@ -76,7 +77,7 @@ const WelcomeHome = () => {
               tableNumber={tableNumber}
               color={tableColors[index]}
               isActive={selectedTable === tableNumber}
-              onClick={handleTableClick}
+              onClick={() => handleTableClick(tableNumber)} // Update to call handleTableClick
             />
           ))}
         </div>

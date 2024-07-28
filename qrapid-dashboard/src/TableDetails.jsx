@@ -39,7 +39,7 @@ function App() {
           <Route path="/register" element={user ? <Navigate to="/home" replace /> : <Register />} />
           <Route path="/home" element={user ? <WelcomeHome /> : <Navigate to="/login" replace />} />
           <Route path="/menu" element={user ? <Menu /> : <Navigate to="/login" replace />} />
-          <Route path="/table" element={user ? <TableOverview /> : <Navigate to="/login" replace />} /> {/* Update this route */}
+          <Route path="/table" element={user ? <TableOverview /> : <Navigate to="/login" replace />} />
           <Route path="/table/:tableNumber" element={user ? <TableDetails /> : <Navigate to="/login" replace />} /> {/* New route for TableDetails */}
           <Route path="/category/:categoryId/items" element={user ? <ItemList /> : <Navigate to="/login" replace />} />
           <Route path="/" element={<Navigate to="/login" replace />} /> {/* Redirect to login if not authenticated */}

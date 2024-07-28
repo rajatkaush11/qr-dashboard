@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+// WelcomeHome.jsx
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
-import { auth } from './firebase-config';
+import { auth, db } from './firebase-config';
+import { collection, query, onSnapshot } from 'firebase/firestore';
 import TableBox from './TableBox';
-import TableDetails from './TableDetails'; // Import TableDetails
+import TableDetails from './TableDetails';
 import './TableOverview.css';
 
 const WelcomeHome = () => {
@@ -14,6 +16,25 @@ const WelcomeHome = () => {
   const [activeRoom, setActiveRoom] = useState('AC Premium');
   const [selectedTable, setSelectedTable] = useState(null);
   const [view, setView] = useState('overview'); // Manage the view state
+
+  useEffect(() => {
+    const q = query(collection(db, 'orders'));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const updatedColors = Array(15).fill('blank'); // Reset to default 'blank'
+
+      querySnapshot.forEach((doc) => {
+        const order = doc.data();
+        const tableIndex = parseInt(order.tableNo.replace('T', '')) - 1;
+        if (tableIndex >= 0 && tableIndex < updatedColors.length) {
+          updatedColors[tableIndex] = 'blue'; // Change to blue when an order is placed
+        }
+      });
+
+      setTableColors(updatedColors);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleLogout = async () => {
     try {

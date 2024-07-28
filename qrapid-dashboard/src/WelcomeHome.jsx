@@ -19,25 +19,26 @@ const WelcomeHome = () => {
   useEffect(() => {
     const q = query(collection(db, 'orders'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      console.log('Snapshot received:', querySnapshot.docs.map(doc => doc.data()));
+      let changes = false;
       const updatedColors = [...tableColors];
-      querySnapshot.forEach((doc) => {
-        const order = doc.data();
-        console.log('Order data:', order);
-        const tableNo = order.tableNo;
-        const tableIndex = tables.indexOf(tableNo);
-        console.log(`TableNo: ${tableNo}, Table index: ${tableIndex}`);
-        if (tableIndex !== -1) {
-          updatedColors[tableIndex] = 'blue'; // Change to blue when an order is placed
+      querySnapshot.docChanges().forEach((change) => {
+        if (change.type === "added" || change.type === "modified") {
+          const order = change.doc.data();
+          const tableIndex = tables.indexOf(order.tableNo);
+          if (tableIndex !== -1 && updatedColors[tableIndex] !== 'blue') {
+            updatedColors[tableIndex] = 'blue'; // Change to blue when an order is placed or modified
+            changes = true;
+          }
         }
       });
-      setTableColors(updatedColors);
-    }, (error) => {
-      console.error('Error fetching snapshot:', error);
+      if (changes) {
+        setTableColors(updatedColors);
+      }
     });
-
+  
     return () => unsubscribe();
   }, [tables, tableColors]);
+  
 
   const handleLogout = async () => {
     try {

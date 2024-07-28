@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import TableBox from './TableBox';
 import './TableOverview.css';
 
@@ -6,6 +7,7 @@ const TableOverview = ({ tables, addTable, onSelectTable, tableColors, onLogout 
   const [selectedTable, setSelectedTable] = useState(null);
   const [activeRoom, setActiveRoom] = useState('AC Premium');
   const [restaurantName, setRestaurantName] = useState('QRapid');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchRestaurantDetails = async () => {
@@ -38,6 +40,7 @@ const TableOverview = ({ tables, addTable, onSelectTable, tableColors, onLogout 
   const handleTableClick = (tableNumber) => {
     setSelectedTable(tableNumber);
     onSelectTable(tableNumber);
+    navigate(`/table/${tableNumber}`); // Navigate to TableDetails
   };
 
   const handleRoomClick = (room) => {

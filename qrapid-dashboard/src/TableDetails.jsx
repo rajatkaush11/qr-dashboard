@@ -23,26 +23,34 @@ const TableDetails = ({ tableNumber, onBackClick, onGenerateKOT, onGenerateBill,
 
   return (
     <div className="table-details">
-      <button onClick={onBackClick}>Back</button>
-      <h2>Table {tableNumber} Details</h2>
-      <div className="order-list">
-        <h3>Current Order</h3>
-        {orders.map((order, index) => (
-          <div key={index} className="order-item">
-            <p><strong>Name:</strong> {order.name}</p>
-            <p><strong>WhatsApp:</strong> {order.whatsapp}</p>
-            <p><strong>Items:</strong></p>
-            <ul>
-              {order.items.map((item, i) => (
-                <li key={i}>{item.name} - {item.price} x {item.quantity}</li>
-              ))}
-            </ul>
-          </div>
-        ))}
+      <div className="header">
+        <button onClick={onBackClick} className="back-button">Back</button>
+        <h2>Table {tableNumber} Details</h2>
       </div>
-      <button onClick={onGenerateKOT}>Generate KOT</button>
-      <button onClick={onGenerateBill}>Generate Bill</button>
-      <button onClick={onComplete}>Complete Order</button>
+      <div className="current-order">
+        <h3>Current Order</h3>
+        {orders.length === 0 ? (
+          <p>No current orders.</p>
+        ) : (
+          orders.map((order, index) => (
+            <div key={index} className="order-item">
+              <p><strong>Name:</strong> {order.name}</p>
+              <p><strong>WhatsApp:</strong> {order.whatsapp}</p>
+              <p><strong>Items:</strong></p>
+              <ul>
+                {order.items.map((item, i) => (
+                  <li key={i}>{item.name} - {item.price} x {item.quantity}</li>
+                ))}
+              </ul>
+            </div>
+          ))
+        )}
+      </div>
+      <div className="action-buttons">
+        <button onClick={onGenerateKOT} className="action-button">Generate KOT</button>
+        <button onClick={onGenerateBill} className="action-button">Generate Bill</button>
+        <button onClick={onComplete} className="action-button">Complete Order</button>
+      </div>
     </div>
   );
 };

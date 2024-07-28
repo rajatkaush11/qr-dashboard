@@ -18,19 +18,28 @@ const WelcomeHome = () => {
 
   useEffect(() => {
     const q = query(collection(db, 'orders'));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      console.log('Snapshot received:', querySnapshot.docs.map(doc => doc.data())); // Log the document data
-      const updatedColors = [...tableColors];
-      querySnapshot.forEach((doc) => {
-        const order = doc.data();
-        console.log('Order data:', order); // Log each order data
-        const tableIndex = parseInt(order.tableNo.replace('T', '')) - 1;
-        if (tableIndex >= 0 && tableIndex < updatedColors.length) {
-          updatedColors[tableIndex] = 'blue'; // Change to blue when an order is placed
+    const unsubscribe = onSnapshot(q, 
+      (querySnapshot) => {
+        console.log('Snapshot received:', querySnapshot.docs.map(doc => doc.data())); // Log the document data
+        if (querySnapshot.empty) {
+          console.log('No matching documents.');
+          return;
         }
-      });
-      setTableColors(updatedColors);
-    });
+        const updatedColors = [...tableColors];
+        querySnapshot.forEach((doc) => {
+          const order = doc.data();
+          console.log('Order data:', order); // Log each order data
+          const tableIndex = parseInt(order.tableNo.replace('T', '')) - 1;
+          if (tableIndex >= 0 && tableIndex < updatedColors.length) {
+            updatedColors[tableIndex] = 'blue'; // Change to blue when an order is placed
+          }
+        });
+        setTableColors(updatedColors);
+      },
+      (error) => {
+        console.error('Error fetching snapshot:', error);
+      }
+    );
 
     return () => unsubscribe();
   }, [tableColors]);

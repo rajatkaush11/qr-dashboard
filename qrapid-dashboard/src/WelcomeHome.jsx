@@ -22,21 +22,21 @@ const WelcomeHome = () => {
   useEffect(() => {
     const q = query(collection(db, 'orders'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const updatedColors = [...tableColors]; // Copy the current colors to update
+      const updatedColors = Array(15).fill('blank'); // Reset colors to blank
       querySnapshot.forEach((doc) => {
         const order = doc.data();
-        const tableIndex = tables.findIndex(t => t === order.tableNo);
+        const tableIndex = tables.findIndex(t => t === `T${order.tableNo}`);
         if (tableIndex !== -1) {
-          updatedColors[tableIndex] = 'blue'; // Change to blue when an order is placed
+          updatedColors[tableIndex] = 'blue'; // Set to blue when an order is active
         }
       });
       sessionStorage.setItem('tableColors', JSON.stringify(updatedColors)); // Cache updated colors
-      setTableColors(updatedColors); // Update the state once after processing all documents
+      setTableColors(updatedColors); // Update the state
     }, (error) => {
       console.error('Error fetching snapshot:', error);
     });
-
-    return () => unsubscribe(); // Cleanup on unmount
+  
+    return () => unsubscribe();  // Cleanup on unmount
   }, [tables, tableColors]); // Only re-run the effect if `tables` or `tableColors` changes
 
   const handleLogout = async () => {

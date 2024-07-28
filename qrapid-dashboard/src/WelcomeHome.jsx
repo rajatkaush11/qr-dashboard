@@ -17,27 +17,28 @@ const WelcomeHome = () => {
   const [restaurantName, setRestaurantName] = useState('QRapid');
   const [activeRoom, setActiveRoom] = useState('AC Premium');
   const [selectedTable, setSelectedTable] = useState(null);
-  const [view, setView] = useState('overview'); // Manage the view state
+  const [view, setView] = useState('overview');
 
   useEffect(() => {
     const q = query(collection(db, 'orders'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const updatedColors = Array(15).fill('blank'); // Reset colors to blank
+      const updatedColors = Array(15).fill('blank');
       querySnapshot.forEach((doc) => {
         const order = doc.data();
+        console.log('Fetched order:', order);
         const tableIndex = tables.findIndex(t => t === `T${order.tableNo}`);
         if (tableIndex !== -1) {
-          updatedColors[tableIndex] = 'blue'; // Set to blue when an order is active
+          updatedColors[tableIndex] = 'blue';
         }
       });
-      sessionStorage.setItem('tableColors', JSON.stringify(updatedColors)); // Cache updated colors
-      setTableColors(updatedColors); // Update the state
+      sessionStorage.setItem('tableColors', JSON.stringify(updatedColors));
+      setTableColors(updatedColors);
     }, (error) => {
       console.error('Error fetching snapshot:', error);
     });
-  
-    return () => unsubscribe();  // Cleanup on unmount
-  }, [tables, tableColors]); // Only re-run the effect if `tables` or `tableColors` changes
+
+    return () => unsubscribe();
+  }, [tables]);
 
   const handleLogout = async () => {
     try {
@@ -52,13 +53,13 @@ const WelcomeHome = () => {
     const newTableNumber = `T${tables.length + 1}`;
     setTables(prevTables => [...prevTables, newTableNumber]);
     const newColors = [...tableColors, 'blank'];
-    sessionStorage.setItem('tableColors', JSON.stringify(newColors)); // Update cache with new table
+    sessionStorage.setItem('tableColors', JSON.stringify(newColors));
     setTableColors(newColors);
   };
 
   const handleTableClick = (tableNumber) => {
     setSelectedTable(tableNumber);
-    setView('details'); // Switch to details view on table click
+    setView('details');
   };
 
   const handleRoomClick = (room) => {
@@ -66,7 +67,7 @@ const WelcomeHome = () => {
   };
 
   const handleBackClick = () => {
-    setView('overview'); // Switch back to overview view
+    setView('overview');
   };
 
   return (

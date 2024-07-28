@@ -12,12 +12,13 @@ const TableDetails = ({ tableNumber, onBackClick, onGenerateKOT, onGenerateBill,
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const ordersData = [];
       querySnapshot.forEach((doc) => {
-        ordersData.push(doc.data());
+        const order = doc.data();
+        console.log('Fetched order for table:', tableNumber, order);
+        ordersData.push(order);
       });
       setOrders(ordersData);
     });
 
-    // Clean up the listener on unmount
     return () => unsubscribe();
   }, [tableNumber]);
 

@@ -20,10 +20,6 @@ const WelcomeHome = () => {
     const q = query(collection(db, 'orders'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       console.log('Snapshot received:', querySnapshot.docs.map(doc => doc.data()));
-      if (querySnapshot.empty) {
-        console.log('No matching documents.');
-        return;
-      }
       const updatedColors = [...tableColors];
       querySnapshot.forEach((doc) => {
         const order = doc.data();

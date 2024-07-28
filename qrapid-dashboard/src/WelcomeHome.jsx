@@ -1,4 +1,3 @@
-// WelcomeHome.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
@@ -20,21 +19,21 @@ const WelcomeHome = () => {
   useEffect(() => {
     const q = query(collection(db, 'orders'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const updatedColors = Array(15).fill('blank'); // Reset to default 'blank'
-
+      console.log('Snapshot received:', querySnapshot); // Log the entire snapshot
+      const updatedColors = [...tableColors];
       querySnapshot.forEach((doc) => {
         const order = doc.data();
+        console.log('Order data:', order); // Log each order data
         const tableIndex = parseInt(order.tableNo.replace('T', '')) - 1;
         if (tableIndex >= 0 && tableIndex < updatedColors.length) {
           updatedColors[tableIndex] = 'blue'; // Change to blue when an order is placed
         }
       });
-
       setTableColors(updatedColors);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [tableColors]);
 
   const handleLogout = async () => {
     try {

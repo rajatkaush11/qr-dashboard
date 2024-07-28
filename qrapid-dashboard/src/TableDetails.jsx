@@ -11,6 +11,7 @@ const TableDetails = ({ tableNumber, onBackClick, onGenerateKOT, onGenerateBill,
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const ordersData = [];
+      console.log(`Real-time update for table ${tableNumber}:`);
       querySnapshot.forEach((doc) => {
         const order = doc.data();
         console.log('Fetched order for table:', tableNumber, order);

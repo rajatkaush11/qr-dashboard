@@ -1,51 +1,52 @@
-import React from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft, faTrash } from '@fortawesome/free-solid-svg-icons';
-import './TableDetails.css';
+import React, { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from './firebase-config';
+import Login from './Login';
+import Register from './Register';
+import WelcomeHome from './WelcomeHome';
+import Navbar from './Navbar';
+import Menu from './Menu';
+import TableOverview from './TableOverview';
+import TableDetails from './TableDetails'; // Import TableDetails
+import ItemList from './ItemList';
+import './index.css';
 
-const TableDetails = ({ tableNumber, onBackClick, onGenerateKOT, onGenerateBill, onComplete }) => {
+function App() {
+  const [user, setUser] = useState(null);
+  const [activePage, setActivePage] = useState('Home');
+
+  useEffect(() => {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUser(user); // Set user on successful authentication
+      } else {
+        setUser(null); // Nullify user on logout or failed authentication
+      }
+    });
+  }, []);
+
+  const handleNavClick = (page) => {
+    setActivePage(page);
+  };
+
   return (
-    <div className="table-details">
-      <div className="back-button-container">
-        <button className="back-button" onClick={onBackClick}>
-          <FontAwesomeIcon icon={faArrowLeft} />
-          <span>Back</span>
-        </button>
+    <Router>
+      <div className="app-container">
+        {user && <Navbar activePage={activePage} onLinkClick={handleNavClick} />}
+        <Routes>
+          <Route path="/login" element={user ? <Navigate to="/home" replace /> : <Login onLogin={() => setUser(true)} />} />
+          <Route path="/register" element={user ? <Navigate to="/home" replace /> : <Register />} />
+          <Route path="/home" element={user ? <WelcomeHome /> : <Navigate to="/login" replace />} />
+          <Route path="/menu" element={user ? <Menu /> : <Navigate to="/login" replace />} />
+          <Route path="/table" element={user ? <TableOverview /> : <Navigate to="/login" replace />} /> {/* Update this route */}
+          <Route path="/table/:tableNumber" element={user ? <TableDetails /> : <Navigate to="/login" replace />} /> {/* New route for TableDetails */}
+          <Route path="/category/:categoryId/items" element={user ? <ItemList /> : <Navigate to="/login" replace />} />
+          <Route path="/" element={<Navigate to="/login" replace />} /> {/* Redirect to login if not authenticated */}
+        </Routes>
       </div>
-      <h2 className="table-title">Table {tableNumber}</h2>
-      <div className="current-orders">
-        <h3>Current Orders</h3>
-        <div className="order-item active">
-          <div className="order-text">
-            <span>Pesto Pasta</span>
-            <span>$15</span>
-          </div>
-          <button className="delete-button">
-            <FontAwesomeIcon icon={faTrash} />
-          </button>
-        </div>
-      </div>
-      <div className="kot-generated">
-        <h3>KOT Generated</h3>
-        <div className="order-item">
-          <span>Pesto Pasta</span>
-          <span>$15</span>
-        </div>
-        <div className="order-item">
-          <span>Ahi Tuna Poke Bowl</span>
-          <span>$17</span>
-        </div>
-      </div>
-      <div className="actions">
-        <button className="action-button add-item">Add Item</button>
-      </div>
-      <div className="action-buttons">
-        <button className="action-button generate-kot" onClick={onGenerateKOT}>Generate - KOT</button>
-        <button className="action-button generate-bill" onClick={onGenerateBill}>Generate - Bill</button>
-        <button className="action-button complete" onClick={onComplete}>Complete</button>
-      </div>
-    </div>
+    </Router>
   );
-};
+}
 
-export default TableDetails;
+export default App;

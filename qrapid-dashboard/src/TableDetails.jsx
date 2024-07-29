@@ -3,7 +3,7 @@ import { backendDb } from './firebase-config'; // Import backendDb
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import './TableDetails.css';
 
-const TableDetails = ({ tableNumber, onBackClick, onGenerateKOT, onGenerateBill, onComplete }) => {
+const TableDetails = ({ tableNumber, onBackClick, onGenerateKOT, onGenerateBill, onComplete, updateTableColor }) => {
   const [orders, setOrders] = useState([]);
 
   useEffect(() => {
@@ -25,6 +25,22 @@ const TableDetails = ({ tableNumber, onBackClick, onGenerateKOT, onGenerateBill,
 
     return () => unsubscribe();
   }, [tableNumber]);
+
+  const handleGenerateKOT = () => {
+    onGenerateKOT();
+    updateTableColor(tableNumber, 'orange'); // Update color to Running KOT Table (orange)
+  };
+
+  const handleGenerateBill = () => {
+    onGenerateBill();
+    updateTableColor(tableNumber, 'green'); // Update color to Printed Table (green)
+  };
+
+  const handleCompleteOrder = () => {
+    onComplete();
+    updateTableColor(tableNumber, 'yellow'); // Update color to Paid Table (yellow)
+    setTimeout(() => updateTableColor(tableNumber, 'blank'), 10000); // Revert to Blank Table (grey) after 10 seconds
+  };
 
   return (
     <div className="table-details">
@@ -52,9 +68,9 @@ const TableDetails = ({ tableNumber, onBackClick, onGenerateKOT, onGenerateBill,
         )}
       </div>
       <div className="action-buttons">
-        <button onClick={onGenerateKOT} className="action-button">Generate KOT</button>
-        <button onClick={onGenerateBill} className="action-button">Generate Bill</button>
-        <button onClick={onComplete} className="action-button">Complete Order</button>
+        <button onClick={handleGenerateKOT} className="action-button">Generate KOT</button>
+        <button onClick={handleGenerateBill} className="action-button">Generate Bill</button>
+        <button onClick={handleCompleteOrder} className="action-button">Complete Order</button>
       </div>
     </div>
   );

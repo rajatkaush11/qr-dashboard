@@ -71,6 +71,16 @@ const WelcomeHome = () => {
     setView('overview');
   };
 
+  const updateTableColor = (tableNumber, color) => {
+    const tableIndex = tables.findIndex(t => t === tableNumber);
+    if (tableIndex !== -1) {
+      const updatedColors = [...tableColors];
+      updatedColors[tableIndex] = color;
+      setTableColors(updatedColors);
+      sessionStorage.setItem('tableColors', JSON.stringify(updatedColors));
+    }
+  };
+
   return (
     <div className="table-overview">
       {view === 'overview' ? (
@@ -143,6 +153,7 @@ const WelcomeHome = () => {
           onGenerateKOT={() => { /* Implement KOT generation */ }}
           onGenerateBill={() => { /* Implement Bill generation */ }}
           onComplete={() => { /* Implement order completion */ }}
+          updateTableColor={updateTableColor}
         />
       )}
     </div>

@@ -35,8 +35,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   const handleCompleteOrder = () => {
-    updateTableColor(tableNumber, 'yellow'); // Update color to Paid Table (yellow)
-    setTimeout(() => updateTableColor(tableNumber, 'blank'), 10000); // Revert to Blank Table (grey) after 10 seconds
+    updateTableColor(tableNumber, 'blank'); // Update color to Blank Table (grey)
   };
 
   return (

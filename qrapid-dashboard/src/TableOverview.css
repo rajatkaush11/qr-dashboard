@@ -1,202 +1,203 @@
-/* Global Styles */  
-* {  
-    box-sizing: border-box;  
-    margin: 0;  
-    padding: 0;  
-  }  
-    
-  body {  
-    font-family: Arial, sans-serif;  
-    line-height: 1.6;  
-    color: #333;  
-    background-color: #f9f9f9;  
-  }  
-    
-  /* Table Overview Styles */  
-  .table-overview {  
-    display: flex;  
-    flex-direction: column;  
-    align-items: center;  
-    padding: 20px;  
-    background-color: #f9f9f9;  
-    border: 1px solid #e0e0e0;  
-    border-radius: 10px;  
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);  
-  }  
-    
-  /* Header Styles */  
-  .header {  
-    display: flex;  
-    justify-content: space-between;  
-    align-items: center;  
-    width: 100%;  
-    padding: 10px;  
-    background-color: #f9f9f9;  
-    border-bottom: 1px solid #e0e0e0;  
-  }  
-    
-  .header h1 {  
-    margin: 0;  
-    color: #333;  
-    font-size: 24px;  
-    font-weight: bold;  
-  }  
-    
-  /* Button Styles */  
-  .button {  
-    background-color: #007bff;  
-    color: #fff;  
-    border: none;  
-    border-radius: 16px;  
-    padding: 10px 20px;  
-    height: 40px;  
-    cursor: pointer;  
-    font-size: 16px;  
-    display: flex;  
-    align-items: center;  
-    justify-content: center;  
-    transition: background-color 0.3s ease;  
-  }  
-    
-  .button:hover {  
-    background-color: #0069d9;  
-  }  
-    
-  .button:active {  
-    background-color: #005cbf;  
-  }  
-    
-  /* Add Table Button Styles */  
-  .add-table-btn {  
-    margin-right: 10px;  
-  }  
-    
-  /* Logout Button Styles */  
-  .logout-btn {  
-    margin-left: 10px;  
-  }  
-    
-  /* Room Button Group Styles */  
-  .room-button-group {  
-    display: flex;  
-    gap: 10px;  
-    margin-top: 20px;  
-    margin-bottom: 20px;  
-  }  
-    
-  .room-button-group button {  
-    padding: 10px 20px;  
-    height: 40px;  
-    border: none;  
-    cursor: pointer;  
-    background-color: #f0f0f0;  
-    border-radius: 16px;  
-    font-size: 14px;  
-    display: flex;  
-    align-items: center;  
-    justify-content: center;  
-    transition: background-color 0.3s ease;  
-  }  
-    
-  .room-button-group button.active {  
-    background-color: #333;  
-    color: #fff;  
-  }  
-    
-  /* Main Container Styles */  
-  .main-container {  
-    display: flex;  
-    justify-content: space-between;  
-    width: 100%;  
-    margin-top: 20px;  
-  }  
-    
-  /* Left Container Styles */  
-  .left-container {  
-    display: flex;  
-    flex-direction: column;  
-    gap: 10px;  
-    padding: 20px;  
-    border: 1px solid #e0e0e0;  
-    border-radius: 10px;  
-    background-color: #f8f8f8;  
-    width: 250px;  
-  }  
-    
-  /* Side Button Styles */  
-  .side-button {  
-    padding: 10px 20px;  
-    height: 40px;  
-    border: none;  
-    cursor: pointer;  
-    background-color: #f0f0f0;  
-    border-radius: 16px;  
-    font-size: 14px;  
-    display: flex;  
-    align-items: center;  
-    justify-content: center;  
-    transition: background-color 0.3s ease;  
-  }  
-    
-  .side-button:hover {  
-    background-color: #e0e0e0;  
-  }  
-    
-  /* Table Container Styles */  
-  .table-container {  
-    display: grid;  
-    grid-template-columns: repeat(5, 1fr);  
-    gap: 10px;  
-    margin-left: 20px;  
-  }  
-    
-  /* Status Container Styles */  
-  .status-container {  
-    display: flex;  
-    flex-direction: column;  
-    gap: 10px;  
-    padding: 20px;  
-    border: 1px solid #e0e0e0;  
-    border-radius: 10px;  
-    background-color: #f8f8f8;  
-    margin-left: 20px;  
-  }  
-    
-  /* Status Item Styles */  
-  .status-item {  
-    display: flex;  
-    align-items: center;  
-    font-size: 14px;  
-  }  
-    
-  /* Status Color Styles */  
-  .status-color {  
-    width: 16px;  
-    height: 16px;  
-    border-radius: 50%;  
-    margin-right: 10px;  
-  }  
-    
-  .status-color.grey {  
-    background-color: grey;  
-  }  
-    
-  .status-color.blue {  
-    background-color: blue;  
-  }  
-    
-  .status-color.green {  
-    background-color: green;  
-  }  
-    
-  .status-color.yellow {  
-    background-color: yellow;  
-  }  
-    
-  .status-color.orange {  
-    background-color: orange;  
-  }
-  /* TableOverview.css */
+/* Global Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+  color: #333;
+  background-color: #f9f9f9;
+}
+
+/* Table Overview Styles */
+.table-overview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Header Styles */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.header h1 {
+  margin: 0;
+  color: #333;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+/* Button Styles */
+.button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 16px;
+  padding: 10px 20px;
+  height: 40px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-color: #0069d9;
+}
+
+.button:active {
+  background-color: #005cbf;
+}
+
+/* Add Table Button Styles */
+.add-table-btn {
+  margin-right: 10px;
+}
+
+/* Logout Button Styles */
+.logout-btn {
+  margin-left: 10px;
+}
+
+/* Room Button Group Styles */
+.room-button-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.room-button-group button {
+  padding: 10px 20px;
+  height: 40px;
+  border: none;
+  cursor: pointer;
+  background-color: #f0f0f0;
+  border-radius: 16px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+}
+
+.room-button-group button.active {
+  background-color: #333;
+  color: #fff;
+}
+
+/* Main Container Styles */
+.main-container {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 20px;
+}
+
+/* Left Container Styles */
+.left-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  background-color: #f8f8f8;
+  width: 250px;
+}
+
+/* Side Button Styles */
+.side-button {
+  padding: 10px 20px;
+  height: 40px;
+  border: none;
+  cursor: pointer;
+  background-color: #f0f0f0;
+  border-radius: 16px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+}
+
+.side-button:hover {
+  background-color: #e0e0e0;
+}
+
+/* Table Container Styles */
+.table-container {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-left: 20px;
+}
+
+/* Status Container Styles */
+.status-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  background-color: #f8f8f8;
+  margin-left: 20px;
+}
+
+/* Status Item Styles */
+.status-item {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+/* Status Color Styles */
+.status-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.status-color.grey {
+  background-color: grey;
+}
+
+.status-color.blue {
+  background-color: blue;
+}
+
+.status-color.green {
+  background-color: green;
+}
+
+.status-color.yellow {
+  background-color: yellow;
+}
+
+.status-color.orange {
+  background-color: orange;
+}
+
+/* TableBox Styles */
 .table-box {
   width: 100px;
   height: 100px;
@@ -216,6 +217,21 @@
 .table-box.blue {
   background-color: blue;
   color: white;
+}
+
+.table-box.green {
+  background-color: green;
+  color: white;
+}
+
+.table-box.yellow {
+  background-color: yellow;
+  color: black;
+}
+
+.table-box.orange {
+  background-color: orange;
+  color: black;
 }
 
 .table-box.active {

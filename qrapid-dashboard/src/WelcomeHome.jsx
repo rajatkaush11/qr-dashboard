@@ -27,7 +27,7 @@ const WelcomeHome = () => {
       querySnapshot.forEach((doc) => {
         const order = doc.data();
         console.log('Fetched order:', order);
-        const tableIndex = tables.findIndex(t => t === `T${order.tableNo}`);
+        const tableIndex = tables.findIndex(t => t === `T${order.tableNo}` || t === `T${parseInt(order.tableNo, 10)}`);
         if (tableIndex !== -1) {
           updatedColors[tableIndex] = 'running'; // Use the 'running' class for blue color
         }

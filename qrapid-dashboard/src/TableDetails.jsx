@@ -7,7 +7,8 @@ const TableDetails = ({ tableNumber, onBackClick, onGenerateKOT, onGenerateBill,
   const [orders, setOrders] = useState([]);
 
   useEffect(() => {
-    const q = query(collection(backendDb, 'orders'), where('tableNo', '==', tableNumber)); // Use backendDb
+    const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
+    const q = query(collection(backendDb, 'orders'), where('tableNo', '==', normalizedTableNumber)); // Use backendDb
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const ordersData = [];

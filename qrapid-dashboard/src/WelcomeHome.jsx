@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
-import { auth, db } from './firebase-config';
+import { auth, db, backendDb } from './firebase-config'; // Import backendDb
 import { collection, query, onSnapshot } from 'firebase/firestore';
 import TableBox from './TableBox';
 import TableDetails from './TableDetails';
@@ -20,9 +20,9 @@ const WelcomeHome = () => {
   const [view, setView] = useState('overview');
 
   useEffect(() => {
-    const q = query(collection(db, 'orders'));
+    const q = query(collection(backendDb, 'orders')); // Use backendDb
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      console.log('Real-time orders update:');
+      console.log('Real-time orders update:', querySnapshot.size);
       const updatedColors = Array(15).fill('blank');
       querySnapshot.forEach((doc) => {
         const order = doc.data();

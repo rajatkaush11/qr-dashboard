@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { db } from './firebase-config';
+import { backendDb } from './firebase-config'; // Import backendDb
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import './TableDetails.css';
 
@@ -7,11 +7,11 @@ const TableDetails = ({ tableNumber, onBackClick, onGenerateKOT, onGenerateBill,
   const [orders, setOrders] = useState([]);
 
   useEffect(() => {
-    const q = query(collection(db, 'orders'), where('tableNo', '==', tableNumber));
+    const q = query(collection(backendDb, 'orders'), where('tableNo', '==', tableNumber)); // Use backendDb
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const ordersData = [];
-      console.log(`Real-time update for table ${tableNumber}:`);
+      console.log(`Real-time update for table ${tableNumber}:`, querySnapshot.size);
       querySnapshot.forEach((doc) => {
         const order = doc.data();
         console.log('Fetched order for table:', tableNumber, order);

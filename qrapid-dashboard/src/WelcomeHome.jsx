@@ -29,7 +29,7 @@ const WelcomeHome = () => {
         console.log('Fetched order:', order);
         const tableIndex = tables.findIndex(t => t === `T${order.tableNo}`);
         if (tableIndex !== -1) {
-          updatedColors[tableIndex] = 'blue';
+          updatedColors[tableIndex] = 'running'; // Use the 'running' class for blue color
         }
       });
       sessionStorage.setItem('tableColors', JSON.stringify(updatedColors));

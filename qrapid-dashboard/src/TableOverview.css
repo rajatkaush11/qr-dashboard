@@ -44,7 +44,7 @@ body {
 
 /* Button Styles */
 .button {
-  background-color: #007bff;
+  background-color: #333;
   color: #fff;
   border: none;
   border-radius: 16px;
@@ -90,6 +90,7 @@ body {
   border: none;
   cursor: pointer;
   background-color: #f0f0f0;
+  color: #333;
   border-radius: 16px;
   font-size: 14px;
   display: flex;
@@ -118,6 +119,7 @@ body {
   gap: 10px;
   padding: 20px;
   border: 1px solid #e0e0e0;
+  color: #333;
   border-radius: 10px;
   background-color: #f8f8f8;
   width: 250px;
@@ -235,5 +237,5 @@ body {
 }
 
 .table-box.active {
-  border: 2px solid red;
+  border: 2px solid black;
 }

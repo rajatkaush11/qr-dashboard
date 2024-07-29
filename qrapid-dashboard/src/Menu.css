@@ -5,6 +5,7 @@
   text-align: center;
   overflow-y: auto; /* Make the content scrollable */
   height: calc(100vh - 60px); /* Adjust height to take up remaining space below the navbar */
+  background-color: #f9f9f9;
 }
 
 .menu-header {
@@ -58,12 +59,15 @@
   flex-direction: column;
   gap: 10px;
   margin-bottom: 20px;
+  align-items: center;
 }
 
 .new-category-input {
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 5px;
+  width: 100%;
+  max-width: 400px;
 }
 
 .add-category-btn {
@@ -87,7 +91,7 @@
 }
 
 .menu-item {
-  background-color: #f8f8f8;
+  background-color: #ffffff;
   padding: 20px;
   border: 1px solid #ddd;
   border-radius: 10px;
@@ -98,16 +102,18 @@
   align-items: center;
   justify-content: center;
   height: 150px; /* Set a fixed height for each category container */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .menu-item:hover {
-  background-color: #e0e0e0;
+  background-color: #f0f0f0;
 }
 
 .menu-item img {
-  max-width: 100%;
+  max-width: 80px;
   max-height: 80px;
   border-radius: 10px;
+  object-fit: cover;
 }
 
 .menu-item-details {
@@ -116,9 +122,15 @@
 }
 
 .menu-item-details h2 {
-  font-size: 1.5em;
+  font-size: 1em;
   color: black;
   margin: 5px 0;
+}
+
+.menu-item-actions {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
 }
 
 .edit-category-btn, .delete-category-btn {
@@ -129,7 +141,6 @@
   padding: 5px 10px;
   cursor: pointer;
   transition: background-color 0.3s ease;
-  margin-right: 5px;
 }
 
 .edit-category-btn:hover, .delete-category-btn:hover {

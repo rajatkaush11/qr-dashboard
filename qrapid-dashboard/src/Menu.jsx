@@ -202,12 +202,14 @@ const Menu = () => {
             <img src={category.image} alt={category.name} />
             <div className="menu-item-details">
               <h2>{category.name}</h2>
-              <button onClick={() => handleEditCategory(category)} className="edit-category-btn">
-                Edit
-              </button>
-              <button onClick={() => handleDeleteCategory(category.id)} className="delete-category-btn">
-                Delete
-              </button>
+              <div className="menu-item-actions">
+                <button onClick={() => handleEditCategory(category)} className="edit-category-btn">
+                  Edit
+                </button>
+                <button onClick={() => handleDeleteCategory(category.id)} className="delete-category-btn">
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
         ))}

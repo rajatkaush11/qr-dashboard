@@ -18,6 +18,8 @@ const TableDetails = ({ tableNumber, onBackClick, onGenerateKOT, onGenerateBill,
         ordersData.push(order);
       });
       setOrders(ordersData);
+    }, (error) => {
+      console.error('Error fetching snapshot:', error);
     });
 
     return () => unsubscribe();

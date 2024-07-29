@@ -3,7 +3,7 @@ import { backendDb } from './firebase-config'; // Import backendDb
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import './TableDetails.css';
 
-const TableDetails = ({ tableNumber, onBackClick, onGenerateKOT, onGenerateBill, onComplete, updateTableColor }) => {
+const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [orders, setOrders] = useState([]);
 
   useEffect(() => {
@@ -27,17 +27,14 @@ const TableDetails = ({ tableNumber, onBackClick, onGenerateKOT, onGenerateBill,
   }, [tableNumber]);
 
   const handleGenerateKOT = () => {
-    onGenerateKOT();
     updateTableColor(tableNumber, 'orange'); // Update color to Running KOT Table (orange)
   };
 
   const handleGenerateBill = () => {
-    onGenerateBill();
     updateTableColor(tableNumber, 'green'); // Update color to Printed Table (green)
   };
 
   const handleCompleteOrder = () => {
-    onComplete();
     updateTableColor(tableNumber, 'yellow'); // Update color to Paid Table (yellow)
     setTimeout(() => updateTableColor(tableNumber, 'blank'), 10000); // Revert to Blank Table (grey) after 10 seconds
   };

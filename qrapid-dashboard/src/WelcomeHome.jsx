@@ -150,9 +150,6 @@ const WelcomeHome = () => {
         <TableDetails
           tableNumber={selectedTable}
           onBackClick={handleBackClick}
-          onGenerateKOT={() => { /* Implement KOT generation */ }}
-          onGenerateBill={() => { /* Implement Bill generation */ }}
-          onComplete={() => { /* Implement order completion */ }}
           updateTableColor={updateTableColor}
         />
       )}

@@ -1,3 +1,4 @@
+/* Navbar.css */
 @import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;700&display=swap');
 
 * {
@@ -21,14 +22,13 @@ body {
   top: 0;
   width: 100%;
   z-index: 1000;
-  font-family: 'Work Sans', sans-serif;
 }
 
 .brand {
   font-size: 18px;
   font-weight: bold;
   color: black;
-  margin-left: 10px; /* Adjust for spacing */
+  margin-left: 10px;
 }
 
 .nav-links {
@@ -51,7 +51,7 @@ body {
 
 .nav-links .active-link {
   color: green;
-  font-weight: bold; /* Optional to make it more prominent */
+  font-weight: bold;
 }
 
 .right-icons {
@@ -87,25 +87,25 @@ body {
 }
 
 .user-icon {
-  width: 32px; /* Adjust for larger profile picture */
-  height: 32px; /* Adjust for larger profile picture */
+  width: 32px;
+  height: 32px;
   cursor: pointer;
   border-radius: 50%;
   background-size: cover;
 }
 
 .navbar img {
-  width: 32px; /* Adjust for larger profile picture */
-  height: 32px; /* Adjust for larger profile picture */
+  width: 32px;
+  height: 32px;
   cursor: pointer;
 }
 
 .navbar .clerk-user-button {
-  margin-right: 10px; /* Adjust for spacing */
+  margin-right: 10px;
 }
 
 .clerk-user-button .clerk-avatar {
-  width: 32px; /* Adjust for larger profile picture */
-  height: 32px; /* Adjust for larger profile picture */
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
 }

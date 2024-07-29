@@ -1,129 +1,130 @@
 /* Menu.css */
 .menu-container {
-    padding: 20px 40px;
-    margin-top: 0;
-    text-align: center;
-  }
-  
-  .menu-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .menu-header h1 {
-    font-size: 2em;
-    color: black;
-  }
-  
-  .add-food-category-btn {
-    background-color: green;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 10px 20px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  
-  .add-food-category-btn:hover {
-    background-color: darkgreen;
-  }
-  
-  .menu-tabs {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin: 20px 0;
-  }
-  
-  .menu-tabs a {
-    text-decoration: none;
-    color: #000;
-    background-color: #f0f0f0;
-    padding: 10px 20px;
-    border-radius: 20px;
-    transition: background-color 0.3s ease;
-  }
-  
-  .menu-tabs a.active {
-    background-color: #007bff;
-    color: #fff;
-  }
-  
-  .new-category-item {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-  
-  .new-category-input {
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-  }
-  
-  .add-category-btn {
-    background-color: green;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 10px 20px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  
-  .add-category-btn:hover {
-    background-color: darkgreen;
-  }
-  
-  .menu-items {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-  }
-  
-  .menu-item {
-    background-color: #f8f8f8;
-    padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  
-  .menu-item:hover {
-    background-color: #e0e0e0;
-  }
-  
-  .menu-item img {
-    max-width: 100%;
-    border-radius: 10px;
-  }
-  
-  .menu-item-details {
-    text-align: left;
-    margin-top: 10px;
-  }
-  
-  .menu-item-details h2 {
-    font-size: 1.5em;
-    color: black;
-  }
-  
-  .edit-category-btn, .delete-category-btn {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 5px 10px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    margin-right: 5px;
-  }
-  
-  .edit-category-btn:hover, .delete-category-btn:hover {
-    background-color: darkblue;
-  }
-  
+  padding: 20px 40px;
+  margin-top: 60px; /* Adjusted to ensure the content starts below the fixed navbar */
+  text-align: center;
+  overflow-y: auto; /* Make the content scrollable */
+  height: calc(100vh - 60px); /* Adjust height to take up remaining space below the navbar */
+}
+
+.menu-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.menu-header h1 {
+font-size: 2em;
+color: black;
+}
+
+.add-food-category-btn {
+background-color: green;
+color: white;
+border: none;
+border-radius: 5px;
+padding: 10px 20px;
+cursor: pointer;
+transition: background-color 0.3s ease;
+}
+
+.add-food-category-btn:hover {
+background-color: darkgreen;
+}
+
+.menu-tabs {
+display: flex;
+justify-content: center;
+gap: 10px;
+margin: 20px 0;
+}
+
+.menu-tabs a {
+text-decoration: none;
+color: #000;
+background-color: #f0f0f0;
+padding: 10px 20px;
+border-radius: 20px;
+transition: background-color 0.3s ease;
+}
+
+.menu-tabs a.active {
+background-color: #007bff;
+color: #fff;
+}
+
+.new-category-item {
+display: flex;
+flex-direction: column;
+gap: 10px;
+margin-bottom: 20px;
+}
+
+.new-category-input {
+padding: 10px;
+border: 1px solid #ddd;
+border-radius: 5px;
+}
+
+.add-category-btn {
+background-color: green;
+color: white;
+border: none;
+border-radius: 5px;
+padding: 10px 20px;
+cursor: pointer;
+transition: background-color 0.3s ease;
+}
+
+.add-category-btn:hover {
+background-color: darkgreen;
+}
+
+.menu-items {
+display: flex;
+flex-wrap: wrap;
+gap: 20px;
+}
+
+.menu-item {
+background-color: #f8f8f8;
+padding: 20px;
+border: 1px solid #ddd;
+border-radius: 10px;
+cursor: pointer;
+transition: background-color 0.3s ease;
+}
+
+.menu-item:hover {
+background-color: #e0e0e0;
+}
+
+.menu-item img {
+max-width: 100%;
+border-radius: 10px;
+}
+
+.menu-item-details {
+text-align: left;
+margin-top: 10px;
+}
+
+.menu-item-details h2 {
+font-size: 1.5em;
+color: black;
+}
+
+.edit-category-btn, .delete-category-btn {
+background-color: #007bff;
+color: white;
+border: none;
+border-radius: 5px;
+padding: 5px 10px;
+cursor: pointer;
+transition: background-color 0.3s ease;
+margin-right: 5px;
+}
+
+.edit-category-btn:hover, .delete-category-btn:hover {
+background-color: darkblue;
+}

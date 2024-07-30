@@ -33,19 +33,18 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         },
         body: JSON.stringify({ tableNumber: order.tableNumber, orderId: order.id }),
       });
-  
+
       if (!response.ok) {
         const errorBody = await response.text();
         throw new Error(`HTTP error! status: ${response.status}, body: ${errorBody}`);
       }
-  
+
       return await response.json();
     } catch (error) {
       console.error(`Error making request to ${url}:`, error);
       throw error;
     }
   };
-  
 
   const handleGenerateKOT = async () => {
     if (orders.length === 0) return;

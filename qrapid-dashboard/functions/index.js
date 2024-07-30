@@ -7,18 +7,18 @@ const db = admin.firestore();
 
 // Configure CORS with dynamic origin support in a more secure manner
 const corsHandler = cors({
-  origin: (origin, callback) => {
-    const allowedOrigins = ['https://qr-dashboard-1107.web.app']; // Replace with your actual domain
-    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
-      callback(null, true);
-    } else {
-      callback(new Error('CORS not allowed'));
-    }
-  }
+  origin: ['https://qr-dashboard-1107.web.app'], // Set the allowed origin
+  methods: ['GET', 'POST', 'OPTIONS'], // Explicitly define methods allowed
+  allowedHeaders: ['Content-Type', 'Authorization'] // Define allowed headers
 });
 
-// Wrapper function to handle CORS
+// Handle CORS including preflight requests
 const handleCors = (req, res, callback) => {
+  if (req.method === 'OPTIONS') {
+    // Send response to OPTIONS requests
+    res.status(200).end();
+    return;
+  }
   return corsHandler(req, res, callback);
 };
 

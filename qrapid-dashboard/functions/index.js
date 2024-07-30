@@ -31,13 +31,9 @@ exports.printKOT = functions.https.onRequest((req, res) => {
         kotContent += `${item.name} x ${item.quantity}\n`;
       });
 
-      // Send KOT to printer (logic needs to be implemented)
-      const ESC_POS = require('esc-pos-encoder');
-      const encoder = new ESC_POS();
-      encoder.initialize();
-      encoder.text(kotContent);
-      encoder.cut();
-      const encodedData = encoder.encode(); // This data should be sent to the printer
+      // Here, you would add your logic to send the KOT content to your printer.
+      // Assuming you have a function `sendToPrinter` to handle this.
+      await sendToPrinter(kotContent);
 
       return res.status(200).send({ success: true, message: "KOT printed successfully" });
     } catch (error) {
@@ -75,13 +71,9 @@ exports.printBill = functions.https.onRequest((req, res) => {
       });
       billContent += `\nTotal Amount: ${totalAmount}\nThank you for dining with us!`;
 
-      // Send Bill to printer (logic needs to be implemented)
-      const ESC_POS = require('esc-pos-encoder');
-      const encoder = new ESC_POS();
-      encoder.initialize();
-      encoder.text(billContent);
-      encoder.cut();
-      const encodedData = encoder.encode(); // This data should be sent to the printer
+      // Here, you would add your logic to send the bill content to your printer.
+      // Assuming you have a function `sendToPrinter` to handle this.
+      await sendToPrinter(billContent);
 
       return res.status(200).send({ success: true, message: "Bill printed successfully" });
     } catch (error) {
@@ -89,3 +81,9 @@ exports.printBill = functions.https.onRequest((req, res) => {
     }
   });
 });
+
+async function sendToPrinter(content) {
+  // This function should include the logic to send content to your printer
+  // You can implement this according to your printer's specifications and API
+  console.log('Printing:', content);
+}

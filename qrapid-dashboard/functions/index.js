@@ -6,86 +6,84 @@ const ESC_POS = require('esc-pos-encoder');
 admin.initializeApp();
 const db = admin.firestore();
 
-exports.printKOT = functions.https.onCall(async (data, context) => {
-  return new Promise((resolve, reject) => {
-    cors((req, res) => {
-      const { tableNumber, orderId } = data;
+exports.printKOT = functions.https.onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      const { tableNumber, orderId } = req.body;
 
       // Fetch order details
-      db.collection('orders').doc(orderId).get()
-        .then(orderDoc => {
-          if (!orderDoc.exists) {
-            reject(new functions.https.HttpsError('not-found', 'Order not found'));
-            return;
-          }
+      const orderRef = db.collection('orders').doc(orderId);
+      const orderDoc = await orderRef.get();
 
-          const order = orderDoc.data();
+      if (!orderDoc.exists) {
+        res.status(404).send('Order not found');
+        return;
+      }
 
-          // Generate KOT content
-          let kotContent = `Table No: ${tableNumber}\n`;
-          kotContent += `Order ID: ${orderId}\n`;
-          kotContent += `Items:\n`;
-          order.items.forEach(item => {
-            kotContent += `${item.name} x ${item.quantity}\n`;
-          });
+      const order = orderDoc.data();
 
-          // Send KOT to printer (pseudo-code, replace with actual print command)
-          const encoder = new ESC_POS();
-          encoder.initialize();
-          encoder.text(kotContent);
-          encoder.cut();
+      // Generate KOT content
+      let kotContent = `Table No: ${tableNumber}\n`;
+      kotContent += `Order ID: ${orderId}\n`;
+      kotContent += `Items:\n`;
+      order.items.forEach(item => {
+        kotContent += `${item.name} x ${item.quantity}\n`;
+      });
 
-          const encodedData = encoder.encode();
-          // Here you would send 'encodedData' to the printer via Bluetooth/USB
+      // Send KOT to printer (pseudo-code, replace with actual print command)
+      const encoder = new ESC_POS();
+      encoder.initialize();
+      encoder.text(kotContent);
+      encoder.cut();
 
-          resolve({ success: true });
-        })
-        .catch(error => {
-          reject(new functions.https.HttpsError('internal', error.message));
-        });
-    })(data, context);
+      const encodedData = encoder.encode();
+      // Here you would send 'encodedData' to the printer via Bluetooth/USB
+
+      res.status(200).send({ success: true });
+    } catch (error) {
+      res.status(500).send(error.message);
+    }
   });
 });
 
-exports.printBill = functions.https.onCall(async (data, context) => {
-  return new Promise((resolve, reject) => {
-    cors((req, res) => {
-      const { tableNumber, orderId } = data;
+exports.printBill = functions.https.onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      const { tableNumber, orderId } = req.body;
 
       // Fetch order details
-      db.collection('orders').doc(orderId).get()
-        .then(orderDoc => {
-          if (!orderDoc.exists) {
-            reject(new functions.https.HttpsError('not-found', 'Order not found'));
-            return;
-          }
+      const orderRef = db.collection('orders').doc(orderId);
+      const orderDoc = await orderRef.get();
 
-          const order = orderDoc.data();
+      if (!orderDoc.exists) {
+        res.status(404).send('Order not found');
+        return;
+      }
 
-          // Generate Bill content
-          let billContent = `Bill for Table No: ${tableNumber}\n\nItems:\n`;
-          let totalAmount = 0;
-          order.items.forEach(item => {
-            const itemTotal = item.price * item.quantity;
-            totalAmount += itemTotal;
-            billContent += `${item.name} - ${item.price} x ${item.quantity} = ${itemTotal}\n`;
-          });
-          billContent += `\nTotal Amount: ${totalAmount}\nThank you for dining with us!`;
+      const order = orderDoc.data();
 
-          // Send Bill to printer (pseudo-code, replace with actual print command)
-          const encoder = new ESC_POS();
-          encoder.initialize();
-          encoder.text(billContent);
-          encoder.cut();
+      // Generate Bill content
+      let billContent = `Bill for Table No: ${tableNumber}\n\nItems:\n`;
+      let totalAmount = 0;
+      order.items.forEach(item => {
+        const itemTotal = item.price * item.quantity;
+        totalAmount += itemTotal;
+        billContent += `${item.name} - ${item.price} x ${item.quantity} = ${itemTotal}\n`;
+      });
+      billContent += `\nTotal Amount: ${totalAmount}\nThank you for dining with us!`;
 
-          const encodedData = encoder.encode();
-          // Here you would send 'encodedData' to the printer via Bluetooth/USB
+      // Send Bill to printer (pseudo-code, replace with actual print command)
+      const encoder = new ESC_POS();
+      encoder.initialize();
+      encoder.text(billContent);
+      encoder.cut();
 
-          resolve({ success: true });
-        })
-        .catch(error => {
-          reject(new functions.https.HttpsError('internal', error.message));
-        });
-    })(data, context);
+      const encodedData = encoder.encode();
+      // Here you would send 'encodedData' to the printer via Bluetooth/USB
+
+      res.status(200).send({ success: true });
+    } catch (error) {
+      res.status(500).send(error.message);
+    }
   });
 });

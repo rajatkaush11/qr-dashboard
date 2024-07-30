@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { backendDb } from './firebase-config';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
-import { getFunctions, httpsCallable } from 'firebase/functions';
 import './TableDetails.css';
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [orders, setOrders] = useState([]);
-  const functions = getFunctions();
 
   useEffect(() => {
     const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
@@ -30,20 +28,56 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     if (orders.length === 0) return;
 
     const order = orders[0]; // Assuming only one active order per table
-    const printKOT = httpsCallable(functions, 'printKOT');
-    await printKOT({ tableNumber, orderId: order.id });
+    try {
+      const response = await fetch('https://us-central1-qr-dashboard-1107.cloudfunctions.net/printKOT', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ tableNumber, orderId: order.id }),
+      });
 
-    updateTableColor(tableNumber, 'orange'); // Update color to Running KOT Table (orange)
+      if (!response.ok) {
+        throw new Error('Failed to generate KOT');
+      }
+
+      const result = await response.json();
+      if (result.success) {
+        updateTableColor(tableNumber, 'orange'); // Update color to Running KOT Table (orange)
+      } else {
+        throw new Error('KOT generation failed');
+      }
+    } catch (error) {
+      console.error('Error generating KOT:', error);
+    }
   };
 
   const handleGenerateBill = async () => {
     if (orders.length === 0) return;
 
     const order = orders[0]; // Assuming only one active order per table
-    const printBill = httpsCallable(functions, 'printBill');
-    await printBill({ tableNumber, orderId: order.id });
+    try {
+      const response = await fetch('https://us-central1-qr-dashboard-1107.cloudfunctions.net/printBill', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ tableNumber, orderId: order.id }),
+      });
 
-    updateTableColor(tableNumber, 'green'); // Update color to Printed Table (green)
+      if (!response.ok) {
+        throw new Error('Failed to generate bill');
+      }
+
+      const result = await response.json();
+      if (result.success) {
+        updateTableColor(tableNumber, 'green'); // Update color to Printed Table (green)
+      } else {
+        throw new Error('Bill generation failed');
+      }
+    } catch (error) {
+      console.error('Error generating bill:', error);
+    }
   };
 
   const handleCompleteOrder = () => {

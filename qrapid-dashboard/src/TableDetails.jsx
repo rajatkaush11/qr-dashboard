@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { backendDb } from './firebase-config';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
-import './TableDetails.css';
+import React, { useEffect, useState } from "react";
+import { backendDb } from "./firebase-config";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import "./TableDetails.css";
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [orders, setOrders] = useState([]);
 
   useEffect(() => {
-    const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
-    const q = query(collection(backendDb, 'orders'), where('tableNo', '==', normalizedTableNumber));
+    const normalizedTableNumber = tableNumber.startsWith("T") ? tableNumber.slice(1) : tableNumber;
+    const q = query(collection(backendDb, "orders"), where("tableNo", "==", normalizedTableNumber));
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const ordersData = [];
@@ -18,7 +18,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       });
       setOrders(ordersData);
     }, (error) => {
-      console.error('Error fetching snapshot:', error);
+      console.error("Error fetching snapshot:", error);
     });
 
     return () => unsubscribe();
@@ -27,9 +27,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const makeRequest = async (url, order) => {
     try {
       const response = await fetch(url, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ tableNumber: order.tableNumber, orderId: order.id }),
       });
@@ -51,13 +51,13 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
     const order = orders[0];
     try {
-      const result = await makeRequest('https://us-central1-qr-dashboard-1107.cloudfunctions.net/printKOT', order);
+      const result = await makeRequest("https://us-central1-qr-dashboard-1107.cloudfunctions.net/printKOT", order);
       if (result.success) {
-        updateTableColor(tableNumber, 'orange'); // Update color to Running KOT Table (orange)
+        updateTableColor(tableNumber, "orange"); // Update color to Running KOT Table (orange)
         await printKOT(order);
       }
     } catch (error) {
-      console.error('Error generating KOT:', error);
+      console.error("Error generating KOT:", error);
     }
   };
 
@@ -66,34 +66,34 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
     const order = orders[0];
     try {
-      const result = await makeRequest('https://us-central1-qr-dashboard-1107.cloudfunctions.net/printBill', order);
+      const result = await makeRequest("https://us-central1-qr-dashboard-1107.cloudfunctions.net/printBill", order);
       if (result.success) {
-        updateTableColor(tableNumber, 'green'); // Update color to Printed Table (green)
+        updateTableColor(tableNumber, "green"); // Update color to Printed Table (green)
       }
     } catch (error) {
-      console.error('Error generating bill:', error);
+      console.error("Error generating bill:", error);
     }
   };
 
   const handleCompleteOrder = () => {
-    updateTableColor(tableNumber, 'blank'); // Update color to Blank Table (grey)
+    updateTableColor(tableNumber, "blank"); // Update color to Blank Table (grey)
   };
 
   const printKOT = async (order) => {
     try {
       // Request device with Bluetooth service and characteristic UUIDs
       const device = await navigator.bluetooth.requestDevice({
-        filters: [{ name: 'YourPrinterName' }],
-        optionalServices: ['service_uuid']
+        filters: [{ name: "YourPrinterName" }],
+        optionalServices: ["service_uuid"],
       });
 
       const server = await device.gatt.connect();
-      const service = await server.getPrimaryService('service_uuid');
-      const characteristic = await service.getCharacteristic('characteristic_uuid');
+      const service = await server.getPrimaryService("service_uuid");
+      const characteristic = await service.getCharacteristic("characteristic_uuid");
 
       // Generate KOT content
       let kotContent = `Table No: ${order.tableNo}\nOrder ID: ${order.id}\nItems:\n`;
-      order.items.forEach(item => {
+      order.items.forEach((item) => {
         kotContent += `${item.name} x ${item.quantity}\n`;
       });
 
@@ -103,9 +103,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
       // Write data to Bluetooth characteristic
       await characteristic.writeValue(data);
-      console.log('KOT printed successfully');
+      console.log("KOT printed successfully");
     } catch (error) {
-      console.error('Error printing KOT:', error);
+      console.error("Error printing KOT:", error);
     }
   };
 

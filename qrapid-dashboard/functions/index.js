@@ -6,7 +6,7 @@ admin.initializeApp();
 const db = admin.firestore();
 
 const corsHandler = cors({
-  origin: ['https://qr-dashboard-1107.web.app'], // Allowed origin(s)
+  origin: 'https://qr-dashboard-1107.web.app', // Allowed origin(s)
   methods: ['GET', 'POST', 'OPTIONS'], // Allowed methods
   allowedHeaders: ['Content-Type'] // Allowed custom headers
 });
@@ -56,9 +56,11 @@ exports.printKOT = functions.https.onRequest((req, res) => {
       encoder.cut();
       const encodedData = encoder.encode();
 
+      res.set('Access-Control-Allow-Origin', 'https://qr-dashboard-1107.web.app');
       res.status(200).send({ success: true, message: "KOT printed successfully", data: encodedData });
     } catch (error) {
       console.error('Error in printKOT:', error);
+      res.set('Access-Control-Allow-Origin', 'https://qr-dashboard-1107.web.app');
       res.status(500).send({ success: false, message: error.toString() });
     }
   });
@@ -103,9 +105,11 @@ exports.printBill = functions.https.onRequest((req, res) => {
       encoder.cut();
       const encodedData = encoder.encode();
 
+      res.set('Access-Control-Allow-Origin', 'https://qr-dashboard-1107.web.app');
       res.status(200).send({ success: true, message: "Bill printed successfully", data: encodedData });
     } catch (error) {
       console.error('Error in printBill:', error);
+      res.set('Access-Control-Allow-Origin', 'https://qr-dashboard-1107.web.app');
       res.status(500).send({ success: false, message: error.toString() });
     }
   });

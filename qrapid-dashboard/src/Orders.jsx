@@ -40,11 +40,12 @@ const Orders = () => {
     console.log('Search term updated:', e.target.value);
   };
 
-  const filteredOrders = orders.filter(order =>
-    order.id.toString().includes(searchTerm) ||
-    (order.tableNo && order.tableNo.toString().includes(searchTerm)) ||
-    (order.status && order.status.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredOrders = orders.filter(order => {
+    console.log('Order keys:', Object.keys(order)); // Log the keys of each order
+    return order.id.toString().includes(searchTerm) ||
+      (order.tableNo && order.tableNo.toString().includes(searchTerm)) ||
+      (order.status && order.status.toLowerCase().includes(searchTerm.toLowerCase()));
+  });
 
   console.log('Filtered orders:', filteredOrders);
 
@@ -99,7 +100,7 @@ const Orders = () => {
                 <td>{order.tableNo}</td>
                 <td>
                   <ul>
-                    {order.items.map((item, i) => (
+                    {order.items && order.items.map((item, i) => (
                       <li key={i}>{item.name} - {item.price} x {item.quantity}</li>
                     ))}
                   </ul>

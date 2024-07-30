@@ -26,6 +26,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const makeRequest = async (url, order) => {
     try {
+      console.log('Making request to:', url, 'with order:', order);
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -40,10 +41,13 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
       if (!response.ok) {
         const errorText = await response.text();
+        console.error(`Request failed with status ${response.status}:`, errorText);
         throw new Error(`Failed to process request: ${response.statusText}, ${errorText}`);
       }
 
-      return await response.json();
+      const result = await response.json();
+      console.log('Request succeeded with response:', result);
+      return result;
     } catch (error) {
       console.error(`Error making request to ${url}:`, error);
       throw error;  // Rethrow after logging to handle it in the calling function

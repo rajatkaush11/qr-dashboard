@@ -44,6 +44,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       const result = await response.json();
       if (result.success) {
         updateTableColor(tableNumber, 'orange'); // Update color to Running KOT Table (orange)
+        await printKOT(order); // Call the Bluetooth print function
       } else {
         throw new Error('KOT generation failed');
       }
@@ -84,6 +85,36 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     updateTableColor(tableNumber, 'blank'); // Update color to Blank Table (grey)
   };
 
+  const printKOT = async (order) => {
+    try {
+      // Request device with Bluetooth service and characteristic UUIDs
+      const device = await navigator.bluetooth.requestDevice({
+        filters: [{ name: 'YourPrinterName' }],
+        optionalServices: ['service_uuid']
+      });
+
+      const server = await device.gatt.connect();
+      const service = await server.getPrimaryService('service_uuid');
+      const characteristic = await service.getCharacteristic('characteristic_uuid');
+
+      // Generate KOT content
+      let kotContent = `Table No: ${order.tableNo}\nOrder ID: ${order.id}\nItems:\n`;
+      order.items.forEach(item => {
+        kotContent += `${item.name} x ${item.quantity}\n`;
+      });
+
+      // Convert to ArrayBuffer
+      const encoder = new TextEncoder();
+      const data = encoder.encode(kotContent);
+
+      // Write data to Bluetooth characteristic
+      await characteristic.writeValue(data);
+      console.log('KOT printed successfully');
+    } catch (error) {
+      console.error('Error printing KOT:', error);
+    }
+  };
+
   return (
     <div className="table-details">
       <div className="header">
@@ -117,4 +148,4 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   );
 };
 
-export default TableDetails;  //kot
+export default TableDetails;

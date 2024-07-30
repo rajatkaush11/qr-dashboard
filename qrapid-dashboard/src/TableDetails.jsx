@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { backendDb } from './firebase-config'; // Import backendDb
+import { backendDb } from './firebase-config';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import './TableDetails.css';
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [orders, setOrders] = useState([]);
+  const functions = getFunctions();
 
   useEffect(() => {
+    // Fetch orders for the table from Firestore
     const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
-    const q = query(collection(backendDb, 'orders'), where('tableNo', '==', normalizedTableNumber)); // Use backendDb
+    const q = query(collection(backendDb, 'orders'), where('tableNo', '==', normalizedTableNumber));
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const ordersData = [];
-      console.log(`Real-time update for table ${tableNumber}:`, querySnapshot.size);
       querySnapshot.forEach((doc) => {
         const order = doc.data();
         ordersData.push(order);
@@ -25,11 +27,23 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     return () => unsubscribe();
   }, [tableNumber]);
 
-  const handleGenerateKOT = () => {
+  const handleGenerateKOT = async () => {
+    if (orders.length === 0) return;
+
+    const order = orders[0]; // Assuming only one active order per table
+    const printKOT = httpsCallable(functions, 'printKOT');
+    await printKOT({ tableNumber, orderId: order.id });
+
     updateTableColor(tableNumber, 'orange'); // Update color to Running KOT Table (orange)
   };
 
-  const handleGenerateBill = () => {
+  const handleGenerateBill = async () => {
+    if (orders.length === 0) return;
+
+    const order = orders[0]; // Assuming only one active order per table
+    const printBill = httpsCallable(functions, 'printBill');
+    await printBill({ tableNumber, orderId: order.id });
+
     updateTableColor(tableNumber, 'green'); // Update color to Printed Table (green)
   };
 

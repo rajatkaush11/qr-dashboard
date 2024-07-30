@@ -52,7 +52,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           orders.map((order, index) => (
             <div key={index} className="order-item">
               <p><strong>Name:</strong> {order.name}</p>
-              <p><strong>WhatsApp:</strong> {order.whatsapp}</p>
               <p><strong>Items:</strong></p>
               <ul>
                 {order.items.map((item, i) => (

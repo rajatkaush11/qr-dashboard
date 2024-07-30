@@ -6,33 +6,22 @@ admin.initializeApp();
 const db = admin.firestore();
 
 const corsHandler = cors({
-  origin: 'https://qr-dashboard-1107.web.app', // Allowed origin(s)
+  origin: 'https://qr-dashboard-1107.web.app', // Allowed origin
   methods: ['GET', 'POST', 'OPTIONS'], // Allowed methods
-  allowedHeaders: ['Content-Type'] // Allowed custom headers
+  allowedHeaders: ['Content-Type'] // Allowed headers
 });
-
-const handleCors = (req, res, callback) => {
-  if (req.method === 'OPTIONS') {
-    res.set('Access-Control-Allow-Origin', 'https://qr-dashboard-1107.web.app');
-    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
-    res.status(200).send('OK'); // Respond to OPTIONS requests
-    return;
-  }
-  return corsHandler(req, res, callback);
-};
 
 exports.printKOT = functions.https.onRequest((req, res) => {
   console.log('printKOT called with body:', req.body);
-  handleCors(req, res, async () => {
+  corsHandler(req, res, async () => {
     try {
       const { tableNumber, orderId, uid } = req.body;
-
       console.log(`Received tableNumber: ${tableNumber}, orderId: ${orderId}, uid: ${uid}`);
 
       // Verify UID and fetch order details from Firestore
       if (!uid || !(await admin.auth().getUser(uid))) {
         console.error('Unauthorized access attempt with UID:', uid);
+        res.set('Access-Control-Allow-Origin', 'https://qr-dashboard-1107.web.app');
         return res.status(403).send('Unauthorized');
       }
 
@@ -40,6 +29,7 @@ exports.printKOT = functions.https.onRequest((req, res) => {
       const orderDoc = await orderRef.get();
       if (!orderDoc.exists) {
         console.error('Order not found for orderId:', orderId);
+        res.set('Access-Control-Allow-Origin', 'https://qr-dashboard-1107.web.app');
         return res.status(404).send('Order not found');
       }
 
@@ -68,14 +58,14 @@ exports.printKOT = functions.https.onRequest((req, res) => {
 
 exports.printBill = functions.https.onRequest((req, res) => {
   console.log('printBill called with body:', req.body);
-  handleCors(req, res, async () => {
+  corsHandler(req, res, async () => {
     try {
       const { tableNumber, orderId, uid } = req.body;
-
       console.log(`Received tableNumber: ${tableNumber}, orderId: ${orderId}, uid: ${uid}`);
 
       if (!uid || !(await admin.auth().getUser(uid))) {
         console.error('Unauthorized access attempt with UID:', uid);
+        res.set('Access-Control-Allow-Origin', 'https://qr-dashboard-1107.web.app');
         return res.status(403).send('Unauthorized');
       }
 
@@ -83,6 +73,7 @@ exports.printBill = functions.https.onRequest((req, res) => {
       const orderDoc = await orderRef.get();
       if (!orderDoc.exists) {
         console.error('Order not found for orderId:', orderId);
+        res.set('Access-Control-Allow-Origin', 'https://qr-dashboard-1107.web.app');
         return res.status(404).send('Order not found');
       }
 

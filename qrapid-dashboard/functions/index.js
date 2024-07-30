@@ -10,7 +10,7 @@ const db = admin.firestore();
 const corsHandler = cors({
   origin: ['https://qr-dashboard-1107.web.app'], // Allowed origin(s)
   methods: ['GET', 'POST', 'OPTIONS'], // Allowed methods
-  allowedHeaders: ['Content-Type', 'Authorization'] // Allowed custom headers
+  allowedHeaders: ['Content-Type'], // Allowed custom headers
 });
 
 // Function to handle CORS, including preflight requests

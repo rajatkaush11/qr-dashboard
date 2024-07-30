@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './Orders.css';
+import './Order.css';
 
 const Order = () => {
   const [orders, setOrders] = useState([
@@ -25,45 +25,51 @@ const Order = () => {
 
   return (
     <div className="order-container">
-      <h1>Order History</h1>
-      <div className="search-bar">
-        <input
-          type="text"
-          placeholder="Search for orders"
-          value={searchTerm}
-          onChange={handleSearch}
-        />
+      <div className="sidebar">
+        <div className="sidebar-item">Table Service</div>
+        <div className="sidebar-item">Parcel</div>
       </div>
-      <div className="status-filters">
-        <button>All</button>
-        <button>Open</button>
-        <button>In Progress</button>
-        <button>Ready</button>
-        <button>Served</button>
-        <button>Cancelled</button>
-      </div>
-      <table className="order-table">
-        <thead>
-          <tr>
-            <th>Order</th>
-            <th>Table</th>
-            <th>Status</th>
-            <th>Time</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredOrders.map(order => (
-            <tr key={order.id}>
-              <td>#{order.id}</td>
-              <td>Table {order.table}</td>
-              <td className={`status ${order.status.replace(' ', '-').toLowerCase()}`}>{order.status}</td>
-              <td>{order.time}</td>
-              <td><button className="details-button">Details</button></td>
+      <div className="main-content">
+        <h1>Order History</h1>
+        <div className="search-bar">
+          <input
+            type="text"
+            placeholder="Search for orders"
+            value={searchTerm}
+            onChange={handleSearch}
+          />
+        </div>
+        <div className="status-filters">
+          <button>All</button>
+          <button>Open</button>
+          <button>In Progress</button>
+          <button>Ready</button>
+          <button>Served</button>
+          <button>Cancelled</button>
+        </div>
+        <table className="order-table">
+          <thead>
+            <tr>
+              <th>Order</th>
+              <th>Table</th>
+              <th>Status</th>
+              <th>Time</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredOrders.map(order => (
+              <tr key={order.id}>
+                <td>#{order.id}</td>
+                <td>Table {order.table}</td>
+                <td className={`status ${order.status.replace(' ', '-').toLowerCase()}`}>{order.status}</td>
+                <td>{order.time}</td>
+                <td><button className="details-button">Details</button></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

@@ -117,4 +117,4 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   );
 };
 
-export default TableDetails;
+export default TableDetails;  //kot

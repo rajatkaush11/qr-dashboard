@@ -42,15 +42,15 @@ const Orders = () => {
 
   const filteredOrders = orders.filter(order =>
     order.id.toString().includes(searchTerm) ||
-    order.table.toString().includes(searchTerm) ||
-    order.status.toLowerCase().includes(searchTerm.toLowerCase())
+    (order.table && order.table.toString().includes(searchTerm)) ||
+    (order.status && order.status.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   console.log('Filtered orders:', filteredOrders);
 
   const displayOrders = view === 'Table Service'
-    ? filteredOrders.filter(order => order.type === 'table')
-    : filteredOrders.filter(order => order.type === 'parcel');
+    ? filteredOrders.filter(order => order.type && order.type.toLowerCase() === 'table')
+    : filteredOrders.filter(order => order.type && order.type.toLowerCase() === 'parcel');
 
   console.log('Displaying orders for view:', view, displayOrders);
 

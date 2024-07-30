@@ -22,7 +22,7 @@
   cursor: pointer;
 }
 
-.sidebar-item:hover {
+.sidebar-item.active, .sidebar-item:hover {
   background-color: #e0e0e0;
 }
 

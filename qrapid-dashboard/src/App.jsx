@@ -9,6 +9,9 @@ import Navbar from './Navbar';
 import Menu from './Menu';
 import TableOverview from './TableOverview';
 import ItemList from './ItemList';
+import Dashboard from './Dashboard';
+import Orders from './Orders';
+import Reports from './Reports';
 import './index.css';
 
 function App() {
@@ -38,8 +41,11 @@ function App() {
           <Route path="/register" element={user ? <Navigate to="/home" replace /> : <Register />} />
           <Route path="/home" element={user ? <WelcomeHome /> : <Navigate to="/login" replace />} />
           <Route path="/menu" element={user ? <Menu /> : <Navigate to="/login" replace />} />
-          <Route path="/table" element={user ? <WelcomeHome /> : <Navigate to="/login" replace />} />
+          <Route path="/table" element={user ? <WelcomeHome /> : <Navigate to="/table" replace />} />
           <Route path="/category/:categoryId/items" element={user ? <ItemList /> : <Navigate to="/login" replace />} />
+          <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" replace />} />
+          <Route path="/orders" element={user ? <Orders /> : <Navigate to="/orders" replace />} />
+          <Route path="/reports" element={user ? <Reports /> : <Navigate to="/login" replace />} />
           <Route path="/" element={<Navigate to="/login" replace />} /> {/* Redirect to login if not authenticated */}
         </Routes>
       </div>

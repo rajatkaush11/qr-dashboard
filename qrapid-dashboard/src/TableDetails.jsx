@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { backendDb } from './firebase-config';
+import { auth, backendDb } from './firebase-config';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
-import { auth } from './firebase-config'; // Ensure you import the auth object
 import './TableDetails.css';
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
@@ -35,24 +34,24 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         body: JSON.stringify({
           tableNumber,
           orderId: order.id,
-          uid: auth.currentUser.uid // Pass the current user's UID
+          uid: auth.currentUser.uid  // Pass the current user's UID
         }),
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to process request: ${response.statusText}`);
+        const errorText = await response.text();
+        throw new Error(`Failed to process request: ${response.statusText}, ${errorText}`);
       }
 
       return await response.json();
     } catch (error) {
       console.error(`Error making request to ${url}:`, error);
-      throw error;
+      throw error;  // Rethrow after logging to handle it in the calling function
     }
   };
 
   const handleGenerateKOT = async () => {
     if (orders.length === 0) return;
-
     const order = orders[0];
     try {
       const result = await makeRequest('https://us-central1-qr-dashboard-1107.cloudfunctions.net/printKOT', order);
@@ -66,7 +65,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const handleGenerateBill = async () => {
     if (orders.length === 0) return;
-
     const order = orders[0];
     try {
       const result = await makeRequest('https://us-central1-qr-dashboard-1107.cloudfunctions.net/printBill', order);

@@ -2,18 +2,15 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const cors = require('cors');
 
-// Initialize Firebase Admin SDK
 admin.initializeApp();
 const db = admin.firestore();
 
-// Configure CORS with dynamic origin support
 const corsHandler = cors({
   origin: ['https://qr-dashboard-1107.web.app'], // Allowed origin(s)
   methods: ['GET', 'POST', 'OPTIONS'], // Allowed methods
-  allowedHeaders: ['Content-Type', 'Authorization'] // Allowed custom headers
+  allowedHeaders: ['Content-Type'] // Allowed custom headers
 });
 
-// Function to handle CORS, including preflight requests
 const handleCors = (req, res, callback) => {
   if (req.method === 'OPTIONS') {
     res.status(200).send('OK'); // Respond to OPTIONS requests

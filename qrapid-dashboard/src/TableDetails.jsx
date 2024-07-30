@@ -26,11 +26,16 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const makeRequest = async (url, order) => {
     try {
+      if (!order.user || !order.user.getToken) {
+        throw new Error('User token is not available');
+      }
+
+      const token = await order.user.getToken();
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${await order.user.getToken()}`, // Assuming there's a user object with a getToken method
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ tableNumber, orderId: order.id }),
       });

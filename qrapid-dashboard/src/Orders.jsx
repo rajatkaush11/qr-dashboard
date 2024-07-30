@@ -49,9 +49,8 @@ const Orders = () => {
 
   console.log('Filtered orders:', filteredOrders);
 
-  const displayOrders = view === 'Table Service'
-    ? filteredOrders.filter(order => order.type && order.type.toLowerCase() === 'table')
-    : filteredOrders.filter(order => order.type && order.type.toLowerCase() === 'parcel');
+  // Adjusted to not filter by type since there is no type field in the orders
+  const displayOrders = view === 'Table Service' ? filteredOrders : [];
 
   console.log('Displaying orders for view:', view, displayOrders);
 

@@ -49,8 +49,11 @@ const Orders = () => {
 
   console.log('Filtered orders:', filteredOrders);
 
+  // Sort orders by createdAt timestamp in descending order
+  const sortedOrders = filteredOrders.sort((a, b) => (a.createdAt && b.createdAt ? a.createdAt.toDate() - b.createdAt.toDate() : 0));
+
   // Adjusted to not filter by type since there is no type field in the orders
-  const displayOrders = view === 'Table Service' ? filteredOrders : [];
+  const displayOrders = view === 'Table Service' ? sortedOrders : [];
 
   console.log('Displaying orders for view:', view, displayOrders);
 

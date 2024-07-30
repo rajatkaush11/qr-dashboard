@@ -1,27 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { collection, query, onSnapshot } from 'firebase/firestore';
+import { backendDb } from './firebase-config';
 import './Orders.css';
 
-const Order = () => {
+const Orders = () => {
   const [view, setView] = useState('Table Service');
   const [searchTerm, setSearchTerm] = useState('');
+  const [tableServiceOrders, setTableServiceOrders] = useState([]);
+  const [parcelOrders, setParcelOrders] = useState([]);
 
-  const tableServiceOrders = [
-    { id: 345, table: 1, status: 'In Progress', time: '12:45 PM' },
-    { id: 346, table: 2, status: 'Open', time: '12:50 PM' },
-    { id: 347, table: 3, status: 'In Progress', time: '12:55 PM' },
-    { id: 348, table: 4, status: 'Ready', time: '01:00 PM' },
-    { id: 349, table: 5, status: 'Served', time: '01:05 PM' },
-    { id: 350, table: 6, status: 'Cancelled', time: '01:10 PM' },
-    { id: 351, table: 7, status: 'Open', time: '01:15 PM' },
-  ];
+  useEffect(() => {
+    const q = query(collection(backendDb, 'orders'));
 
-  const parcelOrders = [
-    { id: 401, table: 'Parcel 1', status: 'In Progress', time: '02:00 PM' },
-    { id: 402, table: 'Parcel 2', status: 'Open', time: '02:15 PM' },
-    { id: 403, table: 'Parcel 3', status: 'Ready', time: '02:30 PM' },
-    { id: 404, table: 'Parcel 4', status: 'Served', time: '02:45 PM' },
-    { id: 405, table: 'Parcel 5', status: 'Cancelled', time: '03:00 PM' },
-  ];
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const tableOrders = [];
+      const parcelOrders = [];
+
+      querySnapshot.forEach((doc) => {
+        const order = doc.data();
+        if (order.type === 'table') {
+          tableOrders.push(order);
+        } else if (order.type === 'parcel') {
+          parcelOrders.push(order);
+        }
+      });
+
+      setTableServiceOrders(tableOrders);
+      setParcelOrders(parcelOrders);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
@@ -89,4 +98,4 @@ const Order = () => {
   );
 };
 
-export default Order;
+export default Orders;

@@ -29,19 +29,20 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ tableNumber, orderId: order.id }),
       });
-
+  
       if (!response.ok) {
-        throw new Error(`Failed to process request: ${response.statusText}`);
+        const errorBody = await response.text(); // Getting the response text, which might include why the request failed
+        throw new Error(`HTTP error! status: ${response.status}, body: ${errorBody}`);
       }
-
+  
       return await response.json();
     } catch (error) {
       console.error(`Error making request to ${url}:`, error);
-      throw error;
+      throw error; // Rethrowing the error is important if you have logic that depends on catching errors from makeRequest
     }
   };
 

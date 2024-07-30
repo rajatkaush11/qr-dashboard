@@ -9,7 +9,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const functions = getFunctions();
 
   useEffect(() => {
-    // Fetch orders for the table from Firestore
     const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
     const q = query(collection(backendDb, 'orders'), where('tableNo', '==', normalizedTableNumber));
 

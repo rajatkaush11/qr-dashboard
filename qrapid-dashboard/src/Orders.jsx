@@ -6,50 +6,61 @@ import './Orders.css';
 const Orders = () => {
   const [view, setView] = useState('Table Service');
   const [searchTerm, setSearchTerm] = useState('');
-  const [tableServiceOrders, setTableServiceOrders] = useState([]);
-  const [parcelOrders, setParcelOrders] = useState([]);
+  const [orders, setOrders] = useState([]);
 
   useEffect(() => {
+    console.log('Setting up Firestore listener for orders...');
     const q = query(collection(backendDb, 'orders'));
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const tableOrders = [];
-      const parcelOrders = [];
+      console.log('Received Firestore snapshot.');
+      const fetchedOrders = [];
 
       querySnapshot.forEach((doc) => {
         const order = doc.data();
-        if (order.type === 'table') {
-          tableOrders.push(order);
-        } else if (order.type === 'parcel') {
-          parcelOrders.push(order);
-        }
+        console.log('Fetched order:', order);
+        fetchedOrders.push({
+          id: doc.id,
+          ...order,
+        });
       });
 
-      setTableServiceOrders(tableOrders);
-      setParcelOrders(parcelOrders);
+      console.log('All fetched orders:', fetchedOrders);
+      setOrders(fetchedOrders);
     });
 
-    return () => unsubscribe();
+    return () => {
+      console.log('Cleaning up Firestore listener...');
+      unsubscribe();
+    };
   }, []);
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
+    console.log('Search term updated:', e.target.value);
   };
 
-  const orders = view === 'Table Service' ? tableServiceOrders : parcelOrders;
   const filteredOrders = orders.filter(order =>
     order.id.toString().includes(searchTerm) ||
     order.table.toString().includes(searchTerm) ||
     order.status.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  console.log('Filtered orders:', filteredOrders);
+
+  const displayOrders = view === 'Table Service'
+    ? filteredOrders.filter(order => order.type === 'table')
+    : filteredOrders.filter(order => order.type === 'parcel');
+
+  console.log('Displaying orders for view:', view, displayOrders);
+
   return (
     <div className="order-container">
       <div className="sidebar">
-        <div className={`sidebar-item ${view === 'Table Service' ? 'active' : ''}`} onClick={() => setView('Table Service')}>
+        <div className={`sidebar-item ${view === 'Table Service' ? 'active' : ''}`} onClick={() => { setView('Table Service'); console.log('View changed to Table Service'); }}>
           Table Service
         </div>
-        <div className={`sidebar-item ${view === 'Parcel' ? 'active' : ''}`} onClick={() => setView('Parcel')}>
+        <div className={`sidebar-item ${view === 'Parcel' ? 'active' : ''}`} onClick={() => { setView('Parcel'); console.log('View changed to Parcel'); }}>
           Parcel
         </div>
       </div>
@@ -82,13 +93,13 @@ const Orders = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredOrders.map(order => (
+            {displayOrders.map((order, index) => (
               <tr key={order.id}>
-                <td>#{order.id}</td>
+                <td>#{index + 1}</td>
                 <td>{order.table}</td>
                 <td className={`status ${order.status.replace(' ', '-').toLowerCase()}`}>{order.status}</td>
                 <td>{order.time}</td>
-                <td><button className="details-button">Details</button></td>
+                <td><button className="details-button" onClick={() => console.log('Details button clicked for order:', order.id)}>Details</button></td>
               </tr>
             ))}
           </tbody>

@@ -31,20 +31,21 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ tableNumber, orderId: order.id }),
+        body: JSON.stringify({ tableNumber: order.tableNumber, orderId: order.id }),
       });
   
       if (!response.ok) {
-        const errorBody = await response.text(); // Getting the response text, which might include why the request failed
+        const errorBody = await response.text();
         throw new Error(`HTTP error! status: ${response.status}, body: ${errorBody}`);
       }
   
       return await response.json();
     } catch (error) {
       console.error(`Error making request to ${url}:`, error);
-      throw error; // Rethrowing the error is important if you have logic that depends on catching errors from makeRequest
+      throw error;
     }
   };
+  
 
   const handleGenerateKOT = async () => {
     if (orders.length === 0) return;

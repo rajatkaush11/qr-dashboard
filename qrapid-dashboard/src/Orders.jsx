@@ -104,7 +104,7 @@ const Orders = () => {
                     ))}
                   </ul>
                 </td>
-                <td>{order.createdAt}</td>
+                <td>{order.createdAt ? order.createdAt.toDate().toLocaleString() : 'N/A'}</td>
                 <td><button className="details-button" onClick={() => console.log('Details button clicked for order:', order.id)}>Details</button></td>
               </tr>
             ))}

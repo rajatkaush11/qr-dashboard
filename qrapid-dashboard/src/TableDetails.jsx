@@ -15,7 +15,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       console.log(`Real-time update for table ${tableNumber}:`, querySnapshot.size);
       querySnapshot.forEach((doc) => {
         const order = doc.data();
-        console.log('Fetched order for table:', tableNumber, order);
         ordersData.push(order);
       });
       setOrders(ordersData);

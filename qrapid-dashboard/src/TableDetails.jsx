@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { backendDb } from './firebase-config';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { auth } from './firebase-config'; // Ensure you import the auth object
 import './TableDetails.css';
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
@@ -30,9 +31,12 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${await order.user.getToken()}`, // Assuming there's a user object with a getToken method
         },
-        body: JSON.stringify({ tableNumber, orderId: order.id }),
+        body: JSON.stringify({
+          tableNumber,
+          orderId: order.id,
+          uid: auth.currentUser.uid // Pass the current user's UID
+        }),
       });
 
       if (!response.ok) {
@@ -54,7 +58,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       const result = await makeRequest('https://us-central1-qr-dashboard-1107.cloudfunctions.net/printKOT', order);
       if (result.success) {
         updateTableColor(tableNumber, 'orange'); // Update color to Running KOT Table (orange)
-        await printKOT(order);
       }
     } catch (error) {
       console.error('Error generating KOT:', error);
@@ -77,36 +80,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const handleCompleteOrder = () => {
     updateTableColor(tableNumber, 'blank'); // Update color to Blank Table (grey)
-  };
-
-  const printKOT = async (order) => {
-    try {
-      // Request device with Bluetooth service and characteristic UUIDs
-      const device = await navigator.bluetooth.requestDevice({
-        filters: [{ name: 'YourPrinterName' }],
-        optionalServices: ['service_uuid']
-      });
-
-      const server = await device.gatt.connect();
-      const service = await server.getPrimaryService('service_uuid');
-      const characteristic = await service.getCharacteristic('characteristic_uuid');
-
-      // Generate KOT content
-      let kotContent = `Table No: ${order.tableNo}\nOrder ID: ${order.id}\nItems:\n`;
-      order.items.forEach(item => {
-        kotContent += `${item.name} x ${item.quantity}\n`;
-      });
-
-      // Convert to ArrayBuffer
-      const encoder = new TextEncoder();
-      const data = encoder.encode(kotContent);
-
-      // Write data to Bluetooth characteristic
-      await characteristic.writeValue(data);
-      console.log('KOT printed successfully');
-    } catch (error) {
-      console.error('Error printing KOT:', error);
-    }
   };
 
   return (

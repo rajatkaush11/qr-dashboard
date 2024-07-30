@@ -52,7 +52,7 @@ const Order = () => {
             <tr>
               <th>Order</th>
               <th>Table</th>
-              <th>Status</th>
+              <th>Items</th>
               <th>Time</th>
               <th>Actions</th>
             </tr>

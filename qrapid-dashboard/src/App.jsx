@@ -40,12 +40,12 @@ function App() {
           <Route path="/login" element={user ? <Navigate to="/home" replace /> : <Login onLogin={() => setUser(true)} />} />
           <Route path="/register" element={user ? <Navigate to="/home" replace /> : <Register />} />
           <Route path="/home" element={user ? <WelcomeHome /> : <Navigate to="/login" replace />} />
-          <Route path="/menu" element={user ? <Menu /> : <Navigate to="/login" replace />} />
+          <Route path="/menu" element={user ? <Menu /> : <Navigate to="/menu" replace />} />
           <Route path="/table" element={user ? <WelcomeHome /> : <Navigate to="/table" replace />} />
-          <Route path="/category/:categoryId/items" element={user ? <ItemList /> : <Navigate to="/login" replace />} />
-          <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" replace />} />
+          <Route path="/category/:categoryId/items" element={user ? <ItemList /> : <Navigate to="/category/:categoryId/items" replace />} />
+          <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/dashboard" replace />} />
           <Route path="/orders" element={user ? <Orders /> : <Navigate to="/orders" replace />} />
-          <Route path="/reports" element={user ? <Reports /> : <Navigate to="/login" replace />} />
+          <Route path="/reports" element={user ? <Reports /> : <Navigate to="/reports" replace />} />
           <Route path="/" element={<Navigate to="/login" replace />} /> {/* Redirect to login if not authenticated */}
         </Routes>
       </div>

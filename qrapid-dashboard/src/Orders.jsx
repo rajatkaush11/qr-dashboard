@@ -42,7 +42,7 @@ const Orders = () => {
 
   const filteredOrders = orders.filter(order =>
     order.id.toString().includes(searchTerm) ||
-    (order.table && order.table.toString().includes(searchTerm)) ||
+    (order.tableNo && order.tableNo.toString().includes(searchTerm)) ||
     (order.status && order.status.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
@@ -87,7 +87,7 @@ const Orders = () => {
             <tr>
               <th>Order</th>
               <th>{view === 'Table Service' ? 'Table' : 'Parcel'}</th>
-              <th>Status</th>
+              <th>Items</th>
               <th>Time</th>
               <th>Actions</th>
             </tr>
@@ -96,9 +96,15 @@ const Orders = () => {
             {displayOrders.map((order, index) => (
               <tr key={order.id}>
                 <td>#{index + 1}</td>
-                <td>{order.table}</td>
-                <td className={`status ${order.status.replace(' ', '-').toLowerCase()}`}>{order.status}</td>
-                <td>{order.time}</td>
+                <td>{order.tableNo}</td>
+                <td>
+                  <ul>
+                    {order.items.map((item, i) => (
+                      <li key={i}>{item.name} - {item.price} x {item.quantity}</li>
+                    ))}
+                  </ul>
+                </td>
+                <td>{order.createdAt}</td>
                 <td><button className="details-button" onClick={() => console.log('Details button clicked for order:', order.id)}>Details</button></td>
               </tr>
             ))}

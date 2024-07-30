@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './Order.css';
+import './Orders.css';
 
 const Order = () => {
   const [view, setView] = useState('Table Service');

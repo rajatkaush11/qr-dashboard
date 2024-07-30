@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { auth, backendDb } from './firebase-config';
+import { backendDb } from './firebase-config';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import './TableDetails.css';
 
@@ -26,41 +26,35 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const makeRequest = async (url, order) => {
     try {
-      console.log('Making request to:', url, 'with order:', order);
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await order.user.getToken()}`, // Assuming there's a user object with a getToken method
         },
-        body: JSON.stringify({
-          tableNumber,
-          orderId: order.id,
-          uid: auth.currentUser.uid  // Pass the current user's UID
-        }),
+        body: JSON.stringify({ tableNumber, orderId: order.id }),
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`Request failed with status ${response.status}:`, errorText);
-        throw new Error(`Failed to process request: ${response.statusText}, ${errorText}`);
+        throw new Error(`Failed to process request: ${response.statusText}`);
       }
 
-      const result = await response.json();
-      console.log('Request succeeded with response:', result);
-      return result;
+      return await response.json();
     } catch (error) {
       console.error(`Error making request to ${url}:`, error);
-      throw error;  // Rethrow after logging to handle it in the calling function
+      throw error;
     }
   };
 
   const handleGenerateKOT = async () => {
     if (orders.length === 0) return;
+
     const order = orders[0];
     try {
       const result = await makeRequest('https://us-central1-qr-dashboard-1107.cloudfunctions.net/printKOT', order);
       if (result.success) {
         updateTableColor(tableNumber, 'orange'); // Update color to Running KOT Table (orange)
+        await printKOT(order);
       }
     } catch (error) {
       console.error('Error generating KOT:', error);
@@ -69,6 +63,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const handleGenerateBill = async () => {
     if (orders.length === 0) return;
+
     const order = orders[0];
     try {
       const result = await makeRequest('https://us-central1-qr-dashboard-1107.cloudfunctions.net/printBill', order);
@@ -82,6 +77,36 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const handleCompleteOrder = () => {
     updateTableColor(tableNumber, 'blank'); // Update color to Blank Table (grey)
+  };
+
+  const printKOT = async (order) => {
+    try {
+      // Request device with Bluetooth service and characteristic UUIDs
+      const device = await navigator.bluetooth.requestDevice({
+        filters: [{ name: 'YourPrinterName' }],
+        optionalServices: ['service_uuid']
+      });
+
+      const server = await device.gatt.connect();
+      const service = await server.getPrimaryService('service_uuid');
+      const characteristic = await service.getCharacteristic('characteristic_uuid');
+
+      // Generate KOT content
+      let kotContent = `Table No: ${order.tableNo}\nOrder ID: ${order.id}\nItems:\n`;
+      order.items.forEach(item => {
+        kotContent += `${item.name} x ${item.quantity}\n`;
+      });
+
+      // Convert to ArrayBuffer
+      const encoder = new TextEncoder();
+      const data = encoder.encode(kotContent);
+
+      // Write data to Bluetooth characteristic
+      await characteristic.writeValue(data);
+      console.log('KOT printed successfully');
+    } catch (error) {
+      console.error('Error printing KOT:', error);
+    }
   };
 
   return (

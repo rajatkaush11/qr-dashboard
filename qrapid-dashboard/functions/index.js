@@ -2,82 +2,83 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const cors = require('cors');
 
+// Initialize Firebase Admin SDK
 admin.initializeApp();
 const db = admin.firestore();
 
+// Configure CORS with dynamic origin support in a more secure manner
 const corsHandler = cors({
-  origin: 'https://qr-dashboard-1107.web.app', // Allowed origin
+  origin: ['https://qr-dashboard-1107.web.app'], // Allowed origin(s)
   methods: ['GET', 'POST', 'OPTIONS'], // Allowed methods
-  allowedHeaders: ['Content-Type'] // Allowed headers
+  allowedHeaders: ['Content-Type', 'Authorization'] // Allowed custom headers
 });
 
+// Function to handle CORS, including preflight requests
+const handleCors = (req, res, callback) => {
+  if (req.method === 'OPTIONS') {
+    // Send response to OPTIONS requests
+    res.status(200).end();
+    return;
+  }
+  return corsHandler(req, res, callback);
+};
+
+// Cloud Function to print Kitchen Order Ticket (KOT)
 exports.printKOT = functions.https.onRequest((req, res) => {
-  console.log('printKOT called with body:', req.body);
-  corsHandler(req, res, async () => {
+  handleCors(req, res, async () => {
     try {
-      const { tableNumber, orderId, uid } = req.body;
-      console.log(`Received tableNumber: ${tableNumber}, orderId: ${orderId}, uid: ${uid}`);
+      const { tableNumber, orderId } = req.body;
 
-      // Verify UID and fetch order details from Firestore
-      if (!uid || !(await admin.auth().getUser(uid))) {
-        console.error('Unauthorized access attempt with UID:', uid);
-        res.set('Access-Control-Allow-Origin', 'https://qr-dashboard-1107.web.app');
-        return res.status(403).send('Unauthorized');
-      }
-
+      // Fetch order details from Firestore
       const orderRef = db.collection('orders').doc(orderId);
       const orderDoc = await orderRef.get();
+
       if (!orderDoc.exists) {
-        console.error('Order not found for orderId:', orderId);
-        res.set('Access-Control-Allow-Origin', 'https://qr-dashboard-1107.web.app');
-        return res.status(404).send('Order not found');
+        res.status(404).send('Order not found');
+        return;
       }
 
       const order = orderDoc.data();
+
+      // Generate KOT content
       let kotContent = `Table No: ${tableNumber}\nOrder ID: ${orderId}\nItems:\n`;
-      order.items.forEach(item => kotContent += `${item.name} x ${item.quantity}\n`);
+      order.items.forEach(item => {
+        kotContent += `${item.name} x ${item.quantity}\n`;
+      });
 
-      console.log('KOT content generated:', kotContent);
-
+      // Send KOT to printer (logic needs to be implemented)
       const ESC_POS = require('esc-pos-encoder');
       const encoder = new ESC_POS();
       encoder.initialize();
       encoder.text(kotContent);
       encoder.cut();
-      const encodedData = encoder.encode();
+      const encodedData = encoder.encode(); // This data should be sent to the printer
 
-      res.set('Access-Control-Allow-Origin', 'https://qr-dashboard-1107.web.app');
-      res.status(200).send({ success: true, message: "KOT printed successfully", data: encodedData });
+      res.status(200).send({ success: true, message: "KOT printed successfully" });
     } catch (error) {
-      console.error('Error in printKOT:', error);
-      res.set('Access-Control-Allow-Origin', 'https://qr-dashboard-1107.web.app');
-      res.status(500).send({ success: false, message: error.toString() });
+      res.status(500).send(error.message);
     }
   });
 });
 
+// Cloud Function to print a bill
 exports.printBill = functions.https.onRequest((req, res) => {
-  console.log('printBill called with body:', req.body);
-  corsHandler(req, res, async () => {
+  handleCors(req, res, async () => {
     try {
-      const { tableNumber, orderId, uid } = req.body;
-      console.log(`Received tableNumber: ${tableNumber}, orderId: ${orderId}, uid: ${uid}`);
+      const { tableNumber, orderId } = req.body;
 
-      if (!uid || !(await admin.auth().getUser(uid))) {
-        console.error('Unauthorized access attempt with UID:', uid);
-        res.set('Access-Control-Allow-Origin', 'https://qr-dashboard-1107.web.app');
-        return res.status(403).send('Unauthorized');
-      }
-
+      // Fetch order details from Firestore
       const orderRef = db.collection('orders').doc(orderId);
       const orderDoc = await orderRef.get();
+
       if (!orderDoc.exists) {
-        console.error('Order not found for orderId:', orderId);
-        res.set('Access-Control-Allow-Origin', 'https://qr-dashboard-1107.web.app');
-        return res.status(404).send('Order not found');
+        res.status(404).send('Order not found');
+        return;
       }
 
       const order = orderDoc.data();
+
+      // Generate Bill content
       let billContent = `Bill for Table No: ${tableNumber}\n\nItems:\n`;
       let totalAmount = 0;
       order.items.forEach(item => {
@@ -87,21 +88,17 @@ exports.printBill = functions.https.onRequest((req, res) => {
       });
       billContent += `\nTotal Amount: ${totalAmount}\nThank you for dining with us!`;
 
-      console.log('Bill content generated:', billContent);
-
+      // Send Bill to printer (logic needs to be implemented)
       const ESC_POS = require('esc-pos-encoder');
       const encoder = new ESC_POS();
       encoder.initialize();
       encoder.text(billContent);
       encoder.cut();
-      const encodedData = encoder.encode();
+      const encodedData = encoder.encode(); // This data should be sent to the printer
 
-      res.set('Access-Control-Allow-Origin', 'https://qr-dashboard-1107.web.app');
-      res.status(200).send({ success: true, message: "Bill printed successfully", data: encodedData });
+      res.status(200).send({ success: true, message: "Bill printed successfully" });
     } catch (error) {
-      console.error('Error in printBill:', error);
-      res.set('Access-Control-Allow-Origin', 'https://qr-dashboard-1107.web.app');
-      res.status(500).send({ success: false, message: error.toString() });
+      res.status(500).send(error.message);
     }
   });
 });

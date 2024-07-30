@@ -2,18 +2,21 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const cors = require('cors');
 
+// Initialize Firebase Admin SDK
 admin.initializeApp();
 const db = admin.firestore();
 
+// Configure CORS with dynamic origin support
 const corsHandler = cors({
-  origin: ['https://qr-dashboard-1107.web.app'],
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  origin: ['https://qr-dashboard-1107.web.app'], // Allowed origin(s)
+  methods: ['GET', 'POST', 'OPTIONS'], // Allowed methods
+  allowedHeaders: ['Content-Type', 'Authorization'] // Allowed custom headers
 });
 
+// Function to handle CORS, including preflight requests
 const handleCors = (req, res, callback) => {
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
+    res.status(200).send('OK'); // Respond to OPTIONS requests
     return;
   }
   return corsHandler(req, res, callback);
@@ -23,6 +26,8 @@ exports.printKOT = functions.https.onRequest((req, res) => {
   handleCors(req, res, async () => {
     try {
       const { tableNumber, orderId, uid } = req.body;
+
+      // Verify UID and fetch order details from Firestore
       if (!uid || !(await admin.auth().getUser(uid))) {
         return res.status(403).send('Unauthorized');
       }
@@ -55,6 +60,7 @@ exports.printBill = functions.https.onRequest((req, res) => {
   handleCors(req, res, async () => {
     try {
       const { tableNumber, orderId, uid } = req.body;
+
       if (!uid || !(await admin.auth().getUser(uid))) {
         return res.status(403).send('Unauthorized');
       }

@@ -24,29 +24,37 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     return () => unsubscribe();
   }, [tableNumber]);
 
-  const handleGenerateKOT = async () => {
-    if (orders.length === 0) return;
-
-    const order = orders[0]; // Assuming only one active order per table
+  const makeRequest = async (url, order) => {
     try {
-      const response = await fetch('https://us-central1-qr-dashboard-1107.cloudfunctions.net/printKOT', {
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await order.user.getToken()}`, // Assuming there's a user object with a getToken method
         },
         body: JSON.stringify({ tableNumber, orderId: order.id }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate KOT');
+        throw new Error(`Failed to process request: ${response.statusText}`);
       }
 
-      const result = await response.json();
+      return await response.json();
+    } catch (error) {
+      console.error(`Error making request to ${url}:`, error);
+      throw error;
+    }
+  };
+
+  const handleGenerateKOT = async () => {
+    if (orders.length === 0) return;
+
+    const order = orders[0];
+    try {
+      const result = await makeRequest('https://us-central1-qr-dashboard-1107.cloudfunctions.net/printKOT', order);
       if (result.success) {
         updateTableColor(tableNumber, 'orange'); // Update color to Running KOT Table (orange)
-        await printKOT(order); // Call the Bluetooth print function
-      } else {
-        throw new Error('KOT generation failed');
+        await printKOT(order);
       }
     } catch (error) {
       console.error('Error generating KOT:', error);
@@ -56,25 +64,11 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const handleGenerateBill = async () => {
     if (orders.length === 0) return;
 
-    const order = orders[0]; // Assuming only one active order per table
+    const order = orders[0];
     try {
-      const response = await fetch('https://us-central1-qr-dashboard-1107.cloudfunctions.net/printBill', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ tableNumber, orderId: order.id }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate bill');
-      }
-
-      const result = await response.json();
+      const result = await makeRequest('https://us-central1-qr-dashboard-1107.cloudfunctions.net/printBill', order);
       if (result.success) {
         updateTableColor(tableNumber, 'green'); // Update color to Printed Table (green)
-      } else {
-        throw new Error('Bill generation failed');
       }
     } catch (error) {
       console.error('Error generating bill:', error);

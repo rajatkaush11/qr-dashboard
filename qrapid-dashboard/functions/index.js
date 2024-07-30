@@ -2,17 +2,18 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const cors = require('cors');
 
+// Initialize Firebase Admin SDK
 admin.initializeApp();
 const db = admin.firestore();
 
 // Configure CORS with dynamic origin support in a more secure manner
 const corsHandler = cors({
-  origin: ['https://qr-dashboard-1107.web.app'], // Set the allowed origin
-  methods: ['GET', 'POST', 'OPTIONS'], // Explicitly define methods allowed
-  allowedHeaders: ['Content-Type', 'Authorization'] // Define allowed headers
+  origin: ['https://qr-dashboard-1107.web.app'], // Allowed origin(s)
+  methods: ['GET', 'POST', 'OPTIONS'], // Allowed methods
+  allowedHeaders: ['Content-Type', 'Authorization'] // Allowed custom headers
 });
 
-// Handle CORS including preflight requests
+// Function to handle CORS, including preflight requests
 const handleCors = (req, res, callback) => {
   if (req.method === 'OPTIONS') {
     // Send response to OPTIONS requests
@@ -22,12 +23,13 @@ const handleCors = (req, res, callback) => {
   return corsHandler(req, res, callback);
 };
 
+// Cloud Function to print Kitchen Order Ticket (KOT)
 exports.printKOT = functions.https.onRequest((req, res) => {
   handleCors(req, res, async () => {
     try {
       const { tableNumber, orderId } = req.body;
 
-      // Fetch order details
+      // Fetch order details from Firestore
       const orderRef = db.collection('orders').doc(orderId);
       const orderDoc = await orderRef.get();
 
@@ -44,7 +46,7 @@ exports.printKOT = functions.https.onRequest((req, res) => {
         kotContent += `${item.name} x ${item.quantity}\n`;
       });
 
-      // Here, send KOT to printer (replace with actual printer logic)
+      // Send KOT to printer (logic needs to be implemented)
       const ESC_POS = require('esc-pos-encoder');
       const encoder = new ESC_POS();
       encoder.initialize();
@@ -59,12 +61,13 @@ exports.printKOT = functions.https.onRequest((req, res) => {
   });
 });
 
+// Cloud Function to print a bill
 exports.printBill = functions.https.onRequest((req, res) => {
   handleCors(req, res, async () => {
     try {
       const { tableNumber, orderId } = req.body;
 
-      // Fetch order details
+      // Fetch order details from Firestore
       const orderRef = db.collection('orders').doc(orderId);
       const orderDoc = await orderRef.get();
 
@@ -85,7 +88,7 @@ exports.printBill = functions.https.onRequest((req, res) => {
       });
       billContent += `\nTotal Amount: ${totalAmount}\nThank you for dining with us!`;
 
-      // Here, send Bill to printer (replace with actual printer logic)
+      // Send Bill to printer (logic needs to be implemented)
       const ESC_POS = require('esc-pos-encoder');
       const encoder = new ESC_POS();
       encoder.initialize();

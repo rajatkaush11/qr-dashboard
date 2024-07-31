@@ -4,7 +4,7 @@ import { collection, query, where, onSnapshot, doc, getDoc, orderBy } from 'fire
 import './TableDetails.css';
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
-  const [orders, setOrders] = useState([]);
+  const [latestOrder, setLatestOrder] = useState(null);
   const [restaurant, setRestaurant] = useState({ name: '', address: '', contact: '' });
   const [completedOrderIds, setCompletedOrderIds] = useState([]);
 
@@ -48,7 +48,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           ordersData.push(order);
         }
       });
-      setOrders(ordersData);
+      setLatestOrder(ordersData.length > 0 ? ordersData[0] : null);
       console.log("Orders fetched:", ordersData);
     }, (error) => {
       console.error('Error fetching orders:', error);
@@ -113,24 +113,21 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   const handleGenerateKOT = async () => {
-    if (orders.length === 0) return;
-    const order = orders[0];
-    await printContent(order, true);
+    if (!latestOrder) return;
+    await printContent(latestOrder, true);
     updateTableColor(tableNumber, 'orange');
   };
 
   const handleGenerateBill = async () => {
-    if (orders.length === 0) return;
-    const order = orders[0];
-    await printContent(order, false);
+    if (!latestOrder) return;
+    await printContent(latestOrder, false);
     updateTableColor(tableNumber, 'green');
   };
 
   const handleCompleteOrder = () => {
-    if (orders.length === 0) return;
-    const order = orders[0];
-    setCompletedOrderIds(prev => [...prev, order.id]);
-    setOrders([]);
+    if (!latestOrder) return;
+    setCompletedOrderIds(prev => [...prev, latestOrder.id]);
+    setLatestOrder(null);
     updateTableColor(tableNumber, 'blank');
   };
 
@@ -142,14 +139,14 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       </div>
       <div className="current-order">
         <h3>Current Order</h3>
-        {orders.length === 0 ? (
+        {latestOrder === null ? (
           <p>No current orders.</p>
         ) : (
           <div className="order-item">
-            <p><strong>Name:</strong> {orders[0].name}</p>
+            <p><strong>Name:</strong> {latestOrder.name}</p>
             <p><strong>Items:</strong></p>
             <ul>
-              {orders[0].items.map((item, i) => (
+              {latestOrder.items.map((item, i) => (
                 <li key={i}>{item.name} - {item.price} x {item.quantity}</li>
               ))}
             </ul>
@@ -157,9 +154,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         )}
       </div>
       <div className="action-buttons">
-        <button onClick={() => handleGenerateKOT()} className="action-button">Generate KOT</button>
-        <button onClick={() => handleGenerateBill()} className="action-button">Generate Bill</button>
-        <button onClick={() => handleCompleteOrder()} className="action-button">Complete Order</button>
+        <button onClick={handleGenerateKOT} className="action-button">Generate KOT</button>
+        <button onClick={handleGenerateBill} className="action-button">Generate Bill</button>
+        <button onClick={handleCompleteOrder} className="action-button">Complete Order</button>
       </div>
     </div>
   );

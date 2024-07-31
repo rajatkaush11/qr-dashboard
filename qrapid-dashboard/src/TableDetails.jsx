@@ -49,16 +49,13 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       console.log('Query snapshot size:', querySnapshot.size);
       const allOrders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       console.log('Query snapshot data:', allOrders);
-      const newOrders = allOrders.filter(order => !completedOrderIds.includes(order.id));
-      setOrders(newOrders);
-      localStorage.setItem(`orders_${tableNumber}`, JSON.stringify(newOrders));
-      if (newOrders.length === 0) {
-        updateTableColor(tableNumber, 'blank');
-      }
+      setOrders(allOrders);
+      localStorage.setItem(`orders_${tableNumber}`, JSON.stringify(allOrders));
     }, (error) => {
       console.error('Error fetching orders:', error);
     });
 
+    // Fetch completed order IDs from the frontend "bills" collection
     const fetchCompletedOrderIds = async () => {
       const q = query(collection(db, 'bills'));
       const querySnapshot = await getDocs(q);

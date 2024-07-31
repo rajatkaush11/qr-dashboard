@@ -29,9 +29,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ tableNumber, orderId: order.id })
+        body: JSON.stringify({ tableNumber, orderId: order.id }),
       });
 
       if (!response.ok) {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { backendDb } from './firebase-config';
-import { collection, query, where, onSnapshot, doc, getDoc, orderBy, limit } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, getDoc, orderBy, limit, Timestamp } from 'firebase/firestore';
 import './TableDetails.css';
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
@@ -33,7 +33,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     fetchRestaurantDetails();
 
     // Normalize tableNumber to match the format in Firestore
-    const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber : `T${tableNumber}`;
+    const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
+    console.log(`Querying for table number: ${normalizedTableNumber}`);
+
     const q = query(
       collection(backendDb, 'orders'),
       where('tableNo', '==', normalizedTableNumber),
@@ -42,6 +44,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      console.log('Query snapshot:', querySnapshot.docs.map(doc => doc.data()));
       if (!querySnapshot.empty) {
         const latestOrder = querySnapshot.docs[0].data();
         setOrder(latestOrder);

@@ -6,24 +6,23 @@ import './TableDetails.css';
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [orders, setOrders] = useState([]);
   const [restaurant, setRestaurant] = useState({ name: '', address: '', contact: '' });
-  const [completedOrderIds, setCompletedOrderIds] = useState([]);
 
   useEffect(() => {
     const fetchRestaurantDetails = async () => {
-      const uid = localStorage.getItem('UID');
+      const uid = localStorage.getItem('UID');  // Retrieve UID from localStorage
       if (!uid) {
         console.error("UID is not found in localStorage.");
         return;
       }
 
-      const restaurantRef = doc(backendDb, 'restaurants', uid);
+      const restaurantRef = doc(backendDb, 'restaurants', uid);  // Use UID to reference the correct document
       const restaurantDoc = await getDoc(restaurantRef);
       if (restaurantDoc.exists()) {
         const data = restaurantDoc.data();
         setRestaurant({
           name: data.restaurantName || "No name provided",
           address: data.address || "No address provided",
-          contact: data.contactNumber || "No contact provided"
+          contact: data.contactNumber || "No contact provided"  // Assuming contactNumber field exists
         });
         console.log("Fetched restaurant details:", data);
       } else {
@@ -40,9 +39,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       const ordersData = [];
       querySnapshot.forEach((doc) => {
         const order = doc.data();
-        if (!completedOrderIds.includes(order.id)) {
-          ordersData.push(order);
-        }
+        ordersData.push(order);
       });
       setOrders(ordersData);
       console.log("Orders fetched:", ordersData);
@@ -51,7 +48,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     });
 
     return () => unsubscribe();
-  }, [tableNumber, completedOrderIds]);
+  }, [tableNumber]);
 
   const printContent = async (order, isKOT) => {
     if ('serial' in navigator) {
@@ -64,21 +61,23 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         let content = '';
 
         if (isKOT) {
-          content += `\x1b\x21\x30`;
-          content += `*** ${restaurant.name.toUpperCase()} ***\n`;
-          content += `${restaurant.address}\nContact: ${restaurant.contact}\n\n`;
-          content += `\x1b\x21\x00`;
+          // KOT Formatting
+          content += `\x1b\x21\x30`; // Double height and width for the restaurant name
+          content += `*** ${restaurant.name.toUpperCase()} ***\n`; // Restaurant name in bold and centered
+          content += `${restaurant.address}\nContact: ${restaurant.contact}\n\n`; // Address and contact in medium font, centered
+          content += `\x1b\x21\x00`; // Normal text size
           content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`;
           content += `Bill No: ${order.id}    Table No: ${order.tableNo}\n\n`;
           order.items.forEach(item => {
-            content += `${item.name} (${item.specialNote}) - ${item.quantity}\n`;
+            content += `${item.name} (${item.specialNote}) - ${item.quantity}\n`; // Items with special notes
           });
           content += `Total Items to Prepare: ${order.items.reduce((sum, item) => sum + item.quantity, 0)}\n\n`;
         } else {
-          content += `\x1b\x21\x30`;
-          content += `*** ${restaurant.name.toUpperCase()} ***\n`;
-          content += `${restaurant.address}\nContact: ${restaurant.contact}\n\n`;
-          content += `\x1b\x21\x00`;
+          // Bill Formatting
+          content += `\x1b\x21\x30`; // Bold + double-size font
+          content += `*** ${restaurant.name.toUpperCase()} ***\n`; // Restaurant name in bold and centered
+          content += `${restaurant.address}\nContact: ${restaurant.contact}\n\n`; // Address and contact in medium font, centered
+          content += `\x1b\x21\x00`; // Normal text size
           content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`;
           content += `Bill No: ${order.id}    Table No: ${order.tableNo}\n\n`;
           let totalAmount = 0;
@@ -123,10 +122,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   const handleCompleteOrder = () => {
-    if (orders.length === 0) return;
-    const order = orders[0];
-    setCompletedOrderIds(prev => [...prev, order.id]);
-    setOrders([]);
     updateTableColor(tableNumber, 'blank');
   };
 

@@ -122,6 +122,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   const handleCompleteOrder = () => {
+    setOrders([]);  // Clear current orders
     updateTableColor(tableNumber, 'blank');
   };
 

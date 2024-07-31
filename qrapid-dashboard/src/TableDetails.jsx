@@ -114,22 +114,25 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   const handleGenerateKOT = async () => {
-    const filteredOrders = orders.filter(order => new Date(order.createdAt.toDate()) > new Date(lastCompletionTime));
+    const filteredOrders = orders.filter(order => !lastCompletionTime || new Date(order.createdAt.toDate()) > new Date(lastCompletionTime));
+    console.log('Filtered orders for KOT:', filteredOrders);
     if (filteredOrders.length === 0) return;
     await printContent(filteredOrders, true);
     updateTableColor(tableNumber, 'orange');
   };
 
   const handleGenerateBill = async () => {
-    const filteredOrders = orders.filter(order => new Date(order.createdAt.toDate()) > new Date(lastCompletionTime));
+    const filteredOrders = orders.filter(order => !lastCompletionTime || new Date(order.createdAt.toDate()) > new Date(lastCompletionTime));
+    console.log('Filtered orders for Bill:', filteredOrders);
     if (filteredOrders.length === 0) return;
     await printContent(filteredOrders, false);
     updateTableColor(tableNumber, 'green');
   };
 
   const handleCompleteOrder = () => {
-    setLastCompletionTime(new Date().toISOString());  // Set the current time as the last completion time
-    setOrders([]);  // Clear current orders
+    console.log('Completing order. Setting lastCompletionTime to current date and time.');
+    setLastCompletionTime(new Date().toISOString());
+    console.log('New lastCompletionTime:', new Date().toISOString());
     updateTableColor(tableNumber, 'blank');
   };
 

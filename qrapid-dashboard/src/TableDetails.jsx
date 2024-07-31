@@ -46,12 +46,14 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       const ordersData = [];
       querySnapshot.forEach((doc) => {
         const order = doc.data();
+        console.log("Fetched document:", order);
         if (!completedOrderIds.includes(order.id)) {
           ordersData.push(order);
         }
       });
-      console.log("Orders fetched:", ordersData);
+      console.log("Filtered ordersData:", ordersData);
       setLatestOrder(ordersData.length > 0 ? ordersData[0] : null);
+      console.log("Latest Order:", ordersData.length > 0 ? ordersData[0] : null);
     }, (error) => {
       console.error('Error fetching orders:', error);
     });

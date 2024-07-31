@@ -6,16 +6,17 @@ import './TableDetails.css';
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [orders, setOrders] = useState([]);
   const [restaurantName, setRestaurantName] = useState('');
+  const [restaurantAddress, setRestaurantAddress] = useState('');
 
   useEffect(() => {
     const fetchRestaurantDetails = async () => {
-      // Assuming the restaurant ID is stored in the local storage or could be inferred
       const restaurantId = localStorage.getItem('restaurantId');
       if (restaurantId) {
         const restaurantRef = doc(backendDb, 'restaurants', restaurantId);
         const restaurantDoc = await getDoc(restaurantRef);
         if (restaurantDoc.exists()) {
           setRestaurantName(restaurantDoc.data().restaurantName);
+          setRestaurantAddress(restaurantDoc.data().address);
         } else {
           console.log('No such restaurant!');
         }
@@ -44,28 +45,25 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const printContent = async (order, isKOT) => {
     if ('serial' in navigator) {
       const port = await navigator.serial.requestPort();
-      await port.open({ baudRate: 9600 }); // Set baud rate as per printer specification
-  
+      await port.open({ baudRate: 9600 });
+
       const writer = port.writable.getWriter();
       const encoder = new TextEncoder();
       let content = '';
-  
+
       if (isKOT) {
         // KOT Formatting
         content += `\x1b\x21\x30`; // Double height and width for the restaurant name
-        content += `*** ${restaurantName.toUpperCase()} ***\n\n`; // Restaurant name in bold and centered
+        content += `*** ${restaurantName.toUpperCase()} ***\n`; // Restaurant name in bold and centered
         content += `\x1b\x21\x08`; // Normal height but double width for the address
-        content += `${restaurantAddress}\n\n`; // Address in medium font, centered
+        content += `${restaurantAddress}\n`; // Address in medium font, centered
         content += `\x1b\x21\x00`; // Normal text size
-        content += `Date: ${new Date().toLocaleDateString()}    `; // Date on left
-        content += `Time: ${new Date().toLocaleTimeString()}\n`; // Time on right
-        content += `\x1b\x21\x08`; // Double width for emphasis
-        content += `Bill No: ${order.id}    Table No: ${order.tableNo}\n\n`; // Bill and table number
-        content += `\x1b\x21\x00`; // Return to normal text size
+        content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`; // Date and time on the same line
+        content += `Bill No: ${order.id}    Table No: ${order.tableNo}\n\n`; // Bill and table number in bold
         order.items.forEach(item => {
-          content += `${item.name} (${item.specialNote}) - ${item.quantity}\n`; // Items with special notes
+          content += `${item.name} - ${item.quantity}\n`; // Items and quantities
         });
-        content += `Total Items to Prepare: ${order.items.reduce((sum, item) => sum + item.quantity, 0)}\n`; // Total quantity
+        content += `Total Items to Prepare: ${order.items.reduce((sum, item) => sum + item.quantity, 0)}\n\n`; // Total quantity
       } else {
         // Bill Formatting
         content += `\x1b\x21\x30`; // Bold + double-size font
@@ -73,11 +71,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         content += `\x1b\x21\x08`; // Normal height but double width for the address
         content += `${restaurantAddress}\n`; // Address centered
         content += `\x1b\x21\x00`; // Normal text size
-        content += `Date: ${new Date().toLocaleDateString()}    `; // Date on left
-        content += `Time: ${new Date().toLocaleTimeString()}\n`; // Time on right
-        content += `\x1b\x21\x08`; // Double width for emphasis
-        content += `Bill No: ${order.id}    Table No: ${order.tableNo}\n\n`; // Bill and table number
-        content += `\x1b\x21\x00`; // Return to normal text size
+        content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`; // Date and time on the same line
+        content += `Bill No: ${order.id}    Table No: ${order.tableNo}\n\n`; // Bill and table number in bold
         let totalAmount = 0;
         order.items.forEach(item => {
           const itemTotal = item.price * item.quantity;
@@ -92,7 +87,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         content += 'Thank you for dining with us!\n'; // Thank you note centered
         content += '--------------------------------\n'; // Cut line
       }
-  
+
       await writer.write(encoder.encode(content));
       writer.releaseLock();
       await port.close();
@@ -101,9 +96,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       console.error("Web Serial API not supported.");
     }
   };
-  
-  
-  
 
   const handleGenerateKOT = async () => {
     if (orders.length === 0) return;
@@ -148,9 +140,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         )}
       </div>
       <div className="action-buttons">
-        <button onClick={handleGenerateKOT} className="action-button">Generate KOT</button>
-        <button onClick={handleGenerateBill} className="action-button">Generate Bill</button>
-        <button onClick={handleCompleteOrder} className="action-button">Complete Order</button>
+        <button onClick={() => handleGenerateKOT()} className="action-button">Generate KOT</button>
+        <button onClick={() => handleGenerateBill()} className="action-button">Generate Bill</button>
+        <button onClick={() => handleCompleteOrder()} className="action-button">Complete Order</button>
       </div>
     </div>
   );

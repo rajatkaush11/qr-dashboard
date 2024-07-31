@@ -53,7 +53,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
     // Fetch completed order IDs from the frontend "bills" collection
     const fetchCompletedOrderIds = async () => {
-      const q = query(collection(frontendDb, 'bills'));
+      const q = query(collection(db, 'bills'));
       const querySnapshot = await getDocs(q);
       const ids = querySnapshot.docs.map(doc => doc.data().orderId);
       setCompletedOrderIds(ids);
@@ -142,10 +142,10 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const handleCompleteOrder = async () => {
     console.log('Completing order. Storing completed orders in "bills" collection.');
     const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
-    const batch = writeBatch(frontendDb);
+    const batch = writeBatch(db);
 
     filteredOrders.forEach(order => {
-      const billRef = doc(collection(frontendDb, 'bills'));
+      const billRef = doc(collection(db, 'bills'));
       batch.set(billRef, { orderId: order.id, ...order });
     });
 

@@ -26,7 +26,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         });
         console.log("Fetched restaurant details:", data);
       } else {
-        console.error(No restaurant found with UID: ${uid});
+        console.error(`No restaurant found with UID: ${uid}`);
       }
     };
 
@@ -62,35 +62,35 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
         if (isKOT) {
           // KOT Formatting
-          content += \x1b\x21\x30; // Double height and width for the restaurant name
-          content += *** ${restaurant.name.toUpperCase()} ***\n; // Restaurant name in bold and centered
-          content += ${restaurant.address}\nContact: ${restaurant.contact}\n\n; // Address and contact in medium font, centered
-          content += \x1b\x21\x00; // Normal text size
-          content += Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n;
-          content += Bill No: ${order.id}    Table No: ${order.tableNo}\n\n;
+          content += `\x1b\x21\x30`; // Double height and width for the restaurant name
+          content += `*** ${restaurant.name.toUpperCase()} ***\n`; // Restaurant name in bold and centered
+          content += `${restaurant.address}\nContact: ${restaurant.contact}\n\n`; // Address and contact in medium font, centered
+          content += `\x1b\x21\x00`; // Normal text size
+          content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`;
+          content += `Bill No: ${order.id}    Table No: ${order.tableNo}\n\n`;
           order.items.forEach(item => {
-            content += ${item.name} (${item.specialNote}) - ${item.quantity}\n; // Items with special notes
+            content += `${item.name} (${item.specialNote}) - ${item.quantity}\n`; // Items with special notes
           });
-          content += Total Items to Prepare: ${order.items.reduce((sum, item) => sum + item.quantity, 0)}\n\n;
+          content += `Total Items to Prepare: ${order.items.reduce((sum, item) => sum + item.quantity, 0)}\n\n`;
         } else {
           // Bill Formatting
-          content += \x1b\x21\x30; // Bold + double-size font
-          content += *** ${restaurant.name.toUpperCase()} ***\n; // Restaurant name in bold and centered
-          content += ${restaurant.address}\nContact: ${restaurant.contact}\n\n; // Address and contact in medium font, centered
-          content += \x1b\x21\x00; // Normal text size
-          content += Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n;
-          content += Bill No: ${order.id}    Table No: ${order.tableNo}\n\n;
+          content += `\x1b\x21\x30`; // Bold + double-size font
+          content += `*** ${restaurant.name.toUpperCase()} ***\n`; // Restaurant name in bold and centered
+          content += `${restaurant.address}\nContact: ${restaurant.contact}\n\n`; // Address and contact in medium font, centered
+          content += `\x1b\x21\x00`; // Normal text size
+          content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`;
+          content += `Bill No: ${order.id}    Table No: ${order.tableNo}\n\n`;
           let totalAmount = 0;
           order.items.forEach(item => {
             const itemTotal = item.price * item.quantity;
             totalAmount += itemTotal;
-            content += ${item.name} - ${item.quantity} x ${item.price} = ${itemTotal}\n;
+            content += `${item.name} - ${item.quantity} x ${item.price} = ${itemTotal}\n`;
           });
-          content += Sub Total: ${totalAmount}\n;
-          content += Discount: -${order.discount || 0}\n;
-          content += CGST: +${order.cgst || 0}\n;
-          content += SGST: +${order.sgst || 0}\n;
-          content += Grand Total: ${totalAmount + (order.cgst || 0) + (order.sgst || 0) - (order.discount || 0)}\n\n;
+          content += `Sub Total: ${totalAmount}\n`;
+          content += `Discount: -${order.discount || 0}\n`;
+          content += `CGST: +${order.cgst || 0}\n`;
+          content += `SGST: +${order.sgst || 0}\n`;
+          content += `Grand Total: ${totalAmount + (order.cgst || 0) + (order.sgst || 0) - (order.discount || 0)}\n\n`;
           content += 'Thank you for dining with us!\n';
           content += '--------------------------------\n';
         }
@@ -116,7 +116,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const handleGenerateBill = async () => {
     if (orders.length === 0) return;
-    const order = orders[0];
+    orders = orders[0];
     await printContent(order, false);
     updateTableColor(tableNumber, 'green');
   };

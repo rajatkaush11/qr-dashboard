@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { backendDb } from './firebase-config';
-import { collection, query, where, onSnapshot, doc, getDoc, orderBy, limit } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, getDoc, orderBy } from 'firebase/firestore';
 import './TableDetails.css';
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
-  const [order, setOrder] = useState(null);
+  const [orders, setOrders] = useState([]);
   const [restaurant, setRestaurant] = useState({ name: '', address: '', contact: '' });
 
   useEffect(() => {
@@ -39,21 +39,14 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     const q = query(
       collection(backendDb, 'orders'),
       where('tableNo', '==', normalizedTableNumber),
-      orderBy('createdAt', 'desc'),
-      limit(1)
+      orderBy('createdAt', 'desc')
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       console.log('Query snapshot size:', querySnapshot.size);
-      console.log('Query snapshot data:', querySnapshot.docs.map(doc => doc.data()));
-      if (!querySnapshot.empty) {
-        const latestOrder = querySnapshot.docs[0].data();
-        setOrder(latestOrder);
-        console.log("Latest order fetched:", latestOrder);
-      } else {
-        setOrder(null);
-        console.log("No orders found for this table.");
-      }
+      const allOrders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      console.log('Query snapshot data:', allOrders);
+      setOrders(allOrders);
     }, (error) => {
       console.error('Error fetching orders:', error);
     });
@@ -61,7 +54,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     return () => unsubscribe();
   }, [tableNumber]);
 
-  const printContent = async (order, isKOT) => {
+  const printContent = async (orders, isKOT) => {
     if ('serial' in navigator) {
       try {
         const port = await navigator.serial.requestPort();
@@ -71,38 +64,40 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         const encoder = new TextEncoder();
         let content = '';
 
-        if (isKOT) {
-          content += `\x1b\x21\x30`;
-          content += `*** ${restaurant.name.toUpperCase()} ***\n`;
-          content += `${restaurant.address}\nContact: ${restaurant.contact}\n\n`;
-          content += `\x1b\x21\x00`;
-          content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`;
-          content += `Bill No: ${order.id}    Table No: ${order.tableNo}\n\n`;
-          order.items.forEach(item => {
-            content += `${item.name} (${item.specialNote}) - ${item.quantity}\n`;
-          });
-          content += `Total Items to Prepare: ${order.items.reduce((sum, item) => sum + item.quantity, 0)}\n\n`;
-        } else {
-          content += `\x1b\x21\x30`;
-          content += `*** ${restaurant.name.toUpperCase()} ***\n`;
-          content += `${restaurant.address}\nContact: ${restaurant.contact}\n\n`;
-          content += `\x1b\x21\x00`;
-          content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`;
-          content += `Bill No: ${order.id}    Table No: ${order.tableNo}\n\n`;
-          let totalAmount = 0;
-          order.items.forEach(item => {
-            const itemTotal = item.price * item.quantity;
-            totalAmount += itemTotal;
-            content += `${item.name} - ${item.quantity} x ${item.price} = ${itemTotal}\n`;
-          });
-          content += `Sub Total: ${totalAmount}\n`;
-          content += `Discount: -${order.discount || 0}\n`;
-          content += `CGST: +${order.cgst || 0}\n`;
-          content += `SGST: +${order.sgst || 0}\n`;
-          content += `Grand Total: ${totalAmount + (order.cgst || 0) + (order.sgst || 0) - (order.discount || 0)}\n\n`;
-          content += 'Thank you for dining with us!\n';
-          content += '--------------------------------\n';
-        }
+        orders.forEach(order => {
+          if (isKOT) {
+            content += `\x1b\x21\x30`;
+            content += `*** ${restaurant.name.toUpperCase()} ***\n`;
+            content += `${restaurant.address}\nContact: ${restaurant.contact}\n\n`;
+            content += `\x1b\x21\x00`;
+            content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`;
+            content += `Bill No: ${order.id}    Table No: ${order.tableNo}\n\n`;
+            order.items.forEach(item => {
+              content += `${item.name} (${item.specialNote}) - ${item.quantity}\n`;
+            });
+            content += `Total Items to Prepare: ${order.items.reduce((sum, item) => sum + item.quantity, 0)}\n\n`;
+          } else {
+            content += `\x1b\x21\x30`;
+            content += `*** ${restaurant.name.toUpperCase()} ***\n`;
+            content += `${restaurant.address}\nContact: ${restaurant.contact}\n\n`;
+            content += `\x1b\x21\x00`;
+            content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`;
+            content += `Bill No: ${order.id}    Table No: ${order.tableNo}\n\n`;
+            let totalAmount = 0;
+            order.items.forEach(item => {
+              const itemTotal = item.price * item.quantity;
+              totalAmount += itemTotal;
+              content += `${item.name} - ${item.quantity} x ${item.price} = ${itemTotal}\n`;
+            });
+            content += `Sub Total: ${totalAmount}\n`;
+            content += `Discount: -${order.discount || 0}\n`;
+            content += `CGST: +${order.cgst || 0}\n`;
+            content += `SGST: +${order.sgst || 0}\n`;
+            content += `Grand Total: ${totalAmount + (order.cgst || 0) + (order.sgst || 0) - (order.discount || 0)}\n\n`;
+            content += 'Thank you for dining with us!\n';
+            content += '--------------------------------\n';
+          }
+        });
 
         await writer.write(encoder.encode(content));
         writer.releaseLock();
@@ -117,19 +112,19 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   const handleGenerateKOT = async () => {
-    if (!order) return;
-    await printContent(order, true);
+    if (orders.length === 0) return;
+    await printContent(orders, true);
     updateTableColor(tableNumber, 'orange');
   };
 
   const handleGenerateBill = async () => {
-    if (!order) return;
-    await printContent(order, false);
+    if (orders.length === 0) return;
+    await printContent(orders, false);
     updateTableColor(tableNumber, 'green');
   };
 
   const handleCompleteOrder = () => {
-    setOrder(null);  // Clear current order
+    setOrders([]);  // Clear current orders
     updateTableColor(tableNumber, 'blank');
   };
 
@@ -140,19 +135,22 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         <h2>Table {tableNumber} Details</h2>
       </div>
       <div className="current-order">
-        <h3>Current Order</h3>
-        {!order ? (
+        <h3>Current Orders</h3>
+        {orders.length === 0 ? (
           <p>No current orders.</p>
         ) : (
-          <div className="order-item">
-            <p><strong>Name:</strong> {order.name}</p>
-            <p><strong>Items:</strong></p>
-            <ul>
-              {order.items.map((item, index) => (
-                <li key={index}>{item.name} - {item.price} x {item.quantity}</li>
-              ))}
-            </ul>
-          </div>
+          orders.map((order, orderIndex) => (
+            <div className="order-item" key={orderIndex}>
+              <p><strong>Order ID:</strong> {order.id}</p>
+              <p><strong>Name:</strong> {order.name}</p>
+              <p><strong>Items:</strong></p>
+              <ul>
+                {order.items.map((item, index) => (
+                  <li key={index}>{item.name} - {item.price} x {item.quantity}</li>
+                ))}
+              </ul>
+            </div>
+          ))
         )}
       </div>
       <div className="action-buttons">

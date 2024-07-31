@@ -44,28 +44,50 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const printContent = async (order, isKOT) => {
     if ('serial' in navigator) {
       const port = await navigator.serial.requestPort();
-      await port.open({ baudRate: 9600 });  // Set baud rate as per printer specification
+      await port.open({ baudRate: 9600 }); // Set baud rate as per printer specification
   
       const writer = port.writable.getWriter();
       const encoder = new TextEncoder();
-      let content = `\n*** ${restaurantName.toUpperCase()} ***\n`;  // Make restaurant name bold and centered
-      content += `Table No: ${order.tableNo}\nOrder ID: ${order.id}\nDate: ${new Date().toLocaleString()}\n\nItems Ordered:\n`;
   
+      // Fetch additional restaurant details, assumed to be stored in state or fetched previously
+      const restaurantAddress = "123 Example St, City";
+      const contactNumber = "(123) 456-7890";
+      const discount = order.discount || 0; // Assuming discount is part of order object
+      const cgst = order.cgst || 0; // Central Goods and Services Tax
+      const sgst = order.sgst || 0; // State Goods and Services Tax
+  
+      // Header
+      let content = `\n*** ${restaurantName.toUpperCase()} ***\n`;
+      content += `${restaurantAddress}\n`;
+      content += `Contact: ${contactNumber}\n\n`;
+  
+      // Order details
+      content += `Date: ${new Date().toLocaleDateString()}\n`;
+      content += `Time: ${new Date().toLocaleTimeString()}\n`;
+      content += `Bill No: ${order.id}\n\n`;
+      content += `Items Ordered:\n`;
+  
+      let totalAmount = 0;
+      let totalQuantity = 0;
       order.items.forEach(item => {
-        content += ` - ${item.name} x ${item.quantity}\n`;
+        const itemTotal = item.price * item.quantity;
+        totalAmount += itemTotal;
+        totalQuantity += item.quantity;
+        content += `${item.name} - ${item.quantity} x ${item.price} = ${itemTotal}\n`;
       });
   
-      if (!isKOT) {
-        let totalAmount = 0;
-        order.items.forEach(item => {
-          const itemTotal = item.price * item.quantity;
-          totalAmount += itemTotal;
-          content += `   ${item.name} - ${item.price} x ${item.quantity} = ${itemTotal}\n`;
-        });
-        content += `\nTotal Amount: ${totalAmount}\n`;
-      }
+      // Totals and taxes
+      content += `\nTotal Items: ${totalQuantity}\n`;
+      content += `Sub Total: ${totalAmount}\n`;
+      content += `Discount: -${discount}\n`;
+      content += `CGST: +${cgst}\n`;
+      content += `SGST: +${sgst}\n`;
   
-      content += '\n--------------------------------\n';  // Dashed line for cut here indication
+      const grandTotal = totalAmount + cgst + sgst - discount;
+      content += `Grand Total: ${grandTotal}\n`;
+  
+      // Footer
+      content += '\n--------------------------------\n'; // Dashed line for cut here indication
       content += 'Thank you for dining with us!\n\n';
   
       await writer.write(encoder.encode(content));
@@ -76,6 +98,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       console.error("Web Serial API not supported.");
     }
   };
+  
   
 
   const handleGenerateKOT = async () => {

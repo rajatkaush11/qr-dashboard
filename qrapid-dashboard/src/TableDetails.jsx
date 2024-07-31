@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { backendDb } from './firebase-config';
-import { collection, query, where, onSnapshot, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, getDoc, updateDoc } from 'firebase/firestore';
 import './TableDetails.css';
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
@@ -33,13 +33,17 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     fetchRestaurantDetails();
 
     const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
-    const q = query(collection(backendDb, 'orders'), where('tableNo', '==', normalizedTableNumber));
+    const q = query(
+      collection(backendDb, 'orders'),
+      where('tableNo', '==', normalizedTableNumber),
+      where('status', '!=', 'completed') // Fetch only non-completed orders
+    );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const ordersData = [];
       querySnapshot.forEach((doc) => {
         const order = doc.data();
-        ordersData.push(order);
+        ordersData.push({ id: doc.id, ...order });
       });
       setOrders(ordersData);
       console.log("Orders fetched:", ordersData);
@@ -121,7 +125,11 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     updateTableColor(tableNumber, 'green');
   };
 
-  const handleCompleteOrder = () => {
+  const handleCompleteOrder = async () => {
+    if (orders.length === 0) return;
+    const order = orders[0];
+    const orderRef = doc(backendDb, 'orders', order.id);
+    await updateDoc(orderRef, { status: 'completed' });
     updateTableColor(tableNumber, 'blank');
   };
 

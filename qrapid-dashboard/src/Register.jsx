@@ -56,6 +56,7 @@ const Register = () => {
       alert('Registered successfully!');
       navigate('/login'); // Redirect to login page
     } catch (error) {
+      console.error("Registration error:", error);
       setMessage(error.message || 'Registration failed');
     }
   };

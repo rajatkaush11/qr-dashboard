@@ -32,7 +32,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
     fetchRestaurantDetails();
 
-    const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
+    // Normalize tableNumber to match the format in Firestore
+    const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber : `T${tableNumber}`;
     const q = query(
       collection(backendDb, 'orders'),
       where('tableNo', '==', normalizedTableNumber),

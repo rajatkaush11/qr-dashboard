@@ -6,6 +6,7 @@ import './TableDetails.css';
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [orders, setOrders] = useState([]);
   const [restaurant, setRestaurant] = useState({ name: '', address: '', contact: '' });
+  const [lastCompletionTime, setLastCompletionTime] = useState(null);
 
   useEffect(() => {
     const fetchRestaurantDetails = async () => {
@@ -113,18 +114,21 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   const handleGenerateKOT = async () => {
-    if (orders.length === 0) return;
-    await printContent(orders, true);
+    const filteredOrders = orders.filter(order => new Date(order.createdAt.toDate()) > new Date(lastCompletionTime));
+    if (filteredOrders.length === 0) return;
+    await printContent(filteredOrders, true);
     updateTableColor(tableNumber, 'orange');
   };
 
   const handleGenerateBill = async () => {
-    if (orders.length === 0) return;
-    await printContent(orders, false);
+    const filteredOrders = orders.filter(order => new Date(order.createdAt.toDate()) > new Date(lastCompletionTime));
+    if (filteredOrders.length === 0) return;
+    await printContent(filteredOrders, false);
     updateTableColor(tableNumber, 'green');
   };
 
   const handleCompleteOrder = () => {
+    setLastCompletionTime(new Date().toISOString());  // Set the current time as the last completion time
     setOrders([]);  // Clear current orders
     updateTableColor(tableNumber, 'blank');
   };
@@ -140,17 +144,19 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         {orders.length === 0 ? (
           <p>No current orders.</p>
         ) : (
-          orders.map((order, orderIndex) => (
-            <div className="order-item" key={orderIndex}>
-              <p><strong>Name:</strong> {order.name}</p>
-              <p><strong>Items:</strong></p>
-              <ul>
-                {order.items.map((item, index) => (
-                  <li key={index}>{item.name} - {item.price} x {item.quantity}</li>
-                ))}
-              </ul>
-            </div>
-          ))
+          orders
+            .filter(order => !lastCompletionTime || new Date(order.createdAt.toDate()) > new Date(lastCompletionTime))
+            .map((order, orderIndex) => (
+              <div className="order-item" key={orderIndex}>
+                <p><strong>Name:</strong> {order.name}</p>
+                <p><strong>Items:</strong></p>
+                <ul>
+                  {order.items.map((item, index) => (
+                    <li key={index}>{item.name} - {item.price} x {item.quantity}</li>
+                  ))}
+                </ul>
+              </div>
+            ))
         )}
       </div>
       <div className="action-buttons">

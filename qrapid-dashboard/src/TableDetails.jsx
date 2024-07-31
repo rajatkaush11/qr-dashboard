@@ -26,69 +26,41 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const handleGenerateKOT = async () => {
     if (orders.length === 0) return;
-
     const order = orders[0];
     try {
-      await printContent(order, true); // true for KOT
+      await printKOT(order);
       updateTableColor(tableNumber, 'orange'); // Update color to Running KOT Table (orange)
     } catch (error) {
       console.error('Error generating KOT:', error);
     }
   };
 
-  const handleGenerateBill = async () => {
-    if (orders.length === 0) return;
+  const printKOT = async (order) => {
+    if ('serial' in navigator) {
+      try {
+        const port = await navigator.serial.requestPort();
+        await port.open({ baudRate: 9600 });  // Make sure baud rate matches your printer's specifications
 
-    const order = orders[0];
-    try {
-      await printContent(order, false); // false for Bill
-      updateTableColor(tableNumber, 'green'); // Update color to Printed Table (green)
-    } catch (error) {
-      console.error('Error generating bill:', error);
-    }
-  };
+        const writer = port.writable.getWriter();
+        const encoder = new TextEncoder();
 
-  const handleCompleteOrder = () => {
-    updateTableColor(tableNumber, 'blank'); // Update color to Blank Table (grey)
-  };
+        // Generate KOT content
+        let kotContent = `Table No: ${order.tableNo}\nOrder ID: ${order.id}\nItems:\n`;
+        order.items.forEach(item => {
+          kotContent += `${item.name} x ${item.quantity}\n`;
+        });
 
-  const printContent = async (order, isKOT) => {
-    try {
-      // Request device with Bluetooth service and characteristic UUIDs
-      const device = await navigator.bluetooth.requestDevice({
-        filters: [{ name: 'SAMPANN Regular' }],
-        optionalServices: ['00001101-0000-1000-8000-00805f9b34fb'] // Common UUID for Serial Port Profile
-      });
+        // Send the KOT content to the printer
+        await writer.write(encoder.encode(kotContent));
+        writer.releaseLock();
 
-      const server = await device.gatt.connect();
-      const service = await server.getPrimaryService('00001101-0000-1000-8000-00805f9b34fb');
-      const characteristic = await service.getCharacteristic('00001101-0000-1000-8000-00805f9b34fb'); // Update to correct characteristic UUID
-
-      // Generate content based on the type (KOT or Bill)
-      let content = `Table No: ${order.tableNo}\nOrder ID: ${order.id}\nItems:\n`;
-      let totalAmount = 0;
-      order.items.forEach(item => {
-        if (isKOT) {
-          content += `${item.name} x ${item.quantity}\n`;
-        } else {
-          const itemTotal = item.price * item.quantity;
-          totalAmount += itemTotal;
-          content += `${item.name} - ${item.price} x ${item.quantity} = ${itemTotal}\n`;
-        }
-      });
-      if (!isKOT) {
-        content += `\nTotal Amount: ${totalAmount}\nThank you for dining with us!`;
+        await port.close();
+        console.log('KOT printed successfully');
+      } catch (error) {
+        console.error('Error connecting to Bluetooth device:', error);
       }
-
-      // Convert to ArrayBuffer
-      const encoder = new TextEncoder();
-      const data = encoder.encode(content);
-
-      // Write data to Bluetooth characteristic
-      await characteristic.writeValue(data);
-      console.log(isKOT ? 'KOT printed successfully' : 'Bill printed successfully');
-    } catch (error) {
-      console.error(isKOT ? 'Error printing KOT:' : 'Error printing bill:', error);
+    } else {
+      console.log('Web Serial API not supported.');
     }
   };
 
@@ -118,8 +90,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       </div>
       <div className="action-buttons">
         <button onClick={handleGenerateKOT} className="action-button">Generate KOT</button>
-        <button onClick={handleGenerateBill} className="action-button">Generate Bill</button>
-        <button onClick={handleCompleteOrder} className="action-button">Complete Order</button>
       </div>
     </div>
   );

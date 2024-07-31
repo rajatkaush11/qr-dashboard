@@ -18,10 +18,12 @@ const Register = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    console.log('Starting registration process...');
     try {
       // Create user with email and password
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      console.log('User created with UID:', user.uid);
 
       // Save additional data in Firestore
       await setDoc(doc(db, "restaurants", user.uid), {
@@ -31,6 +33,7 @@ const Register = () => {
         timing,
         email: user.email // Use the email from userCredential
       });
+      console.log('Restaurant details saved in Firestore');
 
       // Save additional data in MongoDB
       const response = await fetch(`${apiBaseUrl}/api/restaurant`, {
@@ -51,6 +54,7 @@ const Register = () => {
       if (!response.ok) {
         throw new Error('Failed to save data in MongoDB');
       }
+      console.log('Restaurant details saved in MongoDB');
 
       // Display alert and redirect after successful registration
       alert('Registered successfully!');

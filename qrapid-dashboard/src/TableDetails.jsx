@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { backendDb } from './firebase-config';
-import { collection, query, where, onSnapshot, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, getDoc, orderBy, limit } from 'firebase/firestore';
 import './TableDetails.css';
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
-  const [orders, setOrders] = useState([]);
+  const [order, setOrder] = useState(null);
   const [restaurant, setRestaurant] = useState({ name: '', address: '', contact: '' });
 
   useEffect(() => {
@@ -33,16 +33,22 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     fetchRestaurantDetails();
 
     const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
-    const q = query(collection(backendDb, 'orders'), where('tableNo', '==', normalizedTableNumber));
+    const q = query(
+      collection(backendDb, 'orders'),
+      where('tableNo', '==', normalizedTableNumber),
+      orderBy('timestamp', 'desc'),
+      limit(1)
+    );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const ordersData = [];
-      querySnapshot.forEach((doc) => {
-        const order = doc.data();
-        ordersData.push(order);
-      });
-      setOrders(ordersData);
-      console.log("Orders fetched:", ordersData);
+      if (!querySnapshot.empty) {
+        const latestOrder = querySnapshot.docs[0].data();
+        setOrder(latestOrder);
+        console.log("Latest order fetched:", latestOrder);
+      } else {
+        setOrder(null);
+        console.log("No orders found for this table.");
+      }
     }, (error) => {
       console.error('Error fetching orders:', error);
     });
@@ -106,21 +112,19 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   const handleGenerateKOT = async () => {
-    if (orders.length === 0) return;
-    const order = orders[0];
+    if (!order) return;
     await printContent(order, true);
     updateTableColor(tableNumber, 'orange');
   };
 
   const handleGenerateBill = async () => {
-    if (orders.length === 0) return;
-    const order = orders[0];
+    if (!order) return;
     await printContent(order, false);
     updateTableColor(tableNumber, 'green');
   };
 
   const handleCompleteOrder = () => {
-    setOrders([]);  // Clear current orders
+    setOrder(null);  // Clear current order
     updateTableColor(tableNumber, 'blank');
   };
 
@@ -132,20 +136,18 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       </div>
       <div className="current-order">
         <h3>Current Order</h3>
-        {orders.length === 0 ? (
+        {!order ? (
           <p>No current orders.</p>
         ) : (
-          orders.map((order, index) => (
-            <div key={index} className="order-item">
-              <p><strong>Name:</strong> {order.name}</p>
-              <p><strong>Items:</strong></p>
-              <ul>
-                {order.items.map((item, i) => (
-                  <li key={i}>{item.name} - {item.price} x {item.quantity}</li>
-                ))}
-              </ul>
-            </div>
-          ))
+          <div className="order-item">
+            <p><strong>Name:</strong> {order.name}</p>
+            <p><strong>Items:</strong></p>
+            <ul>
+              {order.items.map((item, index) => (
+                <li key={index}>{item.name} - {item.price} x {item.quantity}</li>
+              ))}
+            </ul>
+          </div>
         )}
       </div>
       <div className="action-buttons">

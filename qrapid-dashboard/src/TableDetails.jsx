@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { backendDb } from './firebase-config';
-import { collection, query, where, onSnapshot, doc, getDoc, orderBy, limit, Timestamp } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, getDoc, orderBy, limit } from 'firebase/firestore';
 import './TableDetails.css';
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
@@ -44,7 +44,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      console.log('Query snapshot:', querySnapshot.docs.map(doc => doc.data()));
+      console.log('Query snapshot size:', querySnapshot.size);
+      console.log('Query snapshot data:', querySnapshot.docs.map(doc => doc.data()));
       if (!querySnapshot.empty) {
         const latestOrder = querySnapshot.docs[0].data();
         setOrder(latestOrder);

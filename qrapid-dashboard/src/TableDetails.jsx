@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { backendDb } from './firebase-config';
-import { collection, query, where, onSnapshot, doc, getDoc, orderBy } from 'firebase/firestore';
+import { backendDb, frontendDb } from './firebase-config'; // Import frontendDb
+import { collection, query, where, onSnapshot, doc, getDoc, orderBy, addDoc } from 'firebase/firestore';
 import './TableDetails.css';
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [orders, setOrders] = useState([]);
   const [restaurant, setRestaurant] = useState({ name: '', address: '', contact: '' });
-  const [lastCompletionTime, setLastCompletionTime] = useState(null);
+  const [completedOrderIds, setCompletedOrderIds] = useState([]);
 
   useEffect(() => {
     const fetchRestaurantDetails = async () => {
@@ -50,6 +50,16 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     }, (error) => {
       console.error('Error fetching orders:', error);
     });
+
+    // Fetch completed order IDs from the frontend "bills" collection
+    const fetchCompletedOrderIds = async () => {
+      const q = query(collection(frontendDb, 'bills'));
+      const querySnapshot = await getDocs(q);
+      const ids = querySnapshot.docs.map(doc => doc.data().orderId);
+      setCompletedOrderIds(ids);
+    };
+
+    fetchCompletedOrderIds();
 
     return () => unsubscribe();
   }, [tableNumber]);
@@ -114,7 +124,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   const handleGenerateKOT = async () => {
-    const filteredOrders = orders.filter(order => !lastCompletionTime || new Date(order.createdAt.toDate()) > new Date(lastCompletionTime));
+    const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
     console.log('Filtered orders for KOT:', filteredOrders);
     if (filteredOrders.length === 0) return;
     await printContent(filteredOrders, true);
@@ -122,17 +132,28 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   const handleGenerateBill = async () => {
-    const filteredOrders = orders.filter(order => !lastCompletionTime || new Date(order.createdAt.toDate()) > new Date(lastCompletionTime));
+    const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
     console.log('Filtered orders for Bill:', filteredOrders);
     if (filteredOrders.length === 0) return;
     await printContent(filteredOrders, false);
     updateTableColor(tableNumber, 'green');
   };
 
-  const handleCompleteOrder = () => {
-    console.log('Completing order. Setting lastCompletionTime to current date and time.');
-    setLastCompletionTime(new Date().toISOString());
-    console.log('New lastCompletionTime:', new Date().toISOString());
+  const handleCompleteOrder = async () => {
+    console.log('Completing order. Storing completed orders in "bills" collection.');
+    const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
+    const batch = frontendDb.batch();
+
+    filteredOrders.forEach(order => {
+      const billRef = doc(collection(frontendDb, 'bills'));
+      batch.set(billRef, { orderId: order.id, ...order });
+    });
+
+    await batch.commit();
+
+    console.log('Orders stored in "bills" collection:', filteredOrders);
+
+    setCompletedOrderIds([...completedOrderIds, ...filteredOrders.map(order => order.id)]);
     updateTableColor(tableNumber, 'blank');
   };
 
@@ -148,7 +169,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           <p>No current orders.</p>
         ) : (
           orders
-            .filter(order => !lastCompletionTime || new Date(order.createdAt.toDate()) > new Date(lastCompletionTime))
+            .filter(order => !completedOrderIds.includes(order.id))
             .map((order, orderIndex) => (
               <div className="order-item" key={orderIndex}>
                 <p><strong>Name:</strong> {order.name}</p>

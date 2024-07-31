@@ -51,6 +51,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       console.log('Query snapshot data:', allOrders);
       setOrders(allOrders);
       localStorage.setItem(`orders_${tableNumber}`, JSON.stringify(allOrders));
+      if (allOrders.length === 0) {
+        updateTableColor(tableNumber, 'blank');
+      }
     }, (error) => {
       console.error('Error fetching orders:', error);
     });

@@ -5,7 +5,7 @@ import './TableDetails.css';
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [orders, setOrders] = useState([]);
-  const [restaurant, setRestaurant] = useState({ name: '', address: '' });
+  const [restaurant, setRestaurant] = useState({ name: '', address: '', contact: '' });
 
   useEffect(() => {
     const fetchRestaurantDetails = async () => {
@@ -21,7 +21,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         const data = restaurantDoc.data();
         setRestaurant({
           name: data.restaurantName || "No name provided",
-          address: data.address || "No address provided"
+          address: data.address || "No address provided",
+          contact: data.contactNumber || "No contact provided"  // Assuming contactNumber field exists
         });
         console.log("Fetched restaurant details:", data);
       } else {
@@ -63,22 +64,20 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           // KOT Formatting
           content += `\x1b\x21\x30`; // Double height and width for the restaurant name
           content += `*** ${restaurant.name.toUpperCase()} ***\n`; // Restaurant name in bold and centered
-          content += `\x1b\x21\x08`; // Normal height but double width for the address
-          content += `${restaurant.address}\n`; // Address in medium font, centered
+          content += `${restaurant.address}\nContact: ${restaurant.contact}\n\n`; // Address and contact in medium font, centered
           content += `\x1b\x21\x00`; // Normal text size
           content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`;
           content += `Bill No: ${order.id}    Table No: ${order.tableNo}\n\n`;
           order.items.forEach(item => {
-            content += `${item.name} - ${item.quantity}\n`;
+            content += `${item.name} (${item.specialNote}) - ${item.quantity}\n`; // Items with special notes
           });
           content += `Total Items to Prepare: ${order.items.reduce((sum, item) => sum + item.quantity, 0)}\n\n`;
         } else {
           // Bill Formatting
           content += `\x1b\x21\x30`; // Bold + double-size font
-          content += `*** ${restaurant.name.toUpperCase()} ***\n`;
-          content += `\x1b\x21\x08`;
-          content += `${restaurant.address}\n`;
-          content += `\x1b\x21\x00`;
+          content += `*** ${restaurant.name.toUpperCase()} ***\n`; // Restaurant name in bold and centered
+          content += `${restaurant.address}\nContact: ${restaurant.contact}\n\n`; // Address and contact in medium font, centered
+          content += `\x1b\x21\x00`; // Normal text size
           content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`;
           content += `Bill No: ${order.id}    Table No: ${order.tableNo}\n\n`;
           let totalAmount = 0;
@@ -88,7 +87,11 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
             content += `${item.name} - ${item.quantity} x ${item.price} = ${itemTotal}\n`;
           });
           content += `Sub Total: ${totalAmount}\n`;
-          content += `Thank you for dining with us!\n`;
+          content += `Discount: -${order.discount || 0}\n`;
+          content += `CGST: +${order.cgst || 0}\n`;
+          content += `SGST: +${order.sgst || 0}\n`;
+          content += `Grand Total: ${totalAmount + (order.cgst || 0) + (order.sgst || 0) - (order.discount || 0)}\n\n`;
+          content += 'Thank you for dining with us!\n';
           content += '--------------------------------\n';
         }
 

@@ -24,37 +24,13 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     return () => unsubscribe();
   }, [tableNumber]);
 
-  const makeRequest = async (url, order) => {
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ tableNumber, orderId: order.id }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to process request: ${response.statusText}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error(`Error making request to ${url}:`, error);
-      throw error;
-    }
-  };
-
   const handleGenerateKOT = async () => {
     if (orders.length === 0) return;
 
     const order = orders[0];
     try {
-      const result = await makeRequest('https://us-central1-qr-dashboard-1107.cloudfunctions.net/printKOT', order);
-      if (result.success) {
-        updateTableColor(tableNumber, 'orange'); // Update color to Running KOT Table (orange)
-        await printKOT(order);
-      }
+      await printContent(order, true); // true for KOT
+      updateTableColor(tableNumber, 'orange'); // Update color to Running KOT Table (orange)
     } catch (error) {
       console.error('Error generating KOT:', error);
     }
@@ -65,10 +41,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
     const order = orders[0];
     try {
-      const result = await makeRequest('https://us-central1-qr-dashboard-1107.cloudfunctions.net/printBill', order);
-      if (result.success) {
-        updateTableColor(tableNumber, 'green'); // Update color to Printed Table (green)
-      }
+      await printContent(order, false); // false for Bill
+      updateTableColor(tableNumber, 'green'); // Update color to Printed Table (green)
     } catch (error) {
       console.error('Error generating bill:', error);
     }
@@ -78,33 +52,43 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     updateTableColor(tableNumber, 'blank'); // Update color to Blank Table (grey)
   };
 
-  const printKOT = async (order) => {
+  const printContent = async (order, isKOT) => {
     try {
       // Request device with Bluetooth service and characteristic UUIDs
       const device = await navigator.bluetooth.requestDevice({
-        filters: [{ name: 'YourPrinterName' }],
-        optionalServices: ['service_uuid']
+        filters: [{ name: 'SAMPANN Regular' }],
+        optionalServices: ['00001101-0000-1000-8000-00805f9b34fb'] // Common UUID for Serial Port Profile
       });
 
       const server = await device.gatt.connect();
-      const service = await server.getPrimaryService('service_uuid');
-      const characteristic = await service.getCharacteristic('characteristic_uuid');
+      const service = await server.getPrimaryService('00001101-0000-1000-8000-00805f9b34fb');
+      const characteristic = await service.getCharacteristic('00001101-0000-1000-8000-00805f9b34fb'); // Update to correct characteristic UUID
 
-      // Generate KOT content
-      let kotContent = `Table No: ${order.tableNo}\nOrder ID: ${order.id}\nItems:\n`;
+      // Generate content based on the type (KOT or Bill)
+      let content = `Table No: ${order.tableNo}\nOrder ID: ${order.id}\nItems:\n`;
+      let totalAmount = 0;
       order.items.forEach(item => {
-        kotContent += `${item.name} x ${item.quantity}\n`;
+        if (isKOT) {
+          content += `${item.name} x ${item.quantity}\n`;
+        } else {
+          const itemTotal = item.price * item.quantity;
+          totalAmount += itemTotal;
+          content += `${item.name} - ${item.price} x ${item.quantity} = ${itemTotal}\n`;
+        }
       });
+      if (!isKOT) {
+        content += `\nTotal Amount: ${totalAmount}\nThank you for dining with us!`;
+      }
 
       // Convert to ArrayBuffer
       const encoder = new TextEncoder();
-      const data = encoder.encode(kotContent);
+      const data = encoder.encode(content);
 
       // Write data to Bluetooth characteristic
       await characteristic.writeValue(data);
-      console.log('KOT printed successfully');
+      console.log(isKOT ? 'KOT printed successfully' : 'Bill printed successfully');
     } catch (error) {
-      console.error('Error printing KOT:', error);
+      console.error(isKOT ? 'Error printing KOT:' : 'Error printing bill:', error);
     }
   };
 

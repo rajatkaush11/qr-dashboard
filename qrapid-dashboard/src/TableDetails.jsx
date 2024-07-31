@@ -9,28 +9,23 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   useEffect(() => {
     const fetchRestaurantDetails = async () => {
-      try {
-        const restaurantId = localStorage.getItem('restaurantId');
-        if (!restaurantId) {
-          console.error("Restaurant ID is not found in localStorage.");
-          return;
-        }
+      const uid = localStorage.getItem('UID');  // Retrieve UID from localStorage
+      if (!uid) {
+        console.error("UID is not found in localStorage.");
+        return;
+      }
 
-        const restaurantRef = doc(backendDb, 'restaurants', restaurantId);
-        const restaurantDoc = await getDoc(restaurantRef);
-
-        if (restaurantDoc.exists()) {
-          const data = restaurantDoc.data();
-          setRestaurant({
-            name: data.restaurantName || "No name provided",
-            address: data.address || "No address provided"
-          });
-          console.log("Fetched restaurant details:", data);
-        } else {
-          console.error(`No restaurant found with ID: ${restaurantId}`);
-        }
-      } catch (error) {
-        console.error("Error fetching restaurant details:", error);
+      const restaurantRef = doc(backendDb, 'restaurants', uid);  // Use UID to reference the correct document
+      const restaurantDoc = await getDoc(restaurantRef);
+      if (restaurantDoc.exists()) {
+        const data = restaurantDoc.data();
+        setRestaurant({
+          name: data.restaurantName || "No name provided",
+          address: data.address || "No address provided"
+        });
+        console.log("Fetched restaurant details:", data);
+      } else {
+        console.error(`No restaurant found with UID: ${uid}`);
       }
     };
 
@@ -65,9 +60,12 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         let content = '';
 
         if (isKOT) {
-          content += `\x1b\x21\x30`; // Commands for text formatting
-          content += `*** ${restaurant.name.toUpperCase()} ***\n`;
-          content += `${restaurant.address}\n\n`;
+          // KOT Formatting
+          content += `\x1b\x21\x30`; // Double height and width for the restaurant name
+          content += `*** ${restaurant.name.toUpperCase()} ***\n`; // Restaurant name in bold and centered
+          content += `\x1b\x21\x08`; // Normal height but double width for the address
+          content += `${restaurant.address}\n`; // Address in medium font, centered
+          content += `\x1b\x21\x00`; // Normal text size
           content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`;
           content += `Bill No: ${order.id}    Table No: ${order.tableNo}\n\n`;
           order.items.forEach(item => {
@@ -75,9 +73,12 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           });
           content += `Total Items to Prepare: ${order.items.reduce((sum, item) => sum + item.quantity, 0)}\n\n`;
         } else {
-          content += `\x1b\x21\x30`; // Commands for text formatting
+          // Bill Formatting
+          content += `\x1b\x21\x30`; // Bold + double-size font
           content += `*** ${restaurant.name.toUpperCase()} ***\n`;
+          content += `\x1b\x21\x08`;
           content += `${restaurant.address}\n`;
+          content += `\x1b\x21\x00`;
           content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`;
           content += `Bill No: ${order.id}    Table No: ${order.tableNo}\n\n`;
           let totalAmount = 0;
@@ -146,9 +147,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         )}
       </div>
       <div className="action-buttons">
-        <button onClick={handleGenerateKOT} className="action-button">Generate KOT</button>
-        <button onClick={handleGenerateBill} className="action-button">Generate Bill</button>
-        <button onClick={handleCompleteOrder} className="action-button">Complete Order</button>
+        <button onClick={() => handleGenerateKOT()} className="action-button">Generate KOT</button>
+        <button onClick={() => handleGenerateBill()} className="action-button">Generate Bill</button>
+        <button onClick={() => handleCompleteOrder()} className="action-button">Complete Order</button>
       </div>
     </div>
   );

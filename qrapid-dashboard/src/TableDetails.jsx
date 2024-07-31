@@ -1,28 +1,29 @@
 import React, { useEffect, useState } from 'react';
 import { backendDb } from './firebase-config';
-import { collection, query, where, onSnapshot, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, getDoc, orderBy } from 'firebase/firestore';
 import './TableDetails.css';
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [orders, setOrders] = useState([]);
   const [restaurant, setRestaurant] = useState({ name: '', address: '', contact: '' });
+  const [completedOrderIds, setCompletedOrderIds] = useState([]);
 
   useEffect(() => {
     const fetchRestaurantDetails = async () => {
-      const uid = localStorage.getItem('UID');  // Retrieve UID from localStorage
+      const uid = localStorage.getItem('UID');
       if (!uid) {
         console.error("UID is not found in localStorage.");
         return;
       }
 
-      const restaurantRef = doc(backendDb, 'restaurants', uid);  // Use UID to reference the correct document
+      const restaurantRef = doc(backendDb, 'restaurants', uid);
       const restaurantDoc = await getDoc(restaurantRef);
       if (restaurantDoc.exists()) {
         const data = restaurantDoc.data();
         setRestaurant({
           name: data.restaurantName || "No name provided",
           address: data.address || "No address provided",
-          contact: data.contactNumber || "No contact provided"  // Assuming contactNumber field exists
+          contact: data.contactNumber || "No contact provided"
         });
         console.log("Fetched restaurant details:", data);
       } else {
@@ -33,13 +34,19 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     fetchRestaurantDetails();
 
     const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
-    const q = query(collection(backendDb, 'orders'), where('tableNo', '==', normalizedTableNumber));
+    const q = query(
+      collection(backendDb, 'orders'),
+      where('tableNo', '==', normalizedTableNumber),
+      orderBy('timestamp', 'desc')
+    );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const ordersData = [];
       querySnapshot.forEach((doc) => {
         const order = doc.data();
-        ordersData.push(order);
+        if (!completedOrderIds.includes(order.id)) {
+          ordersData.push(order);
+        }
       });
       setOrders(ordersData);
       console.log("Orders fetched:", ordersData);
@@ -48,7 +55,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     });
 
     return () => unsubscribe();
-  }, [tableNumber]);
+  }, [tableNumber, completedOrderIds]);
 
   const printContent = async (order, isKOT) => {
     if ('serial' in navigator) {
@@ -61,23 +68,21 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         let content = '';
 
         if (isKOT) {
-          // KOT Formatting
-          content += `\x1b\x21\x30`; // Double height and width for the restaurant name
-          content += `*** ${restaurant.name.toUpperCase()} ***\n`; // Restaurant name in bold and centered
-          content += `${restaurant.address}\nContact: ${restaurant.contact}\n\n`; // Address and contact in medium font, centered
-          content += `\x1b\x21\x00`; // Normal text size
+          content += `\x1b\x21\x30`;
+          content += `*** ${restaurant.name.toUpperCase()} ***\n`;
+          content += `${restaurant.address}\nContact: ${restaurant.contact}\n\n`;
+          content += `\x1b\x21\x00`;
           content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`;
           content += `Bill No: ${order.id}    Table No: ${order.tableNo}\n\n`;
           order.items.forEach(item => {
-            content += `${item.name} (${item.specialNote}) - ${item.quantity}\n`; // Items with special notes
+            content += `${item.name} (${item.specialNote}) - ${item.quantity}\n`;
           });
           content += `Total Items to Prepare: ${order.items.reduce((sum, item) => sum + item.quantity, 0)}\n\n`;
         } else {
-          // Bill Formatting
-          content += `\x1b\x21\x30`; // Bold + double-size font
-          content += `*** ${restaurant.name.toUpperCase()} ***\n`; // Restaurant name in bold and centered
-          content += `${restaurant.address}\nContact: ${restaurant.contact}\n\n`; // Address and contact in medium font, centered
-          content += `\x1b\x21\x00`; // Normal text size
+          content += `\x1b\x21\x30`;
+          content += `*** ${restaurant.name.toUpperCase()} ***\n`;
+          content += `${restaurant.address}\nContact: ${restaurant.contact}\n\n`;
+          content += `\x1b\x21\x00`;
           content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`;
           content += `Bill No: ${order.id}    Table No: ${order.tableNo}\n\n`;
           let totalAmount = 0;
@@ -122,6 +127,10 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   const handleCompleteOrder = () => {
+    if (orders.length === 0) return;
+    const order = orders[0];
+    setCompletedOrderIds(prev => [...prev, order.id]);
+    setOrders([]);
     updateTableColor(tableNumber, 'blank');
   };
 
@@ -136,17 +145,15 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         {orders.length === 0 ? (
           <p>No current orders.</p>
         ) : (
-          orders.map((order, index) => (
-            <div key={index} className="order-item">
-              <p><strong>Name:</strong> {order.name}</p>
-              <p><strong>Items:</strong></p>
-              <ul>
-                {order.items.map((item, i) => (
-                  <li key={i}>{item.name} - {item.price} x {item.quantity}</li>
-                ))}
-              </ul>
-            </div>
-          ))
+          <div className="order-item">
+            <p><strong>Name:</strong> {orders[0].name}</p>
+            <p><strong>Items:</strong></p>
+            <ul>
+              {orders[0].items.map((item, i) => (
+                <li key={i}>{item.name} - {item.price} x {item.quantity}</li>
+              ))}
+            </ul>
+          </div>
         )}
       </div>
       <div className="action-buttons">

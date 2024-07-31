@@ -116,7 +116,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const handleGenerateBill = async () => {
     if (orders.length === 0) return;
-    orders = orders[0];
+    const order = orders[0];
     await printContent(order, false);
     updateTableColor(tableNumber, 'green');
   };

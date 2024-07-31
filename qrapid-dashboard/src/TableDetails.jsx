@@ -39,7 +39,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     const q = query(
       collection(backendDb, 'orders'),
       where('tableNo', '==', normalizedTableNumber),
-      orderBy('timestamp', 'desc'),
+      orderBy('createdAt', 'desc'),
       limit(1)
     );
 

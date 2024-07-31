@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { backendDb } from './firebase-config';
-import { collection, query, where, onSnapshot, doc, getDoc, orderBy } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, getDoc } from 'firebase/firestore';
 import './TableDetails.css';
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
-  const [latestOrder, setLatestOrder] = useState(null);
+  const [orders, setOrders] = useState([]);
   const [restaurant, setRestaurant] = useState({ name: '', address: '', contact: '' });
-  const [completedOrderIds, setCompletedOrderIds] = useState([]);
 
   useEffect(() => {
     const fetchRestaurantDetails = async () => {
@@ -34,32 +33,22 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     fetchRestaurantDetails();
 
     const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
-    console.log(`Normalized Table Number: ${normalizedTableNumber}`);
-    
-    const q = query(
-      collection(backendDb, 'orders'),
-      where('tableNo', '==', normalizedTableNumber),
-      orderBy('timestamp', 'desc')
-    );
+    const q = query(collection(backendDb, 'orders'), where('tableNo', '==', normalizedTableNumber));
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const ordersData = [];
       querySnapshot.forEach((doc) => {
         const order = doc.data();
-        console.log("Fetched document:", order);
-        if (!completedOrderIds.includes(order.id)) {
-          ordersData.push(order);
-        }
+        ordersData.push(order);
       });
-      console.log("Filtered ordersData:", ordersData);
-      setLatestOrder(ordersData.length > 0 ? ordersData[0] : null);
-      console.log("Latest Order:", ordersData.length > 0 ? ordersData[0] : null);
+      setOrders(ordersData);
+      console.log("Orders fetched:", ordersData);
     }, (error) => {
       console.error('Error fetching orders:', error);
     });
 
     return () => unsubscribe();
-  }, [tableNumber, completedOrderIds]);
+  }, [tableNumber]);
 
   const printContent = async (order, isKOT) => {
     if ('serial' in navigator) {
@@ -117,21 +106,21 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   const handleGenerateKOT = async () => {
-    if (!latestOrder) return;
-    await printContent(latestOrder, true);
+    if (orders.length === 0) return;
+    const order = orders[0];
+    await printContent(order, true);
     updateTableColor(tableNumber, 'orange');
   };
 
   const handleGenerateBill = async () => {
-    if (!latestOrder) return;
-    await printContent(latestOrder, false);
+    if (orders.length === 0) return;
+    const order = orders[0];
+    await printContent(order, false);
     updateTableColor(tableNumber, 'green');
   };
 
   const handleCompleteOrder = () => {
-    if (!latestOrder) return;
-    setCompletedOrderIds(prev => [...prev, latestOrder.id]);
-    setLatestOrder(null);
+    setOrders([]);  // Clear current orders
     updateTableColor(tableNumber, 'blank');
   };
 
@@ -143,24 +132,26 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       </div>
       <div className="current-order">
         <h3>Current Order</h3>
-        {latestOrder === null ? (
+        {orders.length === 0 ? (
           <p>No current orders.</p>
         ) : (
-          <div className="order-item">
-            <p><strong>Name:</strong> {latestOrder.name}</p>
-            <p><strong>Items:</strong></p>
-            <ul>
-              {latestOrder.items.map((item, i) => (
-                <li key={i}>{item.name} - {item.price} x {item.quantity}</li>
-              ))}
-            </ul>
-          </div>
+          orders.map((order, index) => (
+            <div key={index} className="order-item">
+              <p><strong>Name:</strong> {order.name}</p>
+              <p><strong>Items:</strong></p>
+              <ul>
+                {order.items.map((item, i) => (
+                  <li key={i}>{item.name} - {item.price} x {item.quantity}</li>
+                ))}
+              </ul>
+            </div>
+          ))
         )}
       </div>
       <div className="action-buttons">
-        <button onClick={handleGenerateKOT} className="action-button">Generate KOT</button>
-        <button onClick={handleGenerateBill} className="action-button">Generate Bill</button>
-        <button onClick={handleCompleteOrder} className="action-button">Complete Order</button>
+        <button onClick={() => handleGenerateKOT()} className="action-button">Generate KOT</button>
+        <button onClick={() => handleGenerateBill()} className="action-button">Generate Bill</button>
+        <button onClick={() => handleCompleteOrder()} className="action-button">Complete Order</button>
       </div>
     </div>
   );

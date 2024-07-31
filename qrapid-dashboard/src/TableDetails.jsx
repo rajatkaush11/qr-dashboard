@@ -49,9 +49,12 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       console.log('Query snapshot size:', querySnapshot.size);
       const allOrders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       console.log('Query snapshot data:', allOrders);
-      setOrders(allOrders);
-      localStorage.setItem(`orders_${tableNumber}`, JSON.stringify(allOrders));
-      if (allOrders.length === 0) {
+
+      const filteredOrders = allOrders.filter(order => !completedOrderIds.includes(order.id));
+      setOrders(filteredOrders);
+      localStorage.setItem(`orders_${tableNumber}`, JSON.stringify(filteredOrders));
+      
+      if (filteredOrders.length === 0) {
         updateTableColor(tableNumber, 'blank');
       }
     }, (error) => {
@@ -161,6 +164,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     console.log('Orders stored in "bills" collection:', filteredOrders);
 
     setCompletedOrderIds([...completedOrderIds, ...filteredOrders.map(order => order.id)]);
+    setOrders([]);
+    localStorage.removeItem(`orders_${tableNumber}`);
     updateTableColor(tableNumber, 'blank');
   };
 
@@ -176,7 +181,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           <p>No current orders.</p>
         ) : (
           orders
-            .filter(order => !completedOrderIds.includes(order.id))
             .map((order, orderIndex) => (
               <div className="order-item" key={orderIndex}>
                 <p><strong>Name:</strong> {order.name}</p>

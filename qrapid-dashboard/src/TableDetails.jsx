@@ -71,7 +71,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
             content += `${restaurant.address}\nContact: ${restaurant.contact}\n\n`;
             content += `\x1b\x21\x00`;
             content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`;
-            content += `Bill No: ${order.id}    Table No: ${order.tableNo}\n\n`;
+            content += `Table No: ${order.tableNo}\n\n`;
             order.items.forEach(item => {
               content += `${item.name} (${item.specialNote}) - ${item.quantity}\n`;
             });
@@ -82,7 +82,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
             content += `${restaurant.address}\nContact: ${restaurant.contact}\n\n`;
             content += `\x1b\x21\x00`;
             content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`;
-            content += `Bill No: ${order.id}    Table No: ${order.tableNo}\n\n`;
+            content += `Table No: ${order.tableNo}\n\n`;
             let totalAmount = 0;
             order.items.forEach(item => {
               const itemTotal = item.price * item.quantity;
@@ -141,7 +141,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         ) : (
           orders.map((order, orderIndex) => (
             <div className="order-item" key={orderIndex}>
-              <p><strong>Order ID:</strong> {order.id}</p>
               <p><strong>Name:</strong> {order.name}</p>
               <p><strong>Items:</strong></p>
               <ul>

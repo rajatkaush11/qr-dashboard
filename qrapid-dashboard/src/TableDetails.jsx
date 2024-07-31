@@ -5,21 +5,32 @@ import './TableDetails.css';
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [orders, setOrders] = useState([]);
-  const [restaurantName, setRestaurantName] = useState('');
-  const [restaurantAddress, setRestaurantAddress] = useState('');
+  const [restaurant, setRestaurant] = useState({ name: '', address: '' });
 
   useEffect(() => {
     const fetchRestaurantDetails = async () => {
-      const restaurantId = localStorage.getItem('restaurantId');
-      if (restaurantId) {
+      try {
+        const restaurantId = localStorage.getItem('restaurantId');
+        if (!restaurantId) {
+          console.error("Restaurant ID is not found in localStorage.");
+          return;
+        }
+
         const restaurantRef = doc(backendDb, 'restaurants', restaurantId);
         const restaurantDoc = await getDoc(restaurantRef);
+
         if (restaurantDoc.exists()) {
-          setRestaurantName(restaurantDoc.data().restaurantName);
-          setRestaurantAddress(restaurantDoc.data().address);
+          const data = restaurantDoc.data();
+          setRestaurant({
+            name: data.restaurantName || "No name provided",
+            address: data.address || "No address provided"
+          });
+          console.log("Fetched restaurant details:", data);
         } else {
-          console.log('No such restaurant!');
+          console.error(`No restaurant found with ID: ${restaurantId}`);
         }
+      } catch (error) {
+        console.error("Error fetching restaurant details:", error);
       }
     };
 
@@ -35,8 +46,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         ordersData.push(order);
       });
       setOrders(ordersData);
+      console.log("Orders fetched:", ordersData);
     }, (error) => {
-      console.error('Error fetching snapshot:', error);
+      console.error('Error fetching orders:', error);
     });
 
     return () => unsubscribe();
@@ -44,54 +56,48 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const printContent = async (order, isKOT) => {
     if ('serial' in navigator) {
-      const port = await navigator.serial.requestPort();
-      await port.open({ baudRate: 9600 });
+      try {
+        const port = await navigator.serial.requestPort();
+        await port.open({ baudRate: 9600 });
 
-      const writer = port.writable.getWriter();
-      const encoder = new TextEncoder();
-      let content = '';
+        const writer = port.writable.getWriter();
+        const encoder = new TextEncoder();
+        let content = '';
 
-      if (isKOT) {
-        // KOT Formatting
-        content += `\x1b\x21\x30`; // Double height and width for the restaurant name
-        content += `*** ${restaurantName.toUpperCase()} ***\n`; // Restaurant name in bold and centered
-        content += `\x1b\x21\x08`; // Normal height but double width for the address
-        content += `${restaurantAddress}\n`; // Address in medium font, centered
-        content += `\x1b\x21\x00`; // Normal text size
-        content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`; // Date and time on the same line
-        content += `Bill No: ${order.id}    Table No: ${order.tableNo}\n\n`; // Bill and table number in bold
-        order.items.forEach(item => {
-          content += `${item.name} - ${item.quantity}\n`; // Items and quantities
-        });
-        content += `Total Items to Prepare: ${order.items.reduce((sum, item) => sum + item.quantity, 0)}\n\n`; // Total quantity
-      } else {
-        // Bill Formatting
-        content += `\x1b\x21\x30`; // Bold + double-size font
-        content += `*** ${restaurantName.toUpperCase()} ***\n`; // Restaurant name in bold and centered
-        content += `\x1b\x21\x08`; // Normal height but double width for the address
-        content += `${restaurantAddress}\n`; // Address centered
-        content += `\x1b\x21\x00`; // Normal text size
-        content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`; // Date and time on the same line
-        content += `Bill No: ${order.id}    Table No: ${order.tableNo}\n\n`; // Bill and table number in bold
-        let totalAmount = 0;
-        order.items.forEach(item => {
-          const itemTotal = item.price * item.quantity;
-          totalAmount += itemTotal;
-          content += `${item.name} - ${item.quantity} x ${item.price} = ${itemTotal}\n`; // Itemized breakdown
-        });
-        content += `Sub Total: ${totalAmount}\n`;
-        content += `Discount: -${order.discount}\n`;
-        content += `CGST: +${order.cgst}\n`;
-        content += `SGST: +${order.sgst}\n`;
-        content += `Grand Total: ${totalAmount + order.cgst + order.sgst - order.discount}\n\n`;
-        content += 'Thank you for dining with us!\n'; // Thank you note centered
-        content += '--------------------------------\n'; // Cut line
+        if (isKOT) {
+          content += `\x1b\x21\x30`; // Commands for text formatting
+          content += `*** ${restaurant.name.toUpperCase()} ***\n`;
+          content += `${restaurant.address}\n\n`;
+          content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`;
+          content += `Bill No: ${order.id}    Table No: ${order.tableNo}\n\n`;
+          order.items.forEach(item => {
+            content += `${item.name} - ${item.quantity}\n`;
+          });
+          content += `Total Items to Prepare: ${order.items.reduce((sum, item) => sum + item.quantity, 0)}\n\n`;
+        } else {
+          content += `\x1b\x21\x30`; // Commands for text formatting
+          content += `*** ${restaurant.name.toUpperCase()} ***\n`;
+          content += `${restaurant.address}\n`;
+          content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`;
+          content += `Bill No: ${order.id}    Table No: ${order.tableNo}\n\n`;
+          let totalAmount = 0;
+          order.items.forEach(item => {
+            const itemTotal = item.price * item.quantity;
+            totalAmount += itemTotal;
+            content += `${item.name} - ${item.quantity} x ${item.price} = ${itemTotal}\n`;
+          });
+          content += `Sub Total: ${totalAmount}\n`;
+          content += `Thank you for dining with us!\n`;
+          content += '--------------------------------\n';
+        }
+
+        await writer.write(encoder.encode(content));
+        writer.releaseLock();
+        await port.close();
+        console.log(isKOT ? 'KOT printed successfully' : 'Bill printed successfully');
+      } catch (error) {
+        console.error("Failed to print content via serial:", error);
       }
-
-      await writer.write(encoder.encode(content));
-      writer.releaseLock();
-      await port.close();
-      console.log(isKOT ? 'KOT printed successfully' : 'Bill printed successfully');
     } else {
       console.error("Web Serial API not supported.");
     }
@@ -140,9 +146,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         )}
       </div>
       <div className="action-buttons">
-        <button onClick={() => handleGenerateKOT()} className="action-button">Generate KOT</button>
-        <button onClick={() => handleGenerateBill()} className="action-button">Generate Bill</button>
-        <button onClick={() => handleCompleteOrder()} className="action-button">Complete Order</button>
+        <button onClick={handleGenerateKOT} className="action-button">Generate KOT</button>
+        <button onClick={handleGenerateBill} className="action-button">Generate Bill</button>
+        <button onClick={handleCompleteOrder} className="action-button">Complete Order</button>
       </div>
     </div>
   );

@@ -34,6 +34,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     fetchRestaurantDetails();
 
     const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
+    console.log(`Normalized Table Number: ${normalizedTableNumber}`);
+    
     const q = query(
       collection(backendDb, 'orders'),
       where('tableNo', '==', normalizedTableNumber),
@@ -48,8 +50,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           ordersData.push(order);
         }
       });
-      setLatestOrder(ordersData.length > 0 ? ordersData[0] : null);
       console.log("Orders fetched:", ordersData);
+      setLatestOrder(ordersData.length > 0 ? ordersData[0] : null);
     }, (error) => {
       console.error('Error fetching orders:', error);
     });

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
-import { auth, backendDb, db } from './firebase-config';
-import { collection, query, onSnapshot, getDocs } from 'firebase/firestore';
+import { auth, backendDb } from './firebase-config'; // Import backendDb
+import { collection, query, onSnapshot } from 'firebase/firestore';
 import TableBox from './TableBox';
 import TableDetails from './TableDetails';
 import './TableOverview.css';
@@ -20,7 +20,7 @@ const WelcomeHome = () => {
   const [view, setView] = useState(() => localStorage.getItem('view') || 'overview');
 
   useEffect(() => {
-    const q = query(collection(backendDb, 'orders'));
+    const q = query(collection(backendDb, 'orders')); // Use backendDb
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       console.log('Real-time orders update:', querySnapshot.size);
       const updatedColors = JSON.parse(localStorage.getItem('tableColors')) || Array(15).fill('blank');
@@ -42,27 +42,6 @@ const WelcomeHome = () => {
 
     return () => unsubscribe();
   }, [tables]);
-
-  useEffect(() => {
-    const fetchCompletedOrderIds = async () => {
-      const q = query(collection(db, 'bills'));
-      const querySnapshot = await getDocs(q);
-      const completedOrderIds = querySnapshot.docs.map(doc => doc.data().orderId);
-      const updatedColors = [...tableColors];
-      tables.forEach((tableNumber, index) => {
-        const cachedOrders = JSON.parse(localStorage.getItem(`orders_${tableNumber}`));
-        if (!cachedOrders || cachedOrders.length === 0) {
-          updatedColors[index] = 'blank';
-        } else if (cachedOrders.every(order => completedOrderIds.includes(order.id))) {
-          updatedColors[index] = 'blank';
-        }
-      });
-      localStorage.setItem('tableColors', JSON.stringify(updatedColors));
-      setTableColors(updatedColors);
-    };
-
-    fetchCompletedOrderIds();
-  }, [tables, tableColors]);
 
   const handleLogout = async () => {
     try {

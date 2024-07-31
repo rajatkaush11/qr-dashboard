@@ -32,7 +32,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
     fetchRestaurantDetails();
 
-    // Normalize tableNumber to match the format in Firestore
     const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
     console.log(`Querying for table number: ${normalizedTableNumber}`);
 
@@ -64,40 +63,42 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         const encoder = new TextEncoder();
         let content = '';
 
-        orders.forEach(order => {
-          if (isKOT) {
-            content += `\x1b\x21\x30`;
-            content += `*** ${restaurant.name.toUpperCase()} ***\n`;
-            content += `${restaurant.address}\nContact: ${restaurant.contact}\n\n`;
-            content += `\x1b\x21\x00`;
-            content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`;
-            content += `Table No: ${order.tableNo}\n\n`;
+        content += `\x1b\x21\x30`;
+        content += `*** ${restaurant.name.toUpperCase()} ***\n`;
+        content += `${restaurant.address}\nContact: ${restaurant.contact}\n\n`;
+        content += `\x1b\x21\x00`;
+        content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`;
+        content += `Table No: ${tableNumber}\n\n`;
+
+        if (isKOT) {
+          orders.forEach(order => {
             order.items.forEach(item => {
-              content += `${item.name} (${item.specialNote}) - ${item.quantity}\n`;
+              content += `${item.name} (${item.specialNote || ''}) - ${item.quantity}\n`;
             });
-            content += `Total Items to Prepare: ${order.items.reduce((sum, item) => sum + item.quantity, 0)}\n\n`;
-          } else {
-            content += `\x1b\x21\x30`;
-            content += `*** ${restaurant.name.toUpperCase()} ***\n`;
-            content += `${restaurant.address}\nContact: ${restaurant.contact}\n\n`;
-            content += `\x1b\x21\x00`;
-            content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`;
-            content += `Table No: ${order.tableNo}\n\n`;
-            let totalAmount = 0;
+          });
+          const totalItems = orders.reduce((sum, order) => sum + order.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
+          content += `Total Items to Prepare: ${totalItems}\n\n`;
+        } else {
+          let totalAmount = 0;
+          orders.forEach(order => {
             order.items.forEach(item => {
               const itemTotal = item.price * item.quantity;
               totalAmount += itemTotal;
               content += `${item.name} - ${item.quantity} x ${item.price} = ${itemTotal}\n`;
             });
-            content += `Sub Total: ${totalAmount}\n`;
-            content += `Discount: -${order.discount || 0}\n`;
-            content += `CGST: +${order.cgst || 0}\n`;
-            content += `SGST: +${order.sgst || 0}\n`;
-            content += `Grand Total: ${totalAmount + (order.cgst || 0) + (order.sgst || 0) - (order.discount || 0)}\n\n`;
-            content += 'Thank you for dining with us!\n';
-            content += '--------------------------------\n';
-          }
-        });
+          });
+          const discount = orders.reduce((sum, order) => sum + (order.discount || 0), 0);
+          const cgst = totalAmount * 0.025;
+          const sgst = totalAmount * 0.025;
+          const grandTotal = totalAmount - discount + cgst + sgst;
+          content += `Sub Total: ${totalAmount}\n`;
+          content += `Discount: -${discount}\n`;
+          content += `CGST: +${cgst}\n`;
+          content += `SGST: +${sgst}\n`;
+          content += `Grand Total: ${grandTotal}\n\n`;
+          content += 'Thank you for dining with us!\n';
+          content += '--------------------------------\n';
+        }
 
         await writer.write(encoder.encode(content));
         writer.releaseLock();

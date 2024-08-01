@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { backendDb, db } from './firebase-config'; // Import backendDb
+import { backendDb, db } from './firebase-config';
 import { collection, query, where, onSnapshot, doc, getDoc, orderBy, getDocs, writeBatch } from 'firebase/firestore';
 import './TableDetails.css';
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { backendDb, db } from './firebase-config'; // Import frontendDb
+import { backendDb, db } from './firebase-config'; // Import backendDb
 import { collection, query, where, onSnapshot, doc, getDoc, orderBy, getDocs, writeBatch } from 'firebase/firestore';
 import './TableDetails.css';
 
@@ -10,9 +10,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   useEffect(() => {
     const fetchRestaurantDetails = async () => {
-      const uid = localStorage.getItem('UID');
+      const uid = auth.currentUser?.uid; // Get UID from the authenticated user
       if (!uid) {
-        console.error("UID is not found in localStorage.");
+        console.error("User is not authenticated.");
         return;
       }
 

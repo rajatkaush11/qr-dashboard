@@ -3,7 +3,7 @@ import { backendDb, db } from './firebase-config';
 import { collection, query, where, onSnapshot, doc, getDoc, orderBy, getDocs, writeBatch } from 'firebase/firestore';
 import './TableDetails.css';
 
-const TableDetails = ({ tableNumber, onBackClick, updateTableColor, handleCompleteOrder }) => {
+const TableDetails = ({ tableNumber, onBackClick, updateTableColor, handleCompleteOrder: parentHandleCompleteOrder }) => {
   const [orders, setOrders] = useState(() => {
     const cachedOrders = localStorage.getItem(`orders_${tableNumber}`);
     return cachedOrders ? JSON.parse(cachedOrders) : [];
@@ -143,7 +143,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor, handleComple
     updateTableColor(tableNumber, 'green');
   };
 
-  const handleCompleteOrder = async () => {
+  const completeOrder = async () => {
     console.log('Completing order. Storing completed orders in "bills" collection.');
     const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
     const batch = writeBatch(db);
@@ -151,7 +151,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor, handleComple
     filteredOrders.forEach(order => {
       const billRef = doc(collection(db, 'bills'));
       batch.set(billRef, { orderId: order.id, ...order });
-      handleCompleteOrder(order.id); // Update state to exclude this order in the future
+      parentHandleCompleteOrder(order.id); // Update state to exclude this order in the future
     });
 
     await batch.commit();
@@ -191,7 +191,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor, handleComple
       <div className="action-buttons">
         <button onClick={() => handleGenerateKOT()} className="action-button">Generate KOT</button>
         <button onClick={() => handleGenerateBill()} className="action-button">Generate Bill</button>
-        <button onClick={() => handleCompleteOrder()} className="action-button">Complete Order</button>
+        <button onClick={() => completeOrder()} className="action-button">Complete Order</button>
       </div>
     </div>
   );

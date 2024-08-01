@@ -39,22 +39,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor, handleComple
     const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
     console.log(`Querying for table number: ${normalizedTableNumber}`);
 
-    const q = query(
-      collection(backendDb, 'orders'),
-      where('tableNo', '==', normalizedTableNumber),
-      orderBy('createdAt', 'desc')
-    );
-
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      console.log('Query snapshot size:', querySnapshot.size);
-      const allOrders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      console.log('Query snapshot data:', allOrders);
-      setOrders(allOrders);
-      localStorage.setItem(`orders_${tableNumber}`, JSON.stringify(allOrders));
-    }, (error) => {
-      console.error('Error fetching orders:', error);
-    });
-
     // Fetch completed order IDs from the frontend "bills" collection
     const fetchCompletedOrderIds = async () => {
       const q = query(collection(db, 'bills'));
@@ -66,8 +50,38 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor, handleComple
 
     fetchCompletedOrderIds();
 
+    // Only create a query if completedOrderIds is not empty
+    const createOrderQuery = (completedOrderIds) => {
+      let q;
+      if (completedOrderIds.length > 0) {
+        q = query(
+          collection(backendDb, 'orders'),
+          where('tableNo', '==', normalizedTableNumber),
+          where('id', 'not-in', completedOrderIds),
+          orderBy('createdAt', 'desc')
+        );
+      } else {
+        q = query(
+          collection(backendDb, 'orders'),
+          where('tableNo', '==', normalizedTableNumber),
+          orderBy('createdAt', 'desc')
+        );
+      }
+      return q;
+    };
+
+    const unsubscribe = onSnapshot(createOrderQuery(completedOrderIds), (querySnapshot) => {
+      console.log('Query snapshot size:', querySnapshot.size);
+      const allOrders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      console.log('Query snapshot data:', allOrders);
+      setOrders(allOrders);
+      localStorage.setItem(`orders_${tableNumber}`, JSON.stringify(allOrders));
+    }, (error) => {
+      console.error('Error fetching orders:', error);
+    });
+
     return () => unsubscribe();
-  }, [tableNumber]);
+  }, [tableNumber, completedOrderIds]);
 
   const printContent = async (orders, isKOT) => {
     if ('serial' in navigator) {

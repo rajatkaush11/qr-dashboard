@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { backendDb, db } from './firebase-config'; // Import frontendDb
+import { backendDb, db } from './firebase-config';
 import { collection, query, where, onSnapshot, doc, getDoc, orderBy, getDocs, writeBatch } from 'firebase/firestore';
 import './TableDetails.css';
 
@@ -53,6 +53,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       if (allOrders.length > 0) {
         console.log(`Updating table color for table ${tableNumber} to blue`);
         updateTableColor(`T${normalizedTableNumber}`, 'blue');
+      } else {
+        console.log(`No active orders for table ${tableNumber}, setting color to blank`);
+        updateTableColor(`T${normalizedTableNumber}`, 'blank');
       }
     }, (error) => {
       console.error('Error fetching orders:', error);

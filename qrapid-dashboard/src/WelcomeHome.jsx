@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
-import { auth, backendDb } from './firebase-config'; // Import backendDb
-import { collection, query, onSnapshot } from 'firebase/firestore';
+import { auth, backendDb } from './firebase-config';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import TableBox from './TableBox';
 import TableDetails from './TableDetails';
 import './TableOverview.css';
@@ -21,7 +21,7 @@ const WelcomeHome = () => {
 
   useEffect(() => {
     console.log('Setting up Firestore listener for orders...');
-    const q = query(collection(backendDb, 'orders'));
+    const q = query(collection(backendDb, 'orders'), where('status', '==', 'active'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       console.log('Received Firestore snapshot.');
       const updatedColors = Array(15).fill('blank');
@@ -105,62 +105,61 @@ const WelcomeHome = () => {
             <button
               className={activeRoom === 'Room-2' ? 'active' : ''}
               onClick={() => handleRoomClick('Room-2')}
-                >
-                  Room-2
-                </button>
-                <button
-                  className={activeRoom === 'Room-3' ? 'active' : ''}
-                  onClick={() => handleRoomClick('Room-3')}
-                >
-                  Room-3
-                </button>
+            >
+              Room-2
+            </button>
+            <button
+              className={activeRoom === 'Room-3' ? 'active' : ''}
+              onClick={() => handleRoomClick('Room-3')}
+            >
+              Room-3
+            </button>
+          </div>
+          <div className="main-container">
+            <div className="left-container">
+              <button className="side-button">Running Table</button>
+              <button className="side-button">Printed Table</button>
+              <button className="side-button">Running KOT Table</button>
+            </div>
+            <div className="table-container">
+              {tables.map((tableNumber, index) => (
+                <TableBox
+                  key={index}
+                  tableNumber={tableNumber}
+                  color={tableColors[index]}
+                  isActive={selectedTable === tableNumber}
+                  onClick={() => handleTableClick(tableNumber)}
+                />
+              ))}
+            </div>
+            <div className="status-container">
+              <div className="status-item">
+                <span className="status-color grey"></span> Blank Table
               </div>
-              <div className="main-container">
-                <div className="left-container">
-                  <button className="side-button">Running Table</button>
-                  <button className="side-button">Printed Table</button>
-                  <button className="side-button">Running KOT Table</button>
-                </div>
-                <div className="table-container">
-                  {tables.map((tableNumber, index) => (
-                    <TableBox
-                      key={index}
-                      tableNumber={tableNumber}
-                      color={tableColors[index]}
-                      isActive={selectedTable === tableNumber}
-                      onClick={() => handleTableClick(tableNumber)}
-                    />
-                  ))}
-                </div>
-                <div className="status-container">
-                  <div className="status-item">
-                    <span className="status-color grey"></span> Blank Table
-                  </div>
-                  <div className="status-item">
-                    <span className="status-color blue"></span> Running Table
-                  </div>
-                  <div className="status-item">
-                    <span className="status-color green"></span> Printed Table
-                  </div>
-                  <div className="status-item">
-                    <span className="status-color yellow"></span> Paid Table
-                  </div>
-                  <div className="status-item">
-                    <span className="status-color orange"></span> Running KOT Table
-                  </div>
-                </div>
+              <div className="status-item">
+                <span className="status-color blue"></span> Running Table
               </div>
-            </>
-          ) : (
-            <TableDetails
-              tableNumber={selectedTable}
-              onBackClick={handleBackClick}
-              updateTableColor={updateTableColor}
-            />
-          )}
-        </div>
-      );
-    };
-    
-    export default WelcomeHome;
-    
+              <div className="status-item">
+                <span className="status-color green"></span> Printed Table
+              </div>
+              <div className="status-item">
+                <span className="status-color yellow"></span> Paid Table
+              </div>
+              <div className="status-item">
+                <span className="status-color orange"></span> Running KOT Table
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        <TableDetails
+          tableNumber={selectedTable}
+          onBackClick={handleBackClick}
+          updateTableColor={updateTableColor}
+        />
+      )}
+    </div>
+  );
+};
+
+export default WelcomeHome;

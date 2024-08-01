@@ -18,10 +18,17 @@ const WelcomeHome = () => {
 
   useEffect(() => {
     const fetchTableColors = async () => {
-      const docRef = doc(backendDb, 'tableStatus', 'colors');
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        setTableColors(docSnap.data().colors);
+      try {
+        const docRef = doc(backendDb, 'tableStatus', 'colors');
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setTableColors(docSnap.data().colors);
+          console.log("Fetched table colors:", docSnap.data().colors);
+        } else {
+          console.log("No table colors found");
+        }
+      } catch (error) {
+        console.error('Error fetching table colors:', error);
       }
     };
 
@@ -30,7 +37,7 @@ const WelcomeHome = () => {
     const q = query(collection(backendDb, 'orders'), where('status', '==', 'ongoing'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       console.log('Real-time orders update:', querySnapshot.size);
-      const updatedColors = [...tableColors];
+      const updatedColors = Array(15).fill('blank');
       querySnapshot.forEach((doc) => {
         const order = doc.data();
         console.log('Fetched order:', order);
@@ -40,6 +47,7 @@ const WelcomeHome = () => {
         }
       });
       setTableColors(updatedColors);
+      console.log('Updated table colors:', updatedColors);
     }, (error) => {
       console.error('Error fetching snapshot:', error);
     });
@@ -67,6 +75,7 @@ const WelcomeHome = () => {
   const saveTableColors = async (colors) => {
     try {
       await setDoc(doc(backendDb, 'tableStatus', 'colors'), { colors });
+      console.log('Table colors saved:', colors);
     } catch (error) {
       console.error('Error saving table colors:', error);
     }
@@ -92,6 +101,7 @@ const WelcomeHome = () => {
       updatedColors[tableIndex] = color;
       setTableColors(updatedColors);
       saveTableColors(updatedColors);
+      console.log('Updated table color for', tableNumber, 'to', color);
     }
   };
 

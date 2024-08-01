@@ -27,6 +27,7 @@ const WelcomeHome = () => {
       const updatedColors = Array(15).fill('blank');
       querySnapshot.forEach((doc) => {
         const order = doc.data();
+        console.log('Fetched order:', order);
         const tableIndex = tables.findIndex(t => t === `T${order.tableNo}` || t === `T${parseInt(order.tableNo, 10)}`);
         if (tableIndex !== -1) {
           updatedColors[tableIndex] = 'blue'; // Update color to blue if there is an active order

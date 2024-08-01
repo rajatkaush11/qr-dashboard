@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { backendDb, db } from './firebase-config';
+import { backendDb, db } from './firebase-config'; // Import frontendDb
 import { collection, query, where, onSnapshot, doc, getDoc, orderBy, getDocs, writeBatch } from 'firebase/firestore';
 import './TableDetails.css';
 
@@ -9,7 +9,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [completedOrderIds, setCompletedOrderIds] = useState([]);
 
   useEffect(() => {
-    console.log('Fetching restaurant details...');
     const fetchRestaurantDetails = async () => {
       const uid = localStorage.getItem('UID');
       if (!uid) {
@@ -17,7 +16,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         return;
       }
 
-      console.log(`UID found: ${uid}`);
       const restaurantRef = doc(backendDb, 'restaurants', uid);
       const restaurantDoc = await getDoc(restaurantRef);
       if (restaurantDoc.exists()) {
@@ -41,43 +39,32 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     const q = query(
       collection(backendDb, 'orders'),
       where('tableNo', '==', normalizedTableNumber),
-      where('status', '==', 'active'),
       orderBy('createdAt', 'desc')
     );
 
-    console.log('Setting up Firestore listener for orders...');
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      console.log('Received Firestore snapshot.');
+      console.log('Query snapshot size:', querySnapshot.size);
       const allOrders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       console.log('Query snapshot data:', allOrders);
       setOrders(allOrders);
-      if (allOrders.length > 0) {
-        console.log(`Updating table color for table ${tableNumber} to blue`);
-        updateTableColor(`T${normalizedTableNumber}`, 'blue');
-      }
     }, (error) => {
       console.error('Error fetching orders:', error);
     });
 
+    // Fetch completed order IDs from the frontend "bills" collection
     const fetchCompletedOrderIds = async () => {
-      console.log('Fetching completed order IDs from "bills" collection...');
       const q = query(collection(db, 'bills'));
       const querySnapshot = await getDocs(q);
       const ids = querySnapshot.docs.map(doc => doc.data().orderId);
-      console.log('Fetched completed order IDs:', ids);
       setCompletedOrderIds(ids);
     };
 
     fetchCompletedOrderIds();
 
-    return () => {
-      console.log('Cleaning up Firestore listener...');
-      unsubscribe();
-    };
-  }, [tableNumber, updateTableColor]);
+    return () => unsubscribe();
+  }, [tableNumber]);
 
   const printContent = async (orders, isKOT) => {
-    console.log(`Printing content for ${isKOT ? 'KOT' : 'Bill'}...`);
     if ('serial' in navigator) {
       try {
         const port = await navigator.serial.requestPort();
@@ -95,7 +82,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         content += `Table No: ${tableNumber}\n\n`;
 
         if (isKOT) {
-          console.log('Preparing KOT content...');
           orders.forEach(order => {
             order.items.forEach(item => {
               content += `${item.name} (${item.specialNote || ''}) - ${item.quantity}\n`;
@@ -104,7 +90,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           const totalItems = orders.reduce((sum, order) => sum + order.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
           content += `Total Items to Prepare: ${totalItems}\n\n`;
         } else {
-          console.log('Preparing Bill content...');
           let totalAmount = 0;
           orders.forEach(order => {
             order.items.forEach(item => {
@@ -139,7 +124,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   const handleGenerateKOT = async () => {
-    console.log('Generating KOT...');
     const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
     console.log('Filtered orders for KOT:', filteredOrders);
     if (filteredOrders.length === 0) return;
@@ -148,7 +132,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   const handleGenerateBill = async () => {
-    console.log('Generating Bill...');
     const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
     console.log('Filtered orders for Bill:', filteredOrders);
     if (filteredOrders.length === 0) return;
@@ -157,11 +140,10 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   const handleCompleteOrder = async () => {
-    console.log('Completing order...');
+    console.log('Completing order. Storing completed orders in "bills" collection.');
     const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
     const batch = writeBatch(db);
 
-    console.log('Storing completed orders in "bills" collection...');
     filteredOrders.forEach(order => {
       const billRef = doc(collection(db, 'bills'));
       batch.set(billRef, { orderId: order.id, ...order });
@@ -170,6 +152,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     await batch.commit();
 
     console.log('Orders stored in "bills" collection:', filteredOrders);
+
     setCompletedOrderIds([...completedOrderIds, ...filteredOrders.map(order => order.id)]);
     updateTableColor(tableNumber, 'blank');
   };

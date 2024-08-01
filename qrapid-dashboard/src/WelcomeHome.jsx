@@ -18,6 +18,7 @@ const WelcomeHome = () => {
   const [activeRoom, setActiveRoom] = useState('AC Premium');
   const [selectedTable, setSelectedTable] = useState(null);
   const [view, setView] = useState('overview');
+  const [completedOrderIds, setCompletedOrderIds] = useState([]);
 
   useEffect(() => {
     console.log('Setting up Firestore listener for orders...');
@@ -29,8 +30,8 @@ const WelcomeHome = () => {
         const order = doc.data();
         console.log('Fetched order:', order);
         const tableIndex = tables.findIndex(t => t === `T${order.tableNo}` || t === `T${parseInt(order.tableNo, 10)}`);
-        if (tableIndex !== -1) {
-          updatedColors[tableIndex] = 'blue'; // Update color to blue if there is an active order
+        if (tableIndex !== -1 && !completedOrderIds.includes(order.id)) {
+          updatedColors[tableIndex] = 'blue'; // Update color to blue if there is an active order and it's not completed
         }
       });
       console.log('Updated table colors:', updatedColors);
@@ -39,6 +40,16 @@ const WelcomeHome = () => {
     }, (error) => {
       console.error('Error fetching snapshot:', error);
     });
+
+    const fetchCompletedOrders = async () => {
+      console.log('Fetching completed orders from "bills" collection...');
+      const completedOrderSnapshot = await getDocs(collection(backendDb, 'bills'));
+      const completedOrderIds = completedOrderSnapshot.docs.map(doc => doc.data().orderId);
+      console.log('Fetched completed order IDs:', completedOrderIds);
+      setCompletedOrderIds(completedOrderIds);
+    };
+
+    fetchCompletedOrders();
 
     return () => unsubscribe();
   }, [tables]);

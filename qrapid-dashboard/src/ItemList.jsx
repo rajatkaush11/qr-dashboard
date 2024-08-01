@@ -29,7 +29,7 @@ const ItemList = () => {
         setItems(itemsData);
       }
 
-      const response = await fetch(`${apiBaseUrl}/items/${categoryId}`, {
+      const response = await fetch(`${apiBaseUrl}/api/items/${categoryId}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -71,7 +71,7 @@ const ItemList = () => {
           const itemsRef = collection(db, 'restaurants', user.uid, 'categories', categoryId, 'items');
           const docRef = await addDoc(itemsRef, newItem);
 
-          const response = await fetch(`${apiBaseUrl}/items`, {
+          const response = await fetch(`${apiBaseUrl}/api/items`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -109,7 +109,7 @@ const ItemList = () => {
           const itemDocRef = doc(db, 'restaurants', user.uid, 'categories', categoryId, 'items', editingItem.id);
           await setDoc(itemDocRef, newItem);
 
-          const response = await fetch(`${apiBaseUrl}/items/${editingItem.id}`, {
+          const response = await fetch(`${apiBaseUrl}/api/items/${editingItem.id}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -143,7 +143,7 @@ const ItemList = () => {
           const itemDocRef = doc(db, 'restaurants', user.uid, 'categories', categoryId, 'items', itemToDelete.id);
           await deleteDoc(itemDocRef);
 
-          const response = await fetch(`${apiBaseUrl}/items/${itemToDelete._id}`, {
+          const response = await fetch(`${apiBaseUrl}/api/items/${itemToDelete._id}`, {
             method: 'DELETE',
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('token')}`,

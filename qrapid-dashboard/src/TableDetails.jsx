@@ -1,13 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { backendDb, db } from './firebase-config';
-import { collection, query, where, onSnapshot, doc, getDoc, orderBy, writeBatch } from 'firebase/firestore';
+import { backendDb, db } from './firebase-config'; // Import frontendDb
+import { collection, query, where, onSnapshot, doc, getDoc, orderBy, getDocs, writeBatch } from 'firebase/firestore';
 import './TableDetails.css';
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
-  const [orders, setOrders] = useState(() => {
-    const cachedOrders = localStorage.getItem(`orders_${tableNumber}`);
-    return cachedOrders ? JSON.parse(cachedOrders) : [];
-  });
+  const [orders, setOrders] = useState([]);
   const [restaurant, setRestaurant] = useState({ name: '', address: '', contact: '' });
   const [completedOrderIds, setCompletedOrderIds] = useState([]);
 
@@ -50,10 +47,19 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       const allOrders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       console.log('Query snapshot data:', allOrders);
       setOrders(allOrders);
-      localStorage.setItem(`orders_${tableNumber}`, JSON.stringify(allOrders));
     }, (error) => {
       console.error('Error fetching orders:', error);
     });
+
+    // Fetch completed order IDs from the frontend "bills" collection
+    const fetchCompletedOrderIds = async () => {
+      const q = query(collection(db, 'bills'));
+      const querySnapshot = await getDocs(q);
+      const ids = querySnapshot.docs.map(doc => doc.data().orderId);
+      setCompletedOrderIds(ids);
+    };
+
+    fetchCompletedOrderIds();
 
     return () => unsubscribe();
   }, [tableNumber]);
@@ -119,6 +125,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const handleGenerateKOT = async () => {
     const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
+    console.log('Filtered orders for KOT:', filteredOrders);
     if (filteredOrders.length === 0) return;
     await printContent(filteredOrders, true);
     updateTableColor(tableNumber, 'orange');
@@ -126,12 +133,14 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const handleGenerateBill = async () => {
     const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
+    console.log('Filtered orders for Bill:', filteredOrders);
     if (filteredOrders.length === 0) return;
     await printContent(filteredOrders, false);
     updateTableColor(tableNumber, 'green');
   };
 
   const handleCompleteOrder = async () => {
+    console.log('Completing order. Storing completed orders in "bills" collection.');
     const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
     const batch = writeBatch(db);
 
@@ -141,6 +150,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     });
 
     await batch.commit();
+
+    console.log('Orders stored in "bills" collection:', filteredOrders);
 
     setCompletedOrderIds([...completedOrderIds, ...filteredOrders.map(order => order.id)]);
     updateTableColor(tableNumber, 'blank');

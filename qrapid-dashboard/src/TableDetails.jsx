@@ -54,7 +54,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         console.log(`Updating table color for table ${tableNumber} to blue`);
         updateTableColor(`T${normalizedTableNumber}`, 'blue');
       } else {
-        console.log(`No active orders for table ${tableNumber}, setting color to blank`);
+        console.log(`No active orders for table ${tableNumber}.`);
         updateTableColor(`T${normalizedTableNumber}`, 'blank');
       }
     }, (error) => {

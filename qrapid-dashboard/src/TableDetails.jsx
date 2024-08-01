@@ -58,6 +58,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       const querySnapshot = await getDocs(q);
       const ids = querySnapshot.docs.map(doc => doc.data().orderId);
       setCompletedOrderIds(ids);
+      console.log('Fetched completed order IDs:', ids);
     };
 
     fetchCompletedOrderIds();

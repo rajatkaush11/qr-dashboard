@@ -48,6 +48,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       const allOrders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       console.log('Query snapshot data:', allOrders);
       setOrders(allOrders);
+      if (allOrders.length > 0) {
+        updateTableColor(`T${normalizedTableNumber}`, 'blue');
+      }
     }, (error) => {
       console.error('Error fetching orders:', error);
     });
@@ -62,7 +65,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     fetchCompletedOrderIds();
 
     return () => unsubscribe();
-  }, [tableNumber]);
+  }, [tableNumber, updateTableColor]);
 
   const printContent = async (orders, isKOT) => {
     if ('serial' in navigator) {

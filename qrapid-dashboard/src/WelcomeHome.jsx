@@ -23,15 +23,13 @@ const WelcomeHome = () => {
     const q = query(collection(backendDb, 'orders')); // Use backendDb
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       console.log('Real-time orders update:', querySnapshot.size);
-      const updatedColors = JSON.parse(localStorage.getItem('tableColors')) || Array(15).fill('blank');
+      const updatedColors = Array(15).fill('blank');
       querySnapshot.forEach((doc) => {
         const order = doc.data();
         console.log('Fetched order:', order);
         const tableIndex = tables.findIndex(t => t === `T${order.tableNo}` || t === `T${parseInt(order.tableNo, 10)}`);
         if (tableIndex !== -1) {
-          if (updatedColors[tableIndex] !== 'orange' && updatedColors[tableIndex] !== 'green') {
-            updatedColors[tableIndex] = 'blue'; // Use the 'running' class for blue color
-          }
+          updatedColors[tableIndex] = 'blue'; // Use the 'running' class for blue color
         }
       });
       localStorage.setItem('tableColors', JSON.stringify(updatedColors));

@@ -1,8 +1,3 @@
-import React, { useEffect, useState } from 'react';
-import { backendDb, db } from './firebase-config';
-import { collection, query, where, onSnapshot, doc, getDoc, orderBy, getDocs, writeBatch } from 'firebase/firestore';
-import './TableDetails.css';
-
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [orders, setOrders] = useState([]);
   const [restaurant, setRestaurant] = useState({ name: '', address: '', contact: '' });

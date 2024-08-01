@@ -47,7 +47,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
     console.log('Setting up Firestore listener for orders...');
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      console.log('Received Firestore snapshot.');
+      console.log('Received Firestore snapshot for orders.');
       const allOrders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       console.log('Query snapshot data:', allOrders);
       setOrders(allOrders);

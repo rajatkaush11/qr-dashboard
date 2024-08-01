@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { backendDb, db } from './firebase-config'; // Import frontendDb
+import { backendDb, db } from './firebase-config';
 import { collection, query, where, onSnapshot, doc, getDoc, orderBy, getDocs, writeBatch } from 'firebase/firestore';
 import './TableDetails.css';
 
-const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
+const TableDetails = ({ tableNumber, onBackClick, updateTableColor, handleCompleteOrder }) => {
   const [orders, setOrders] = useState(() => {
     const cachedOrders = localStorage.getItem(`orders_${tableNumber}`);
     return cachedOrders ? JSON.parse(cachedOrders) : [];
@@ -151,6 +151,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     filteredOrders.forEach(order => {
       const billRef = doc(collection(db, 'bills'));
       batch.set(billRef, { orderId: order.id, ...order });
+      handleCompleteOrder(order.id); // Update state to exclude this order in the future
     });
 
     await batch.commit();

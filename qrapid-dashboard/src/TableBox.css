@@ -1,3 +1,4 @@
+/* TableBox.css */
 .table-box {
   width: 100px;
   height: 100px;
@@ -13,7 +14,7 @@
 }
 
 .table-box.active {
-  background-color: limegreen;
+  border: 2px solid black;
 }
 
 .table-box.blank {

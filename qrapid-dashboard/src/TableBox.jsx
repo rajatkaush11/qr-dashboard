@@ -1,3 +1,4 @@
+// TableBox.js
 import React from 'react';
 import './TableBox.css';
 

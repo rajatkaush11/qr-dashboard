@@ -1,10 +1,15 @@
+// TableDetails.js
+import React, { useEffect, useState } from 'react';
+import { collection, query, where, orderBy, onSnapshot, doc, getDoc, writeBatch } from 'firebase/firestore';
+import { backendDb } from './firebase-config';
+import './TableDetails.css';
+
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [orders, setOrders] = useState([]);
   const [restaurant, setRestaurant] = useState({ name: '', address: '', contact: '' });
   const [completedOrderIds, setCompletedOrderIds] = useState([]);
 
   useEffect(() => {
-    console.log('Fetching restaurant details...');
     const fetchRestaurantDetails = async () => {
       const uid = localStorage.getItem('UID');
       if (!uid) {
@@ -12,7 +17,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         return;
       }
 
-      console.log(`UID found: ${uid}`);
       const restaurantRef = doc(backendDb, 'restaurants', uid);
       const restaurantDoc = await getDoc(restaurantRef);
       if (restaurantDoc.exists()) {
@@ -22,7 +26,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           address: data.address || "No address provided",
           contact: data.contactNumber || "No contact provided"
         });
-        console.log("Fetched restaurant details:", data);
       } else {
         console.error(`No restaurant found with UID: ${uid}`);
       }
@@ -31,7 +34,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     fetchRestaurantDetails();
 
     const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
-    console.log(`Querying for table number: ${normalizedTableNumber}`);
 
     const q = query(
       collection(backendDb, 'orders'),
@@ -39,17 +41,12 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       orderBy('createdAt', 'desc')
     );
 
-    console.log('Setting up Firestore listener for orders...');
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      console.log('Received Firestore snapshot.');
       const allOrders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      console.log('Query snapshot data:', allOrders);
       setOrders(allOrders);
       if (allOrders.length > 0) {
-        console.log(`Updating table color for table ${tableNumber} to blue`);
         updateTableColor(`T${normalizedTableNumber}`, 'blue');
       } else {
-        console.log(`No active orders for table ${tableNumber}.`);
         updateTableColor(`T${normalizedTableNumber}`, 'blank');
       }
     }, (error) => {
@@ -57,24 +54,18 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     });
 
     const fetchCompletedOrderIds = async () => {
-      console.log('Fetching completed order IDs from "bills" collection...');
-      const q = query(collection(db, 'bills'));
+      const q = query(collection(backendDb, 'bills'));
       const querySnapshot = await getDocs(q);
       const ids = querySnapshot.docs.map(doc => doc.data().orderId);
-      console.log('Fetched completed order IDs:', ids);
       setCompletedOrderIds(ids);
     };
 
     fetchCompletedOrderIds();
 
-    return () => {
-      console.log('Cleaning up Firestore listener...');
-      unsubscribe();
-    };
+    return () => unsubscribe();
   }, [tableNumber, updateTableColor]);
 
   const printContent = async (orders, isKOT) => {
-    console.log(`Printing content for ${isKOT ? 'KOT' : 'Bill'}...`);
     if ('serial' in navigator) {
       try {
         const port = await navigator.serial.requestPort();
@@ -92,7 +83,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         content += `Table No: ${tableNumber}\n\n`;
 
         if (isKOT) {
-          console.log('Preparing KOT content...');
           orders.forEach(order => {
             order.items.forEach(item => {
               content += `${item.name} (${item.specialNote || ''}) - ${item.quantity}\n`;
@@ -101,7 +91,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           const totalItems = orders.reduce((sum, order) => sum + order.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
           content += `Total Items to Prepare: ${totalItems}\n\n`;
         } else {
-          console.log('Preparing Bill content...');
           let totalAmount = 0;
           orders.forEach(order => {
             order.items.forEach(item => {
@@ -126,7 +115,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         await writer.write(encoder.encode(content));
         writer.releaseLock();
         await port.close();
-        console.log(isKOT ? 'KOT printed successfully' : 'Bill printed successfully');
       } catch (error) {
         console.error("Failed to print content via serial:", error);
       }
@@ -136,37 +124,30 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   const handleGenerateKOT = async () => {
-    console.log('Generating KOT...');
     const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
-    console.log('Filtered orders for KOT:', filteredOrders);
     if (filteredOrders.length === 0) return;
     await printContent(filteredOrders, true);
     updateTableColor(`T${tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber}`, 'orange');
   };
 
   const handleGenerateBill = async () => {
-    console.log('Generating Bill...');
     const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
-    console.log('Filtered orders for Bill:', filteredOrders);
     if (filteredOrders.length === 0) return;
     await printContent(filteredOrders, false);
     updateTableColor(`T${tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber}`, 'green');
   };
 
   const handleCompleteOrder = async () => {
-    console.log('Completing order...');
     const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
-    const batch = writeBatch(db);
+    const batch = writeBatch(backendDb);
 
-    console.log('Storing completed orders in "bills" collection...');
     filteredOrders.forEach(order => {
-      const billRef = doc(collection(db, 'bills'));
+      const billRef = doc(collection(backendDb, 'bills'));
       batch.set(billRef, { orderId: order.id, ...order });
     });
 
     await batch.commit();
 
-    console.log('Orders stored in "bills" collection:', filteredOrders);
     setCompletedOrderIds([...completedOrderIds, ...filteredOrders.map(order => order.id)]);
     updateTableColor(`T${tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber}`, 'blank');
   };

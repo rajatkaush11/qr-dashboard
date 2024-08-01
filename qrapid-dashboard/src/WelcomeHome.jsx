@@ -4,6 +4,7 @@ import { signOut } from 'firebase/auth';
 import { auth, backendDb } from './firebase-config';
 import { collection, query, onSnapshot, getDocs } from 'firebase/firestore';
 import TableBox from './TableBox';
+import TableDetails from './TableDetails'; // Import the TableDetails component
 import './TableOverview.css';
 
 const WelcomeHome = () => {

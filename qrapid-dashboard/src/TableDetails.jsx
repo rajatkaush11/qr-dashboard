@@ -52,7 +52,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       console.error('Error fetching orders:', error);
     });
 
-    // Fetch completed order IDs from the frontend "bills" collection
     const fetchCompletedOrderIds = async () => {
       const q = query(collection(db, 'bills'));
       const querySnapshot = await getDocs(q);

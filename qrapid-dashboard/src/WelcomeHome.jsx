@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth, backendDb } from './firebase-config';
-import { collection, query, onSnapshot } from 'firebase/firestore';
+import { collection, query, onSnapshot, doc, setDoc, getDoc } from 'firebase/firestore';
 import TableBox from './TableBox';
 import TableDetails from './TableDetails';
 import './TableOverview.css';
@@ -17,6 +17,16 @@ const WelcomeHome = () => {
   const [view, setView] = useState('overview');
 
   useEffect(() => {
+    const fetchTableColors = async () => {
+      const docRef = doc(backendDb, 'tableStatus', 'colors');
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        setTableColors(docSnap.data().colors);
+      }
+    };
+
+    fetchTableColors();
+
     const q = query(collection(backendDb, 'orders'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       console.log('Real-time orders update:', querySnapshot.size);
@@ -51,6 +61,15 @@ const WelcomeHome = () => {
     setTables(prevTables => [...prevTables, newTableNumber]);
     const newColors = [...tableColors, 'blank'];
     setTableColors(newColors);
+    saveTableColors(newColors);
+  };
+
+  const saveTableColors = async (colors) => {
+    try {
+      await setDoc(doc(backendDb, 'tableStatus', 'colors'), { colors });
+    } catch (error) {
+      console.error('Error saving table colors:', error);
+    }
   };
 
   const handleTableClick = (tableNumber) => {
@@ -72,6 +91,7 @@ const WelcomeHome = () => {
       const updatedColors = [...tableColors];
       updatedColors[tableIndex] = color;
       setTableColors(updatedColors);
+      saveTableColors(updatedColors);
     }
   };
 

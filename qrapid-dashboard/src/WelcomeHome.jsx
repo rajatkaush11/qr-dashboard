@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
-import { collection, query, onSnapshot, where } from 'firebase/firestore';
+import { collection, query, onSnapshot, where, getDocs } from 'firebase/firestore';
 import { auth, backendDb } from './firebase-config';
 import TableBox from './TableBox';
 import TableDetails from './TableDetails';
@@ -52,7 +52,7 @@ const WelcomeHome = () => {
     fetchCompletedOrders();
 
     return () => unsubscribe();
-  }, [tables]);
+  }, [tables, completedOrderIds]);
 
   const handleLogout = async () => {
     try {

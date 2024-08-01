@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
-import { collection, query, onSnapshot, where, getDocs } from 'firebase/firestore';
-import { auth, backendDb } from './firebase-config';
+import { auth, backendDb } from './firebase-config'; // Import backendDb
+import { collection, query, onSnapshot } from 'firebase/firestore';
 import TableBox from './TableBox';
 import TableDetails from './TableDetails';
 import './TableOverview.css';
@@ -18,29 +18,18 @@ const WelcomeHome = () => {
   const [activeRoom, setActiveRoom] = useState('AC Premium');
   const [selectedTable, setSelectedTable] = useState(null);
   const [view, setView] = useState('overview');
-  const [completedOrderIds, setCompletedOrderIds] = useState([]);
 
   useEffect(() => {
-    const fetchCompletedOrders = async () => {
-      try {
-        const completedOrderSnapshot = await getDocs(collection(backendDb, 'bills'));
-        const completedOrderIds = completedOrderSnapshot.docs.map(doc => doc.data().orderId);
-        setCompletedOrderIds(completedOrderIds);
-      } catch (error) {
-        console.error('Error fetching completed orders:', error);
-      }
-    };
-
-    fetchCompletedOrders();
-
-    const q = query(collection(backendDb, 'orders'), where('status', '==', 'active'));
+    const q = query(collection(backendDb, 'orders')); // Use backendDb
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      console.log('Real-time orders update:', querySnapshot.size);
       const updatedColors = Array(15).fill('blank');
       querySnapshot.forEach((doc) => {
         const order = doc.data();
+        console.log('Fetched order:', order);
         const tableIndex = tables.findIndex(t => t === `T${order.tableNo}` || t === `T${parseInt(order.tableNo, 10)}`);
-        if (tableIndex !== -1 && !completedOrderIds.includes(order.id)) {
-          updatedColors[tableIndex] = 'blue'; // Update color to blue if there is an active order and it's not completed
+        if (tableIndex !== -1) {
+          updatedColors[tableIndex] = 'blue'; // Use the 'running' class for blue color
         }
       });
       sessionStorage.setItem('tableColors', JSON.stringify(updatedColors));
@@ -50,7 +39,7 @@ const WelcomeHome = () => {
     });
 
     return () => unsubscribe();
-  }, [tables, completedOrderIds]);
+  }, [tables]);
 
   const handleLogout = async () => {
     try {

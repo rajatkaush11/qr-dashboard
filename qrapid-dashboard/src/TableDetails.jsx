@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { backendDb, db, auth } from './firebase-config';
-import { collection, query, where, onSnapshot, doc, getDoc, orderBy, getDocs, writeBatch, updateDoc } from 'firebase/firestore';
+import { backendDb, db } from './firebase-config';
+import { collection, query, where, onSnapshot, doc, getDoc, orderBy, getDocs, writeBatch } from 'firebase/firestore';
 import './TableDetails.css';
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
@@ -39,7 +39,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     const q = query(
       collection(backendDb, 'orders'),
       where('tableNo', '==', normalizedTableNumber),
-      where('status', '==', 'ongoing'),
       orderBy('createdAt', 'desc')
     );
 
@@ -58,7 +57,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       const querySnapshot = await getDocs(q);
       const ids = querySnapshot.docs.map(doc => doc.data().orderId);
       setCompletedOrderIds(ids);
-      console.log('Fetched completed order IDs:', ids);
     };
 
     fetchCompletedOrderIds();
@@ -76,10 +74,10 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         const encoder = new TextEncoder();
         let content = '';
 
-        content += `\x1b\x21\x30`;
+        content += '\x1b\x21\x30';
         content += `*** ${restaurant.name.toUpperCase()} ***\n`;
         content += `${restaurant.address}\nContact: ${restaurant.contact}\n\n`;
-        content += `\x1b\x21\x00`;
+        content += '\x1b\x21\x00';
         content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`;
         content += `Table No: ${tableNumber}\n\n`;
 
@@ -149,8 +147,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     filteredOrders.forEach(order => {
       const billRef = doc(collection(db, 'bills'));
       batch.set(billRef, { orderId: order.id, ...order });
-      // Update the order status to completed
-      updateDoc(doc(backendDb, 'orders', order.id), { status: 'completed' });
     });
 
     await batch.commit();

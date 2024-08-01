@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth, backendDb } from './firebase-config';
-import { collection, query, onSnapshot, doc, setDoc, getDoc, where } from 'firebase/firestore';
+import { collection, query, onSnapshot } from 'firebase/firestore';
 import TableBox from './TableBox';
 import TableDetails from './TableDetails';
 import './TableOverview.css';
 
 const WelcomeHome = () => {
   const navigate = useNavigate();
+  // Correct the template literal in map to use backticks
   const [tables, setTables] = useState(Array(15).fill(null).map((_, i) => `T${i + 1}`));
   const [tableColors, setTableColors] = useState(Array(15).fill('blank'));
   const [restaurantName, setRestaurantName] = useState('QRapid');
@@ -17,27 +18,10 @@ const WelcomeHome = () => {
   const [view, setView] = useState('overview');
 
   useEffect(() => {
-    const fetchTableColors = async () => {
-      try {
-        const docRef = doc(backendDb, 'tableStatus', 'colors');
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setTableColors(docSnap.data().colors);
-          console.log("Fetched table colors:", docSnap.data().colors);
-        } else {
-          console.log("No table colors found");
-        }
-      } catch (error) {
-        console.error('Error fetching table colors:', error);
-      }
-    };
-
-    fetchTableColors();
-
-    const q = query(collection(backendDb, 'orders'), where('status', '==', 'ongoing'));
+    const q = query(collection(backendDb, 'orders'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       console.log('Real-time orders update:', querySnapshot.size);
-      const updatedColors = [...tableColors];
+      const updatedColors = Array(15).fill('blank');
       querySnapshot.forEach((doc) => {
         const order = doc.data();
         console.log('Fetched order:', order);
@@ -47,7 +31,6 @@ const WelcomeHome = () => {
         }
       });
       setTableColors(updatedColors);
-      console.log('Updated table colors:', updatedColors);
     }, (error) => {
       console.error('Error fetching snapshot:', error);
     });
@@ -69,16 +52,6 @@ const WelcomeHome = () => {
     setTables(prevTables => [...prevTables, newTableNumber]);
     const newColors = [...tableColors, 'blank'];
     setTableColors(newColors);
-    saveTableColors(newColors);
-  };
-
-  const saveTableColors = async (colors) => {
-    try {
-      await setDoc(doc(backendDb, 'tableStatus', 'colors'), { colors });
-      console.log('Table colors saved:', colors);
-    } catch (error) {
-      console.error('Error saving table colors:', error);
-    }
   };
 
   const handleTableClick = (tableNumber) => {
@@ -100,8 +73,6 @@ const WelcomeHome = () => {
       const updatedColors = [...tableColors];
       updatedColors[tableIndex] = color;
       setTableColors(updatedColors);
-      saveTableColors(updatedColors);
-      console.log('Updated table color for', tableNumber, 'to', color);
     }
   };
 

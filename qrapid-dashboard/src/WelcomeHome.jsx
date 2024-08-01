@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
-import { auth, backendDb } from './firebase-config';
+import { auth, backendDb } from './firebase-config'; // Import backendDb
 import { collection, query, onSnapshot } from 'firebase/firestore';
 import TableBox from './TableBox';
 import TableDetails from './TableDetails';
@@ -10,14 +10,17 @@ import './TableOverview.css';
 const WelcomeHome = () => {
   const navigate = useNavigate();
   const [tables, setTables] = useState(Array(15).fill(null).map((_, i) => `T${i + 1}`));
-  const [tableColors, setTableColors] = useState(Array(15).fill('blank'));
+  const [tableColors, setTableColors] = useState(() => {
+    const cachedColors = sessionStorage.getItem('tableColors');
+    return cachedColors ? JSON.parse(cachedColors) : Array(15).fill('blank');
+  });
   const [restaurantName, setRestaurantName] = useState('QRapid');
   const [activeRoom, setActiveRoom] = useState('AC Premium');
   const [selectedTable, setSelectedTable] = useState(null);
   const [view, setView] = useState('overview');
 
   useEffect(() => {
-    const q = query(collection(backendDb, 'orders'));
+    const q = query(collection(backendDb, 'orders')); // Use backendDb
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       console.log('Real-time orders update:', querySnapshot.size);
       const updatedColors = Array(15).fill('blank');
@@ -29,6 +32,7 @@ const WelcomeHome = () => {
           updatedColors[tableIndex] = 'blue'; // Use the 'running' class for blue color
         }
       });
+      sessionStorage.setItem('tableColors', JSON.stringify(updatedColors));
       setTableColors(updatedColors);
     }, (error) => {
       console.error('Error fetching snapshot:', error);
@@ -50,6 +54,7 @@ const WelcomeHome = () => {
     const newTableNumber = `T${tables.length + 1}`;
     setTables(prevTables => [...prevTables, newTableNumber]);
     const newColors = [...tableColors, 'blank'];
+    sessionStorage.setItem('tableColors', JSON.stringify(newColors));
     setTableColors(newColors);
   };
 
@@ -72,6 +77,7 @@ const WelcomeHome = () => {
       const updatedColors = [...tableColors];
       updatedColors[tableIndex] = color;
       setTableColors(updatedColors);
+      sessionStorage.setItem('tableColors', JSON.stringify(updatedColors));
     }
   };
 

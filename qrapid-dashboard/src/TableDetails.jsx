@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { backendDb, db } from './firebase-config';
+import { backendDb, db } from './firebase-config'; // Import frontendDb
 import { collection, query, where, onSnapshot, doc, getDoc, orderBy, getDocs, writeBatch } from 'firebase/firestore';
 import './TableDetails.css';
 
@@ -41,13 +41,12 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     const q = query(
       collection(backendDb, 'orders'),
       where('tableNo', '==', normalizedTableNumber),
-      where('status', '==', 'active'),
       orderBy('createdAt', 'desc')
     );
 
     console.log('Setting up Firestore listener for orders...');
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      console.log('Received Firestore snapshot for orders.');
+      console.log('Received Firestore snapshot.');
       const allOrders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       console.log('Query snapshot data:', allOrders);
       setOrders(allOrders);

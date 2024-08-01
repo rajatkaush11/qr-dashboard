@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
-import { auth, backendDb } from './firebase-config';
-import { collection, query, onSnapshot, where } from 'firebase/firestore';
+import { auth, backendDb } from './firebase-config'; // Import backendDb
+import { collection, query, onSnapshot } from 'firebase/firestore';
 import TableBox from './TableBox';
 import TableDetails from './TableDetails';
 import './TableOverview.css';
@@ -21,7 +21,7 @@ const WelcomeHome = () => {
 
   useEffect(() => {
     console.log('Setting up Firestore listener for orders...');
-    const q = query(collection(backendDb, 'orders'), where('status', '==', 'active'));
+    const q = query(collection(backendDb, 'orders'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       console.log('Received Firestore snapshot.');
       const updatedColors = Array(15).fill('blank');
@@ -30,7 +30,7 @@ const WelcomeHome = () => {
         console.log('Fetched order:', order);
         const tableIndex = tables.findIndex(t => t === `T${order.tableNo}` || t === `T${parseInt(order.tableNo, 10)}`);
         if (tableIndex !== -1) {
-          updatedColors[tableIndex] = 'blue';
+          updatedColors[tableIndex] = 'blue'; // Use the 'running' class for blue color
         }
       });
       console.log('Updated table colors:', updatedColors);
@@ -40,10 +40,7 @@ const WelcomeHome = () => {
       console.error('Error fetching snapshot:', error);
     });
 
-    return () => {
-      console.log('Cleaning up Firestore listener...');
-      unsubscribe();
-    };
+    return () => unsubscribe();
   }, [tables]);
 
   const handleLogout = async () => {
@@ -64,11 +61,13 @@ const WelcomeHome = () => {
   };
 
   const handleTableClick = (tableNumber) => {
+    console.log(`Table ${tableNumber} clicked.`);
     setSelectedTable(tableNumber);
     setView('details');
   };
 
   const handleRoomClick = (room) => {
+    console.log(`Room ${room} clicked.`);
     setActiveRoom(room);
   };
 
@@ -77,6 +76,7 @@ const WelcomeHome = () => {
   };
 
   const updateTableColor = (tableNumber, color) => {
+    console.log(`Updating color for table ${tableNumber} to ${color}.`);
     const tableIndex = tables.findIndex(t => t === tableNumber);
     if (tableIndex !== -1) {
       const updatedColors = [...tableColors];

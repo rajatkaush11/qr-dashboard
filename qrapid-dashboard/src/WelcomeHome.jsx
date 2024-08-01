@@ -1,4 +1,3 @@
-// WelcomeHome.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
@@ -23,9 +22,13 @@ const WelcomeHome = () => {
 
   useEffect(() => {
     const fetchCompletedOrders = async () => {
-      const completedOrderSnapshot = await getDocs(collection(backendDb, 'bills'));
-      const completedOrderIds = completedOrderSnapshot.docs.map(doc => doc.data().orderId);
-      setCompletedOrderIds(completedOrderIds);
+      try {
+        const completedOrderSnapshot = await getDocs(collection(backendDb, 'bills'));
+        const completedOrderIds = completedOrderSnapshot.docs.map(doc => doc.data().orderId);
+        setCompletedOrderIds(completedOrderIds);
+      } catch (error) {
+        console.error('Error fetching completed orders:', error);
+      }
     };
 
     fetchCompletedOrders();

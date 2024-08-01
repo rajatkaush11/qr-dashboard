@@ -4,7 +4,10 @@ import { collection, query, where, onSnapshot, doc, getDoc, orderBy, getDocs, wr
 import './TableDetails.css';
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
-  const [orders, setOrders] = useState([]);
+  const [orders, setOrders] = useState(() => {
+    const cachedOrders = localStorage.getItem(`orders_${tableNumber}`);
+    return cachedOrders ? JSON.parse(cachedOrders) : [];
+  });
   const [restaurant, setRestaurant] = useState({ name: '', address: '', contact: '' });
   const [completedOrderIds, setCompletedOrderIds] = useState([]);
 
@@ -47,6 +50,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       const allOrders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       console.log('Query snapshot data:', allOrders);
       setOrders(allOrders);
+      localStorage.setItem(`orders_${tableNumber}`, JSON.stringify(allOrders));
     }, (error) => {
       console.error('Error fetching orders:', error);
     });

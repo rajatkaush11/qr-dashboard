@@ -11,28 +11,30 @@ const WelcomeHome = () => {
   const navigate = useNavigate();
   const [tables, setTables] = useState(Array(15).fill(null).map((_, i) => `T${i + 1}`));
   const [tableColors, setTableColors] = useState(() => {
-    const cachedColors = sessionStorage.getItem('tableColors');
+    const cachedColors = localStorage.getItem('tableColors');
     return cachedColors ? JSON.parse(cachedColors) : Array(15).fill('blank');
   });
   const [restaurantName, setRestaurantName] = useState('QRapid');
   const [activeRoom, setActiveRoom] = useState('AC Premium');
-  const [selectedTable, setSelectedTable] = useState(null);
-  const [view, setView] = useState('overview');
+  const [selectedTable, setSelectedTable] = useState(() => localStorage.getItem('selectedTable'));
+  const [view, setView] = useState(() => localStorage.getItem('view') || 'overview');
 
   useEffect(() => {
     const q = query(collection(backendDb, 'orders')); // Use backendDb
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       console.log('Real-time orders update:', querySnapshot.size);
-      const updatedColors = Array(15).fill('blank');
+      const updatedColors = JSON.parse(localStorage.getItem('tableColors')) || Array(15).fill('blank');
       querySnapshot.forEach((doc) => {
         const order = doc.data();
         console.log('Fetched order:', order);
         const tableIndex = tables.findIndex(t => t === `T${order.tableNo}` || t === `T${parseInt(order.tableNo, 10)}`);
         if (tableIndex !== -1) {
-          updatedColors[tableIndex] = 'blue'; // Use the 'running' class for blue color
+          if (updatedColors[tableIndex] !== 'orange' && updatedColors[tableIndex] !== 'green') {
+            updatedColors[tableIndex] = 'blue'; // Use the 'running' class for blue color
+          }
         }
       });
-      sessionStorage.setItem('tableColors', JSON.stringify(updatedColors));
+      localStorage.setItem('tableColors', JSON.stringify(updatedColors));
       setTableColors(updatedColors);
     }, (error) => {
       console.error('Error fetching snapshot:', error);
@@ -54,13 +56,15 @@ const WelcomeHome = () => {
     const newTableNumber = `T${tables.length + 1}`;
     setTables(prevTables => [...prevTables, newTableNumber]);
     const newColors = [...tableColors, 'blank'];
-    sessionStorage.setItem('tableColors', JSON.stringify(newColors));
+    localStorage.setItem('tableColors', JSON.stringify(newColors));
     setTableColors(newColors);
   };
 
   const handleTableClick = (tableNumber) => {
     setSelectedTable(tableNumber);
     setView('details');
+    localStorage.setItem('selectedTable', tableNumber);
+    localStorage.setItem('view', 'details');
   };
 
   const handleRoomClick = (room) => {
@@ -69,6 +73,7 @@ const WelcomeHome = () => {
 
   const handleBackClick = () => {
     setView('overview');
+    localStorage.setItem('view', 'overview');
   };
 
   const updateTableColor = (tableNumber, color) => {
@@ -77,7 +82,7 @@ const WelcomeHome = () => {
       const updatedColors = [...tableColors];
       updatedColors[tableIndex] = color;
       setTableColors(updatedColors);
-      sessionStorage.setItem('tableColors', JSON.stringify(updatedColors));
+      localStorage.setItem('tableColors', JSON.stringify(updatedColors));
     }
   };
 

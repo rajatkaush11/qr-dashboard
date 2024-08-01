@@ -30,7 +30,7 @@ const WelcomeHome = () => {
     const q = query(collection(backendDb, 'orders'), where('status', '==', 'ongoing'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       console.log('Real-time orders update:', querySnapshot.size);
-      const updatedColors = Array(15).fill('blank');
+      const updatedColors = [...tableColors];
       querySnapshot.forEach((doc) => {
         const order = doc.data();
         console.log('Fetched order:', order);

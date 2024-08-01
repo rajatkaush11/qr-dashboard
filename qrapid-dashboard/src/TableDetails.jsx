@@ -60,6 +60,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor, handleComple
       const q = query(collection(db, 'bills'));
       const querySnapshot = await getDocs(q);
       const ids = querySnapshot.docs.map(doc => doc.data().orderId);
+      console.log('Fetched completed order IDs:', ids);
       setCompletedOrderIds(ids);
     };
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { backendDb, db } from './firebase-config'; // Import frontendDb
+import { backendDb, db } from './firebase-config';
 import { collection, query, where, onSnapshot, doc, getDoc, orderBy, getDocs, writeBatch } from 'firebase/firestore';
 import './TableDetails.css';
 
@@ -39,6 +39,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     const q = query(
       collection(backendDb, 'orders'),
       where('tableNo', '==', normalizedTableNumber),
+      where('status', '==', 'active'),
       orderBy('createdAt', 'desc')
     );
 
@@ -125,7 +126,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const handleGenerateKOT = async () => {
     const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
-    console.log('Filtered orders for KOT:', filteredOrders);
     if (filteredOrders.length === 0) return;
     await printContent(filteredOrders, true);
     updateTableColor(tableNumber, 'orange');
@@ -133,14 +133,12 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const handleGenerateBill = async () => {
     const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
-    console.log('Filtered orders for Bill:', filteredOrders);
     if (filteredOrders.length === 0) return;
     await printContent(filteredOrders, false);
     updateTableColor(tableNumber, 'green');
   };
 
   const handleCompleteOrder = async () => {
-    console.log('Completing order. Storing completed orders in "bills" collection.');
     const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
     const batch = writeBatch(db);
 
@@ -150,8 +148,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     });
 
     await batch.commit();
-
-    console.log('Orders stored in "bills" collection:', filteredOrders);
 
     setCompletedOrderIds([...completedOrderIds, ...filteredOrders.map(order => order.id)]);
     updateTableColor(tableNumber, 'blank');

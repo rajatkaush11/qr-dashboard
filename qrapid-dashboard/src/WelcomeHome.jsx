@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
-import { auth, backendDb } from './firebase-config'; // Import backendDb
-import { collection, query, onSnapshot } from 'firebase/firestore';
+import { auth, backendDb } from './firebase-config';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import TableBox from './TableBox';
 import TableDetails from './TableDetails';
 import './TableOverview.css';
@@ -20,16 +20,15 @@ const WelcomeHome = () => {
   const [view, setView] = useState('overview');
 
   useEffect(() => {
-    const q = query(collection(backendDb, 'orders')); // Use backendDb
+    const q = query(collection(backendDb, 'orders'), where('status', '==', 'active'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       console.log('Real-time orders update:', querySnapshot.size);
       const updatedColors = Array(15).fill('blank');
       querySnapshot.forEach((doc) => {
         const order = doc.data();
-        console.log('Fetched order:', order);
         const tableIndex = tables.findIndex(t => t === `T${order.tableNo}` || t === `T${parseInt(order.tableNo, 10)}`);
         if (tableIndex !== -1) {
-          updatedColors[tableIndex] = 'blue'; // Use the 'running' class for blue color
+          updatedColors[tableIndex] = 'blue';
         }
       });
       sessionStorage.setItem('tableColors', JSON.stringify(updatedColors));

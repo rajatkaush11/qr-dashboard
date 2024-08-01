@@ -21,7 +21,16 @@ const WelcomeHome = () => {
   const [completedOrderIds, setCompletedOrderIds] = useState([]);
 
   useEffect(() => {
-    console.log('Setting up Firestore listener for orders...');
+    const fetchCompletedOrders = async () => {
+      console.log('Fetching completed orders from "bills" collection...');
+      const completedOrderSnapshot = await getDocs(collection(backendDb, 'bills'));
+      const completedOrderIds = completedOrderSnapshot.docs.map(doc => doc.data().orderId);
+      console.log('Fetched completed order IDs:', completedOrderIds);
+      setCompletedOrderIds(completedOrderIds);
+    };
+
+    fetchCompletedOrders();
+
     const q = query(collection(backendDb, 'orders'), where('status', '==', 'active'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       console.log('Received Firestore snapshot.');
@@ -40,16 +49,6 @@ const WelcomeHome = () => {
     }, (error) => {
       console.error('Error fetching snapshot:', error);
     });
-
-    const fetchCompletedOrders = async () => {
-      console.log('Fetching completed orders from "bills" collection...');
-      const completedOrderSnapshot = await getDocs(collection(backendDb, 'bills'));
-      const completedOrderIds = completedOrderSnapshot.docs.map(doc => doc.data().orderId);
-      console.log('Fetched completed order IDs:', completedOrderIds);
-      setCompletedOrderIds(completedOrderIds);
-    };
-
-    fetchCompletedOrders();
 
     return () => unsubscribe();
   }, [tables, completedOrderIds]);

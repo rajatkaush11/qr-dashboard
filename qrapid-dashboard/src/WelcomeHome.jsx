@@ -9,7 +9,6 @@ import './TableOverview.css';
 
 const WelcomeHome = () => {
   const navigate = useNavigate();
-  // Correct the template literal in map to use backticks
   const [tables, setTables] = useState(Array(15).fill(null).map((_, i) => `T${i + 1}`));
   const [tableColors, setTableColors] = useState(Array(15).fill('blank'));
   const [restaurantName, setRestaurantName] = useState('QRapid');

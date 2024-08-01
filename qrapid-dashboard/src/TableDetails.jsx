@@ -74,10 +74,10 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         const encoder = new TextEncoder();
         let content = '';
 
-        content += '\x1b\x21\x30';
+        content += `\x1b\x21\x30`;
         content += `*** ${restaurant.name.toUpperCase()} ***\n`;
         content += `${restaurant.address}\nContact: ${restaurant.contact}\n\n`;
-        content += '\x1b\x21\x00';
+        content += `\x1b\x21\x00`;
         content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`;
         content += `Table No: ${tableNumber}\n\n`;
 

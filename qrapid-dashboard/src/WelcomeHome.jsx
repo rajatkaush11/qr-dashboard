@@ -105,61 +105,62 @@ const WelcomeHome = () => {
             <button
               className={activeRoom === 'Room-2' ? 'active' : ''}
               onClick={() => handleRoomClick('Room-2')}
-            >
-              Room-2
-            </button>
-            <button
-              className={activeRoom === 'Room-3' ? 'active' : ''}
-              onClick={() => handleRoomClick('Room-3')}
-            >
-              Room-3
-            </button>
-          </div>
-          <div className="main-container">
-            <div className="left-container">
-              <button className="side-button">Running Table</button>
-              <button className="side-button">Printed Table</button>
-              <button className="side-button">Running KOT Table</button>
-            </div>
-            <div className="table-container">
-              {tables.map((tableNumber, index) => (
-                <TableBox
-                  key={index}
-                  tableNumber={tableNumber}
-                  color={tableColors[index]}
-                  isActive={selectedTable === tableNumber}
-                  onClick={() => handleTableClick(tableNumber)}
-                />
-              ))}
-            </div>
-            <div className="status-container">
-              <div className="status-item">
-                <span className="status-color grey"></span> Blank Table
+                >
+                  Room-2
+                </button>
+                <button
+                  className={activeRoom === 'Room-3' ? 'active' : ''}
+                  onClick={() => handleRoomClick('Room-3')}
+                >
+                  Room-3
+                </button>
               </div>
-              <div className="status-item">
-                <span className="status-color blue"></span> Running Table
+              <div className="main-container">
+                <div className="left-container">
+                  <button className="side-button">Running Table</button>
+                  <button className="side-button">Printed Table</button>
+                  <button className="side-button">Running KOT Table</button>
+                </div>
+                <div className="table-container">
+                  {tables.map((tableNumber, index) => (
+                    <TableBox
+                      key={index}
+                      tableNumber={tableNumber}
+                      color={tableColors[index]}
+                      isActive={selectedTable === tableNumber}
+                      onClick={() => handleTableClick(tableNumber)}
+                    />
+                  ))}
+                </div>
+                <div className="status-container">
+                  <div className="status-item">
+                    <span className="status-color grey"></span> Blank Table
+                  </div>
+                  <div className="status-item">
+                    <span className="status-color blue"></span> Running Table
+                  </div>
+                  <div className="status-item">
+                    <span className="status-color green"></span> Printed Table
+                  </div>
+                  <div className="status-item">
+                    <span className="status-color yellow"></span> Paid Table
+                  </div>
+                  <div className="status-item">
+                    <span className="status-color orange"></span> Running KOT Table
+                  </div>
+                </div>
               </div>
-              <div className="status-item">
-                <span className="status-color green"></span> Printed Table
-              </div>
-              <div className="status-item">
-                <span className="status-color yellow"></span> Paid Table
-              </div>
-              <div className="status-item">
-                <span className="status-color orange"></span> Running KOT Table
-              </div>
-            </div>
-          </div>
-        </>
-      ) : (
-        <TableDetails
-          tableNumber={selectedTable}
-          onBackClick={handleBackClick}
-          updateTableColor={updateTableColor}
-        />
-      )}
-    </div>
-  );
-};
-
-export default WelcomeHome;
+            </>
+          ) : (
+            <TableDetails
+              tableNumber={selectedTable}
+              onBackClick={handleBackClick}
+              updateTableColor={updateTableColor}
+            />
+          )}
+        </div>
+      );
+    };
+    
+    export default WelcomeHome;
+    

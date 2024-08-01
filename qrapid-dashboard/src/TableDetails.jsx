@@ -143,7 +143,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     console.log('Filtered orders for KOT:', filteredOrders);
     if (filteredOrders.length === 0) return;
     await printContent(filteredOrders, true);
-    updateTableColor(tableNumber, 'orange');
+    updateTableColor(`T${tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber}`, 'orange');
   };
 
   const handleGenerateBill = async () => {
@@ -152,7 +152,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     console.log('Filtered orders for Bill:', filteredOrders);
     if (filteredOrders.length === 0) return;
     await printContent(filteredOrders, false);
-    updateTableColor(tableNumber, 'green');
+    updateTableColor(`T${tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber}`, 'green');
   };
 
   const handleCompleteOrder = async () => {
@@ -170,7 +170,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
     console.log('Orders stored in "bills" collection:', filteredOrders);
     setCompletedOrderIds([...completedOrderIds, ...filteredOrders.map(order => order.id)]);
-    updateTableColor(tableNumber, 'blank');
+    updateTableColor(`T${tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber}`, 'blank');
   };
 
   return (

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth, backendDb } from './firebase-config';
-import { collection, query, onSnapshot, where } from 'firebase/firestore';
+import { collection, query, onSnapshot } from 'firebase/firestore';
 import TableBox from './TableBox';
 import TableDetails from './TableDetails';
 import './TableOverview.css';
@@ -18,43 +18,30 @@ const WelcomeHome = () => {
   const [activeRoom, setActiveRoom] = useState('AC Premium');
   const [selectedTable, setSelectedTable] = useState(() => localStorage.getItem('selectedTable'));
   const [view, setView] = useState(() => localStorage.getItem('view') || 'overview');
-  const [completedOrders, setCompletedOrders] = useState(() => {
-    const cachedCompletedOrders = localStorage.getItem('completedOrders');
-    return cachedCompletedOrders ? JSON.parse(cachedCompletedOrders) : [];
-  });
 
   useEffect(() => {
-    const fetchOrders = () => {
-      const q = query(
-        collection(backendDb, 'orders'),
-        where('orderId', 'not-in', completedOrders)
-      );
-
-      const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        console.log('Real-time orders update:', querySnapshot.size);
-        const updatedColors = Array(15).fill('blank');
-        querySnapshot.forEach((doc) => {
-          const order = doc.data();
-          console.log('Fetched order:', order);
-          if (order.tableNo) {
-            const tableIndex = tables.findIndex(t => t === `T${order.tableNo}` || t === `T${parseInt(order.tableNo, 10)}`);
-            if (tableIndex !== -1) {
-              updatedColors[tableIndex] = 'blue'; // Use the 'running' class for blue color
-            }
+    const q = query(collection(backendDb, 'orders'));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      console.log('Real-time orders update:', querySnapshot.size);
+      const updatedColors = Array(15).fill('blank');
+      querySnapshot.forEach((doc) => {
+        const order = doc.data();
+        console.log('Fetched order:', order);
+        if (order.tableNo) {
+          const tableIndex = tables.findIndex(t => t === `T${order.tableNo}` || t === `T${parseInt(order.tableNo, 10)}`);
+          if (tableIndex !== -1) {
+            updatedColors[tableIndex] = 'blue'; // Use the 'running' class for blue color
           }
-        });
-        localStorage.setItem('tableColors', JSON.stringify(updatedColors));
-        setTableColors(updatedColors);
-      }, (error) => {
-        console.error('Error fetching snapshot:', error);
+        }
       });
+      localStorage.setItem('tableColors', JSON.stringify(updatedColors));
+      setTableColors(updatedColors);
+    }, (error) => {
+      console.error('Error fetching snapshot:', error);
+    });
 
-      return unsubscribe;
-    };
-
-    const unsubscribe = fetchOrders();
     return () => unsubscribe();
-  }, [tables, completedOrders]);
+  }, [tables]);
 
   const handleLogout = async () => {
     try {
@@ -87,12 +74,6 @@ const WelcomeHome = () => {
   const handleBackClick = () => {
     setView('overview');
     localStorage.setItem('view', 'overview');
-  };
-
-  const handleCompleteOrder = (orderId) => {
-    const updatedCompletedOrders = [...completedOrders, orderId];
-    setCompletedOrders(updatedCompletedOrders);
-    localStorage.setItem('completedOrders', JSON.stringify(updatedCompletedOrders));
   };
 
   const updateTableColor = (tableNumber, color) => {
@@ -175,7 +156,6 @@ const WelcomeHome = () => {
           tableNumber={selectedTable}
           onBackClick={handleBackClick}
           updateTableColor={updateTableColor}
-          handleCompleteOrder={handleCompleteOrder}
         />
       )}
     </div>

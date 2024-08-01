@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { backendDb, db } from './firebase-config';
+import { backendDb, db } from './firebase-config'; // Import frontendDb
 import { collection, query, where, onSnapshot, doc, getDoc, orderBy, getDocs, writeBatch } from 'firebase/firestore';
 import './TableDetails.css';
 
-const TableDetails = ({ tableNumber, onBackClick, updateTableColor, handleCompleteOrder: parentHandleCompleteOrder }) => {
+const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [orders, setOrders] = useState(() => {
     const cachedOrders = localStorage.getItem(`orders_${tableNumber}`);
     return cachedOrders ? JSON.parse(cachedOrders) : [];
@@ -39,38 +39,13 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor, handleComple
     const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
     console.log(`Querying for table number: ${normalizedTableNumber}`);
 
-    // Fetch completed order IDs from the frontend "bills" collection
-    const fetchCompletedOrderIds = async () => {
-      const q = query(collection(db, 'bills'));
-      const querySnapshot = await getDocs(q);
-      const ids = querySnapshot.docs.map(doc => doc.data().orderId);
-      console.log('Fetched completed order IDs:', ids);
-      setCompletedOrderIds(ids);
-    };
+    const q = query(
+      collection(backendDb, 'orders'),
+      where('tableNo', '==', normalizedTableNumber),
+      orderBy('createdAt', 'desc')
+    );
 
-    fetchCompletedOrderIds();
-
-    // Only create a query if completedOrderIds is not empty
-    const createOrderQuery = (completedOrderIds) => {
-      let q;
-      if (completedOrderIds.length > 0) {
-        q = query(
-          collection(backendDb, 'orders'),
-          where('tableNo', '==', normalizedTableNumber),
-          where('id', 'not-in', completedOrderIds),
-          orderBy('createdAt', 'desc')
-        );
-      } else {
-        q = query(
-          collection(backendDb, 'orders'),
-          where('tableNo', '==', normalizedTableNumber),
-          orderBy('createdAt', 'desc')
-        );
-      }
-      return q;
-    };
-
-    const unsubscribe = onSnapshot(createOrderQuery(completedOrderIds), (querySnapshot) => {
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
       console.log('Query snapshot size:', querySnapshot.size);
       const allOrders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       console.log('Query snapshot data:', allOrders);
@@ -80,8 +55,18 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor, handleComple
       console.error('Error fetching orders:', error);
     });
 
+    // Fetch completed order IDs from the frontend "bills" collection
+    const fetchCompletedOrderIds = async () => {
+      const q = query(collection(db, 'bills'));
+      const querySnapshot = await getDocs(q);
+      const ids = querySnapshot.docs.map(doc => doc.data().orderId);
+      setCompletedOrderIds(ids);
+    };
+
+    fetchCompletedOrderIds();
+
     return () => unsubscribe();
-  }, [tableNumber, completedOrderIds]);
+  }, [tableNumber]);
 
   const printContent = async (orders, isKOT) => {
     if ('serial' in navigator) {
@@ -158,7 +143,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor, handleComple
     updateTableColor(tableNumber, 'green');
   };
 
-  const completeOrder = async () => {
+  const handleCompleteOrder = async () => {
     console.log('Completing order. Storing completed orders in "bills" collection.');
     const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
     const batch = writeBatch(db);
@@ -166,7 +151,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor, handleComple
     filteredOrders.forEach(order => {
       const billRef = doc(collection(db, 'bills'));
       batch.set(billRef, { orderId: order.id, ...order });
-      parentHandleCompleteOrder(order.id); // Update state to exclude this order in the future
     });
 
     await batch.commit();
@@ -206,7 +190,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor, handleComple
       <div className="action-buttons">
         <button onClick={() => handleGenerateKOT()} className="action-button">Generate KOT</button>
         <button onClick={() => handleGenerateBill()} className="action-button">Generate Bill</button>
-        <button onClick={() => completeOrder()} className="action-button">Complete Order</button>
+        <button onClick={() => handleCompleteOrder()} className="action-button">Complete Order</button>
       </div>
     </div>
   );

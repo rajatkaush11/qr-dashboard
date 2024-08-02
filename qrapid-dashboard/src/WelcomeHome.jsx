@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
-import { auth, backendDb } from './firebase-config';
+import { auth, backendDb } from './firebase-config'; // Import backendDb
 import { collection, query, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import TableBox from './TableBox';
 import TableDetails from './TableDetails';
@@ -20,7 +20,7 @@ const WelcomeHome = () => {
   const [view, setView] = useState('overview');
 
   useEffect(() => {
-    const q = query(collection(backendDb, 'orders'));
+    const q = query(collection(backendDb, 'orders')); // Use backendDb
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       console.log('Real-time orders update:', querySnapshot.size);
       const updatedColors = [...tableColors];
@@ -78,10 +78,13 @@ const WelcomeHome = () => {
       updatedColors[tableIndex] = color;
       setTableColors(updatedColors);
       sessionStorage.setItem('tableColors', JSON.stringify(updatedColors));
-      
+
       // Update Firestore with the new color
-      const orderRef = doc(backendDb, 'orders', tableNumber);
-      await updateDoc(orderRef, { color });
+      const orderRef = query(collection(backendDb, 'orders'), where('tableNo', '==', tableNumber.slice(1)));
+      const querySnapshot = await getDocs(orderRef);
+      querySnapshot.forEach(async (docSnapshot) => {
+        await updateDoc(docSnapshot.ref, { color });
+      });
     }
   };
 

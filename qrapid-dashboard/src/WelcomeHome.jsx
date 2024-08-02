@@ -22,12 +22,14 @@ const WelcomeHome = () => {
   useEffect(() => {
     const q = query(collection(backendDb, 'orders'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      console.log('Real-time orders update:', querySnapshot.size);
       const updatedColors = [...tableColors];
       querySnapshot.forEach((doc) => {
         const order = doc.data();
+        console.log('Fetched order:', order);
         const tableIndex = tables.findIndex(t => t === `T${order.tableNo}` || t === `T${parseInt(order.tableNo, 10)}`);
         if (tableIndex !== -1 && order.status !== 'completed') {
-          updatedColors[tableIndex] = 'blue'; // Use the 'running' class for blue color
+          updatedColors[tableIndex] = 'blue';
         }
       });
       sessionStorage.setItem('tableColors', JSON.stringify(updatedColors));
@@ -77,8 +79,9 @@ const WelcomeHome = () => {
       setTableColors(updatedColors);
       sessionStorage.setItem('tableColors', JSON.stringify(updatedColors));
       
-      const tableStateRef = doc(backendDb, 'tableStates', tableNumber);
-      await updateDoc(tableStateRef, { color });
+      // Update Firestore with the new color
+      const orderRef = doc(backendDb, 'orders', tableNumber);
+      await updateDoc(orderRef, { color });
     }
   };
 

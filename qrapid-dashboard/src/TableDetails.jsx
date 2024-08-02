@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { backendDb, db } from './firebase-config'; // Import frontendDb as db
-import { collection, query, where, onSnapshot, doc, getDoc, orderBy, getDocs, writeBatch, setDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, getDocs, writeBatch } from 'firebase/firestore';
 import './TableDetails.css';
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
@@ -15,7 +15,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     const q = query(
       collection(backendDb, 'orders'),
       where('tableNo', '==', normalizedTableNumber),
-      where('status', '!=', 'completed'), // Ensure we don't fetch completed orders
       orderBy('createdAt', 'desc')
     );
 

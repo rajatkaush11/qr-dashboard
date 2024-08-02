@@ -20,7 +20,7 @@ const WelcomeHome = () => {
   const [view, setView] = useState('overview');
 
   useEffect(() => {
-    const q = query(collection(backendDb, 'orders'), where('status', '!=', 'completed'));
+    const q = query(collection(backendDb, 'orders'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       console.log('Real-time orders update:', querySnapshot.size);
       const updatedColors = [...tableColors];

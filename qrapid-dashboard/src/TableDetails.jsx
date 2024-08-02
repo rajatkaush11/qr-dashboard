@@ -16,21 +16,22 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     const q = query(
       collection(backendDb, 'orders'),
       where('tableNo', '==', normalizedTableNumber),
-      where('status', '!=', 'completed'),
       orderBy('createdAt', 'desc')
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      console.log('Real-time orders update:', querySnapshot.size);
-      const allOrders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      console.log('Query snapshot data:', allOrders);
-      setOrders(allOrders);
+      if (!orderFetched) {
+        console.log('Query snapshot size:', querySnapshot.size);
+        const allOrders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        console.log('Query snapshot data:', allOrders);
+        setOrders(allOrders);
 
-      // Update table color to blue for new orders
-      if (allOrders.length > 0) {
-        updateTableColor(tableNumber, 'blue');
-      } else {
-        updateTableColor(tableNumber, 'blank');
+        // Update table color to blue for new orders
+        if (allOrders.length > 0) {
+          updateTableColor(tableNumber, 'blue');
+        }
+
+        setOrderFetched(true); // Set orderFetched to true after initial fetch
       }
     }, (error) => {
       console.error('Error fetching orders:', error);
@@ -46,7 +47,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     fetchCompletedOrderIds();
 
     return () => unsubscribe();
-  }, [tableNumber, updateTableColor]);
+  }, [tableNumber, updateTableColor, orderFetched]);
 
   const printContent = async (orders, isKOT) => {
     if ('serial' in navigator) {
@@ -138,6 +139,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     setCompletedOrderIds([...completedOrderIds, ...filteredOrders.map(order => order.id)]);
     setOrders(prevOrders => prevOrders.filter(order => !filteredOrders.map(o => o.id).includes(order.id)));
     await updateTableColor(tableNumber, 'blank');
+    setOrderFetched(false); // Reset orderFetched to false to listen for new orders
   };
 
   const updateOrderStatus = async (orders, status) => {

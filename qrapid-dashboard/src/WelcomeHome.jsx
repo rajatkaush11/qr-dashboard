@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
-import { auth, backendDb } from './firebase-config'; // Import backendDb
-import { collection, query, onSnapshot, where, getDocs } from 'firebase/firestore';
+import { auth, backendDb } from './firebase-config';
+import { collection, query, onSnapshot, where, getDocs, updateDoc } from 'firebase/firestore';
 import TableBox from './TableBox';
 import TableDetails from './TableDetails';
 import './TableOverview.css';
@@ -20,7 +20,7 @@ const WelcomeHome = () => {
   const [view, setView] = useState('overview');
 
   useEffect(() => {
-    const q = query(collection(backendDb, 'orders')); // Use backendDb
+    const q = query(collection(backendDb, 'orders'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       console.log('Real-time orders update:', querySnapshot.size);
       const updatedColors = [...tableColors];
@@ -28,7 +28,7 @@ const WelcomeHome = () => {
         const order = doc.data();
         console.log('Fetched order:', order);
         const tableIndex = tables.findIndex(t => t === `T${order.tableNo}` || t === `T${parseInt(order.tableNo, 10)}`);
-        if (tableIndex !== -1 && order.status !== 'completed') {
+        if (tableIndex !== -1 && order.status !== 'completed' && order.status !== 'KOT' && order.status !== 'billed') {
           updatedColors[tableIndex] = 'blue';
         }
       });

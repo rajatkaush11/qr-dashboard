@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { backendDb, db } from './firebase-config'; // Import frontendDb as db
+import { backendDb, db } from './firebase-config';
 import { collection, query, where, onSnapshot, orderBy, getDocs, writeBatch, doc } from 'firebase/firestore';
 import './TableDetails.css';
 
@@ -7,6 +7,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [orders, setOrders] = useState([]);
   const [restaurant, setRestaurant] = useState({ name: 'QRapid', address: '', contact: '' });
   const [completedOrderIds, setCompletedOrderIds] = useState([]);
+  const [orderFetched, setOrderFetched] = useState(false); // New state to track order fetch
 
   useEffect(() => {
     const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
@@ -19,14 +20,18 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      console.log('Query snapshot size:', querySnapshot.size);
-      const allOrders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      console.log('Query snapshot data:', allOrders);
-      setOrders(allOrders);
+      if (!orderFetched) {
+        console.log('Query snapshot size:', querySnapshot.size);
+        const allOrders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        console.log('Query snapshot data:', allOrders);
+        setOrders(allOrders);
 
-      // Update table color to blue for new orders
-      if (allOrders.length > 0) {
-        updateTableColor(tableNumber, 'blue');
+        // Update table color to blue for new orders
+        if (allOrders.length > 0) {
+          updateTableColor(tableNumber, 'blue');
+        }
+
+        setOrderFetched(true); // Set orderFetched to true after initial fetch
       }
     }, (error) => {
       console.error('Error fetching orders:', error);
@@ -42,7 +47,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     fetchCompletedOrderIds();
 
     return () => unsubscribe();
-  }, [tableNumber, updateTableColor]);
+  }, [tableNumber, updateTableColor, orderFetched]);
 
   const printContent = async (orders, isKOT) => {
     if ('serial' in navigator) {
@@ -134,6 +139,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     setCompletedOrderIds([...completedOrderIds, ...filteredOrders.map(order => order.id)]);
     setOrders(prevOrders => prevOrders.filter(order => !filteredOrders.map(o => o.id).includes(order.id)));
     await updateTableColor(tableNumber, 'blank');
+    setOrderFetched(false); // Reset orderFetched to false to listen for new orders
   };
 
   const updateOrderStatus = async (orders, status) => {

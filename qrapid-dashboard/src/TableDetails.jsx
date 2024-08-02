@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { backendDb, db } from './firebase-config'; // Import frontendDb
-import { collection, query, where, onSnapshot, doc, getDoc, orderBy, addDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, getDoc, orderBy, addDoc, batch } from 'firebase/firestore';
 import './TableDetails.css';
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
@@ -154,6 +154,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     console.log('Orders stored in "bills" collection:', filteredOrders);
 
     setCompletedOrderIds([...completedOrderIds, ...filteredOrders.map(order => order.id)]);
+    setOrders(prevOrders => prevOrders.filter(order => !completedOrderIds.includes(order.id)));
     updateTableColor(tableNumber, 'blank');
   };
 

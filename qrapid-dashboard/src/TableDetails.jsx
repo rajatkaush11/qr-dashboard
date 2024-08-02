@@ -15,7 +15,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     const q = query(
       collection(backendDb, 'orders'),
       where('tableNo', '==', normalizedTableNumber),
-      where('status', '!=', 'completed'), // Ensure we don't fetch completed orders
       orderBy('createdAt', 'desc')
     );
 
@@ -158,7 +157,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           <p>No current orders.</p>
         ) : (
           orders
-            .filter(order => !completedOrderIds.includes(order.id))
+            .filter(order => order.status !== 'completed')
             .map((order, orderIndex) => (
               <div className="order-item" key={orderIndex}>
                 <p><strong>Name:</strong> {order.name}</p>

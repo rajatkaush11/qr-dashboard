@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { backendDb, db } from './firebase-config';
-import { collection, query, where, onSnapshot, doc, getDoc, orderBy, getDocs, writeBatch, updateDoc } from 'firebase/firestore';
+import { backendDb, db } from './firebase-config'; // Import frontendDb as db
+import { collection, query, where, onSnapshot, doc, getDoc, orderBy, getDocs, writeBatch, setDoc } from 'firebase/firestore';
 import './TableDetails.css';
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
@@ -39,7 +39,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     const q = query(
       collection(backendDb, 'orders'),
       where('tableNo', '==', normalizedTableNumber),
-      where('status', '!=', 'completed'), // Exclude completed orders
+      where('status', '!=', 'completed'), // Ensure we don't fetch completed orders
       orderBy('createdAt', 'desc')
     );
 
@@ -48,11 +48,15 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       const allOrders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       console.log('Query snapshot data:', allOrders);
       setOrders(allOrders);
+
+      // Update table color to blue for new orders
+      if (allOrders.length > 0) {
+        updateTableColor(tableNumber, 'blue');
+      }
     }, (error) => {
       console.error('Error fetching orders:', error);
     });
 
-    // Fetch completed order IDs from the frontend "bills" collection
     const fetchCompletedOrderIds = async () => {
       const q = query(collection(db, 'bills'));
       const querySnapshot = await getDocs(q);
@@ -63,7 +67,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     fetchCompletedOrderIds();
 
     return () => unsubscribe();
-  }, [tableNumber]);
+  }, [tableNumber, updateTableColor]);
 
   const printContent = async (orders, isKOT) => {
     if ('serial' in navigator) {
@@ -126,39 +130,44 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const handleGenerateKOT = async () => {
     const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
-    console.log('Filtered orders for KOT:', filteredOrders);
     if (filteredOrders.length === 0) return;
     await printContent(filteredOrders, true);
     await updateTableColor(tableNumber, 'orange');
+    await updateOrderStatus(filteredOrders, 'KOT');
   };
 
   const handleGenerateBill = async () => {
     const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
-    console.log('Filtered orders for Bill:', filteredOrders);
     if (filteredOrders.length === 0) return;
     await printContent(filteredOrders, false);
     await updateTableColor(tableNumber, 'green');
+    await updateOrderStatus(filteredOrders, 'billed');
   };
 
   const handleCompleteOrder = async () => {
-    console.log('Completing order. Storing completed orders in "bills" collection.');
     const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
     const batch = writeBatch(db);
 
     filteredOrders.forEach(order => {
       const billRef = doc(collection(db, 'bills'));
       batch.set(billRef, { orderId: order.id, ...order });
-      const orderRef = doc(backendDb, 'orders', order.id);
-      batch.update(orderRef, { status: 'completed' });
     });
 
     await batch.commit();
-
-    console.log('Orders stored in "bills" collection:', filteredOrders);
+    await updateOrderStatus(filteredOrders, 'completed');
 
     setCompletedOrderIds([...completedOrderIds, ...filteredOrders.map(order => order.id)]);
     setOrders(prevOrders => prevOrders.filter(order => !filteredOrders.map(o => o.id).includes(order.id)));
     await updateTableColor(tableNumber, 'blank');
+  };
+
+  const updateOrderStatus = async (orders, status) => {
+    const batch = writeBatch(backendDb);
+    orders.forEach(order => {
+      const orderRef = doc(backendDb, 'orders', order.id);
+      batch.update(orderRef, { status });
+    });
+    await batch.commit();
   };
 
   return (

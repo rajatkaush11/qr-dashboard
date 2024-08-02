@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { backendDb, db } from './firebase-config'; // Import frontendDb
-import { collection, query, where, onSnapshot, doc, getDoc, orderBy, addDoc, batch } from 'firebase/firestore';
+import { backendDb, frontendDb as db } from './firebase-config'; // Import frontendDb and rename it to db
+import { collection, query, where, onSnapshot, doc, getDoc, orderBy, getDocs, writeBatch } from 'firebase/firestore';
 import './TableDetails.css';
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
@@ -142,7 +142,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const handleCompleteOrder = async () => {
     console.log('Completing order. Storing completed orders in "bills" collection.');
     const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
-    const batch = db.batch();
+    const batch = writeBatch(db); // Use frontendDb as db here
 
     filteredOrders.forEach(order => {
       const billRef = doc(collection(db, 'bills'));
@@ -154,7 +154,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     console.log('Orders stored in "bills" collection:', filteredOrders);
 
     setCompletedOrderIds([...completedOrderIds, ...filteredOrders.map(order => order.id)]);
-    setOrders(prevOrders => prevOrders.filter(order => !completedOrderIds.includes(order.id)));
+    setOrders(prevOrders => prevOrders.filter(order => !filteredOrders.map(o => o.id).includes(order.id)));
     updateTableColor(tableNumber, 'blank');
   };
 

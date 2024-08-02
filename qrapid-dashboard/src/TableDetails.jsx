@@ -5,34 +5,10 @@ import './TableDetails.css';
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [orders, setOrders] = useState([]);
-  const [restaurant, setRestaurant] = useState({ name: '', address: '', contact: '' });
+  const [restaurant, setRestaurant] = useState({ name: 'QRapid', address: '', contact: '' });
   const [completedOrderIds, setCompletedOrderIds] = useState([]);
 
   useEffect(() => {
-    const fetchRestaurantDetails = async () => {
-      const uid = localStorage.getItem('UID');
-      if (!uid) {
-        console.error("UID is not found in localStorage.");
-        return;
-      }
-
-      const restaurantRef = doc(backendDb, 'restaurants', uid);
-      const restaurantDoc = await getDoc(restaurantRef);
-      if (restaurantDoc.exists()) {
-        const data = restaurantDoc.data();
-        setRestaurant({
-          name: data.restaurantName || "No name provided",
-          address: data.address || "No address provided",
-          contact: data.contactNumber || "No contact provided"
-        });
-        console.log("Fetched restaurant details:", data);
-      } else {
-        console.error(`No restaurant found with UID: ${uid}`);
-      }
-    };
-
-    fetchRestaurantDetails();
-
     const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
     console.log(`Querying for table number: ${normalizedTableNumber}`);
 

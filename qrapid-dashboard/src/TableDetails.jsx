@@ -128,7 +128,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     console.log('Filtered orders for KOT:', filteredOrders);
     if (filteredOrders.length === 0) return;
     await printContent(filteredOrders, true);
-    updateTableColor(tableNumber, 'orange');
+    await updateTableColor(tableNumber, 'orange');
   };
 
   const handleGenerateBill = async () => {
@@ -136,13 +136,13 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     console.log('Filtered orders for Bill:', filteredOrders);
     if (filteredOrders.length === 0) return;
     await printContent(filteredOrders, false);
-    updateTableColor(tableNumber, 'green');
+    await updateTableColor(tableNumber, 'green');
   };
 
   const handleCompleteOrder = async () => {
     console.log('Completing order. Storing completed orders in "bills" collection.');
     const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
-    const batch = writeBatch(db); // Use frontendDb as db here
+    const batch = writeBatch(db);
 
     filteredOrders.forEach(order => {
       const billRef = doc(collection(db, 'bills'));
@@ -155,7 +155,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
     setCompletedOrderIds([...completedOrderIds, ...filteredOrders.map(order => order.id)]);
     setOrders(prevOrders => prevOrders.filter(order => !filteredOrders.map(o => o.id).includes(order.id)));
-    updateTableColor(tableNumber, 'blank');
+    await updateTableColor(tableNumber, 'blank');
   };
 
   return (

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { backendDb, db } from './firebase-config'; // Import frontendDb as db
-import { collection, query, where, onSnapshot, doc, getDoc, orderBy, getDocs, writeBatch } from 'firebase/firestore';
+import { backendDb, db } from './firebase-config';
+import { collection, query, where, onSnapshot, doc, getDoc, orderBy, getDocs, writeBatch, updateDoc } from 'firebase/firestore';
 import './TableDetails.css';
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
@@ -39,6 +39,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     const q = query(
       collection(backendDb, 'orders'),
       where('tableNo', '==', normalizedTableNumber),
+      where('status', '!=', 'completed'), // Exclude completed orders
       orderBy('createdAt', 'desc')
     );
 
@@ -147,6 +148,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     filteredOrders.forEach(order => {
       const billRef = doc(collection(db, 'bills'));
       batch.set(billRef, { orderId: order.id, ...order });
+      const orderRef = doc(backendDb, 'orders', order.id);
+      batch.update(orderRef, { status: 'completed' });
     });
 
     await batch.commit();

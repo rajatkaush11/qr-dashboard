@@ -12,6 +12,7 @@ const Register = () => {
   const [address, setAddress] = useState('');
   const [description, setDescription] = useState('');
   const [timing, setTiming] = useState('');
+  const [restaurantImage, setRestaurantImage] = useState(null);
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
   const apiBaseUrl = import.meta.env.VITE_BACKEND_API; // Use the environment variable for the base URL
@@ -109,6 +110,12 @@ const Register = () => {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => setRestaurantImage(e.target.files[0])}
           required
         />
         <button type="submit">Register</button>

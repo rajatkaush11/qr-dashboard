@@ -1,175 +1,173 @@
-/* Menu.css */  
-  
-/* Global Styles */  
-* {  
-  box-sizing: border-box;  
-  margin: 0;  
-  padding: 0;  
-}  
-  
-body {  
-  font-family: Arial, sans-serif;  
-  line-height: 1.6;  
-  color: #333;  
-  background-color: #f9f9f9;  
-}  
-  
-/* Menu Container */  
-.menu-container {  
-  padding: 40px 60px;  
-  margin-top: 80px;  
-  text-align: center;  
-  overflow-y: auto;  
-  height: calc(100vh - 80px);  
-  background-color: #f9f9f9;  
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);  
-}  
-  
-/* Menu Header */  
-.menu-header {  
-  display: flex;  
-  justify-content: space-between;  
-  align-items: center;  
-  margin-bottom: 20px;  
-}  
-  
-.menu-header h1 {  
-  font-size: 2.5em;  
-  color: #333;  
-  font-weight: bold;  
-  margin: 0;  
-}  
-  
-/* Add Food Category Button */  
-.add-food-category-btn {  
-  background-color: #34C759;  
-  color: #fff;  
-  border: none;  
-  border-radius: 5px;  
-  padding: 12px 25px;  
-  cursor: pointer;  
-  transition: background-color 0.3s ease;  
-}  
-  
-.add-food-category-btn:hover {  
-  background-color: #2E865F;  
-}  
-  
-/* Menu Tabs */  
-.menu-tabs {  
-  display: flex;  
-  justify-content: center;  
-  gap: 15px;  
-  margin: 20px 0;  
-}  
-  
-.menu-tabs a {  
-  text-decoration: none;  
-  color: #333;  
-  background-color: #f0f0f0;  
-  padding: 12px 25px;  
-  border-radius: 20px;  
-  transition: background-color 0.3s ease;  
-}  
-  
-.menu-tabs a.active {  
-  background-color: #007bff;  
-  color: #fff;  
-}  
-  
-/* New Category Item */  
-.new-category-item {  
-  display: flex;  
-  flex-direction: column;  
-  gap: 15px;  
-  margin-bottom: 25px;  
-  align-items: center;  
-}  
-  
-.new-category-input {  
-  padding: 12px;  
-  border: 1px solid #ddd;  
-  border-radius: 5px;  
-  width: 100%;  
-  max-width: 400px;  
-}  
-  
-.add-category-btn {  
-  background-color: #34C759;  
-  color: #fff;  
-  border: none;  
-  border-radius: 5px;  
-  padding: 12px 25px;  
-  cursor: pointer;  
-  transition: background-color 0.3s ease;  
-}  
-  
-.add-category-btn:hover {  
-  background-color: #2E865F;  
-}  
-  
-/* Menu Items */  
-.menu-items {  
-  display: grid;  
-  grid-template-columns: repeat(7, 1fr);  
-  gap: 25px;  
-}  
-  
-.menu-item {  
-  background-color: #fff;  
-  padding: 30px; /* Increased padding for better spacing inside categories */  
-  border: 1px solid #ddd;  
-  border-radius: 10px;  
-  cursor: pointer;  
-  transition: background-color 0.3s ease;  
-  display: flex;  
-  flex-direction: column;  
-  align-items: center;  
-  justify-content: center;  
-  height: 180px;  
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);  
-}  
-  
-.menu-item:hover {  
-  background-color: #f0f0f0;  
-}  
-  
-.menu-item img {  
-  max-width: 100px;  
-  max-height: 100px;  
-  border-radius: 10px;  
-  object-fit: cover;  
-  margin-bottom: 15px;  
-}  
-  
-.menu-item-details {  
-  text-align: center;  
-  margin-top: 15px;  
-}  
-  
-.menu-item-details h2 {  
-  font-size: 1.2em;  
-  color: #333;  
-  margin: 5px 0;  
-}  
-  
-.menu-item-actions {  
-  display: flex;  
-  gap: 10px;  
-  justify-content: center;  
-  margin-top: 15px;  
-}  
-  
-.edit-category-btn,.delete-category-btn {  
-  background-color: #000; /* Changed to black */  
-  color: #fff;  
-  border: none;  
-  border-radius: 5px;  
-  padding: 8px 15px;  
-  cursor: pointer;  
-  transition: background-color 0.3s ease;  
-}  
-  
-.edit-category-btn:hover,.delete-category-btn:hover {  
-  background-color: #333; /* Darker black on hover */  
+/* Global Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+  color: #333;
+  background-color: #f9f9f9;
+}
+
+/* Menu Container */
+.menu-container {
+  padding: 40px 20px; /* Adjusted left and right padding */
+  margin-top: 80px;
+  text-align: center;
+  overflow-y: auto;
+  height: calc(100vh - 80px);
+  background-color: #f9f9f9;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Menu Header */
+.menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.menu-header h1 {
+  font-size: 2.5em;
+  color: #333;
+  font-weight: bold;
+  margin: 0;
+}
+
+/* Add Food Category Button */
+.add-food-category-btn {
+  background-color: #34C759;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 12px 25px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.add-food-category-btn:hover {
+  background-color: #2E865F;
+}
+
+/* Menu Tabs */
+.menu-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.menu-tabs a {
+  text-decoration: none;
+  color: #333;
+  background-color: #f0f0f0;
+  padding: 12px 25px;
+  border-radius: 20px;
+  transition: background-color 0.3s ease;
+}
+
+.menu-tabs a.active {
+  background-color: #007bff;
+  color: #fff;
+}
+
+/* New Category Item */
+.new-category-item {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 25px;
+  align-items: center;
+}
+
+.new-category-input {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.add-category-btn {
+  background-color: #34C759;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 12px 25px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.add-category-btn:hover {
+  background-color: #2E865F;
+}
+
+/* Menu Items */
+.menu-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* Adjusted for consistent item size */
+  gap: 25px;
+}
+
+.menu-item {
+  background-color: #fff;
+  padding: 20px; /* Adjusted padding */
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 250px; /* Set a fixed height for all items */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.menu-item:hover {
+  background-color: #f0f0f0;
+}
+
+.menu-item img {
+  max-width: 100px;
+  max-height: 100px;
+  border-radius: 10px;
+  object-fit: cover;
+  margin-bottom: 15px;
+}
+
+.menu-item-details {
+  text-align: center;
+  margin-top: 15px;
+}
+
+.menu-item-details h2 {
+  font-size: 1.2em;
+  color: #333;
+  margin: 5px 0;
+}
+
+.menu-item-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 15px;
+}
+
+.edit-category-btn, .delete-category-btn {
+  background-color: #000; /* Changed to black */
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 15px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.edit-category-btn:hover, .delete-category-btn:hover {
+  background-color: #333; /* Darker black on hover */
 }

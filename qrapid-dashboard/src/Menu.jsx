@@ -112,9 +112,9 @@ const Menu = () => {
           throw new Error('Failed to update category in MongoDB');
         }
 
-        // Update the category in the state
-        const updatedCategories = categories.map(cat => (cat.id === editingCategory.id ? { ...newCategory, id: editingCategory.id } : cat));
-        setCategories(updatedCategories);
+        // Fetch updated categories
+        fetchCategories();
+
         setNewCategory({ name: '', image: '' });
         setEditingCategory(null);
         setShowCategoryInput(false);
@@ -159,14 +159,6 @@ const Menu = () => {
           {editingCategory ? 'Edit Category' : '+ Add Food Category'}
         </button>
       </div>
-      {/* <div className="menu-tabs">
-        <a href="#" className="active">All</a>
-        <a href="#">Popular Items</a>
-        <a href="#">Featured</a>
-        <a href="#">Combos</a>
-        <a href="#">Family Bundles</a>
-        <a href="#">Desserts</a>
-      </div> */}
       {showCategoryInput && (
         <div className="new-category-item">
           <input

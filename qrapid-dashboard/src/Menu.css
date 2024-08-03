@@ -109,7 +109,7 @@ body {
 /* Menu Items */
 .menu-items {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* Adjusted for consistent item size */
+  grid-template-columns: repeat(5, 1fr); /* Set grid to 5 columns */
   gap: 25px;
 }
 

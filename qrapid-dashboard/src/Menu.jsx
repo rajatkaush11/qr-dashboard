@@ -112,6 +112,7 @@ const Menu = () => {
           throw new Error('Failed to update category in MongoDB');
         }
 
+        // Update the category in the state
         const updatedCategories = categories.map(cat => (cat.id === editingCategory.id ? { ...newCategory, id: editingCategory.id } : cat));
         setCategories(updatedCategories);
         setNewCategory({ name: '', image: '' });

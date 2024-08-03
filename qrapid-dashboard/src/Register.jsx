@@ -76,7 +76,6 @@ const Register = () => {
 
   return (
     <div className="restaurant-details">
-      <button className="login-btn" onClick={() => navigate('/login')}>Login</button>
       <h2>Register Restaurant</h2>
       <form onSubmit={handleRegister}>
         <input
@@ -130,6 +129,7 @@ const Register = () => {
         <button type="submit">Register</button>
         {message && <p className="message">{message}</p>}
       </form>
+      <button className="login-btn" onClick={() => navigate('/login')}>Login</button>
     </div>
   );
 };

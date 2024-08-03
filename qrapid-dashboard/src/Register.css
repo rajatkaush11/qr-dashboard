@@ -88,8 +88,7 @@ body {
   width: 100%;
   margin-top: 20px;
 }
-.back-to-login-btn {
-    margin-top: 20px;
+.login-btn {
     padding: 10px;
     font-size: 18px;
     color: white;
@@ -99,9 +98,10 @@ body {
     cursor: pointer;
     width: 100%;
     transition: background-color 0.3s;
+    margin-bottom: 20px; /* Space between the button and the heading */
   }
   
-  .back-to-login-btn:hover {
+  .login-btn:hover {
     background-color: #1C6145;
   }
   

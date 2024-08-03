@@ -1,117 +1,173 @@
-/* Global Styles */  
-  
-* {  
-  box-sizing: border-box;  
-  margin: 0;  
-  padding: 0;  
-}  
-  
-body {  
-  font-family: Arial, sans-serif;  
-  line-height: 1.6;  
-  color: #333;  
-  background-color: #f9f9f9;  
-}  
-  
-#root {  
-  max-width: 1280px;  
-  margin: 0 auto;  
-  padding: 2rem;  
-  text-align: center;  
-}  
-  
-/* Logo Styles */  
-  
-.logo {  
-  height: 4em;  
-  padding: 1em;  
-  will-change: filter;  
-  transition: filter 300ms;  
-}  
-  
-.logo:hover {  
-  filter: drop-shadow(0 0 2em #646cffaa);  
-}  
-  
-.logo.react:hover {  
-  filter: drop-shadow(0 0 2em #61dafbaa);  
-}  
-  
-/* Signin Container Styles */  
-  
-.signin-container {  
-  display: flex;  
-  flex-direction: column;  
-  align-items: center;  
-  justify-content: center;  
-  height: 100vh;  
-  text-align: center;  
-  padding: 2rem;  
-  background-color: #f9f9f9;  
-}  
-  
-.signin-container h1 {  
-  margin-bottom: 1.5em;  
-  color: #333;  
-  font-size: 2em;  
-  font-weight: bold;  
-}  
-  
-.signin-container.clerk-sign-in-button {  
-  background-color: #00BF63;  
-  border: none;  
-  border-radius: 8px;  
-  color: #fff;  
-  font-size: 1.2em;  
-  padding: 1.2em 2.4em;  
-  cursor: pointer;  
-  transition: background-color 0.3s ease;  
-}  
-  
-.signin-container.clerk-sign-in-button:hover {  
-  background-color: #333;  
-}  
-  
-.signin-container.clerk-sign-in-button:focus {  
-  outline: none;  
-  box-shadow: 0 0 5px rgba(255, 127, 80, 0.5);  
-}  
-  
-/* Logo Spin Animation */  
-  
-@keyframes logo-spin {  
-  from {  
-    transform: rotate(0deg);  
-  }  
-  to {  
-    transform: rotate(360deg);  
-  }  
-}  
-  
-@media (prefers-reduced-motion: no-preference) {  
-  a:nth-of-type(2).logo {  
-    animation: logo-spin infinite 20s linear;  
-  }  
-}  
-  
-/* Card Styles */  
-  
-.card {  
-  padding: 2em;  
-  background-color: #fff;  
-  border: 1px solid #ddd;  
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);  
-}  
-  
-/* Read the Docs Styles */  
-  
-.read-the-docs {  
-  color: #666;  
-  font-size: 1.2em;  
-  text-decoration: none;  
-}  
-  
-.read-the-docs:hover {  
-  color: #333;  
-  text-decoration: underline;  
+/* Global Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+  color: #333;
+  background-color: #f9f9f9;
+}
+
+/* Menu Container */
+.menu-container {
+  padding: 40px 20px; /* Adjusted left and right padding */
+  margin-top: 80px;
+  text-align: center;
+  overflow-y: auto;
+  height: calc(100vh - 80px);
+  background-color: #f9f9f9;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Menu Header */
+.menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.menu-header h1 {
+  font-size: 2.5em;
+  color: #333;
+  font-weight: bold;
+  margin: 0;
+}
+
+/* Add Food Category Button */
+.add-food-category-btn {
+  background-color: #34C759;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 12px 25px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.add-food-category-btn:hover {
+  background-color: #2E865F;
+}
+
+/* Menu Tabs */
+.menu-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.menu-tabs a {
+  text-decoration: none;
+  color: #333;
+  background-color: #f0f0f0;
+  padding: 12px 25px;
+  border-radius: 20px;
+  transition: background-color 0.3s ease;
+}
+
+.menu-tabs a.active {
+  background-color: #007bff;
+  color: #fff;
+}
+
+/* New Category Item */
+.new-category-item {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 25px;
+  align-items: center;
+}
+
+.new-category-input {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.add-category-btn {
+  background-color: #34C759;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 12px 25px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.add-category-btn:hover {
+  background-color: #2E865F;
+}
+
+/* Menu Items */
+.menu-items {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr); /* Set grid to 5 columns */
+  gap: 25px;
+}
+
+.menu-item {
+  background-color: #fff;
+  padding: 20px; /* Adjusted padding */
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 250px; /* Set a fixed height for all items */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.menu-item:hover {
+  background-color: #f0f0f0;
+}
+
+.menu-item img {
+  max-width: 100px;
+  max-height: 100px;
+  border-radius: 10px;
+  object-fit: cover;
+  margin-bottom: 15px;
+}
+
+.menu-item-details {
+  text-align: center;
+  margin-top: 15px;
+}
+
+.menu-item-details h2 {
+  font-size: 1.2em;
+  color: #333;
+  margin: 5px 0;
+}
+
+.menu-item-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 15px;
+}
+
+.edit-category-btn, .delete-category-btn {
+  background-color: #000; /* Changed to black */
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 15px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.edit-category-btn:hover, .delete-category-btn:hover {
+  background-color: #333; /* Darker black on hover */
 }

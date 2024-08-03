@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from './firebase-config';
 import { doc, setDoc } from 'firebase/firestore';
-import './register.css';
+import './Register.css';
 import { useNavigate } from 'react-router-dom';
 
 const Register = () => {
@@ -121,6 +121,7 @@ const Register = () => {
         <button type="submit">Register</button>
         {message && <p className="message">{message}</p>}
       </form>
+      <button className="back-to-login-btn" onClick={() => navigate('/login')}>Back to Login</button>
     </div>
   );
 };

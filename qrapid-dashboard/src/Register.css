@@ -88,3 +88,20 @@ body {
   width: 100%;
   margin-top: 20px;
 }
+.back-to-login-btn {
+    margin-top: 20px;
+    padding: 10px;
+    font-size: 18px;
+    color: white;
+    background-color: #2E865F;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.3s;
+  }
+  
+  .back-to-login-btn:hover {
+    background-color: #1C6145;
+  }
+  

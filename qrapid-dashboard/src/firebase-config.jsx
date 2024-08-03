@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 // Existing frontend Firebase configuration
 const frontendFirebaseConfig = {
@@ -26,9 +27,10 @@ const backendFirebaseConfig = {
 const frontendApp = getApps().length === 0 ? initializeApp(frontendFirebaseConfig) : getApp();
 const frontendAuth = getAuth(frontendApp);
 const frontendDb = getFirestore(frontendApp);
+const frontendStorage = getStorage(frontendApp);
 
 // Initialize the backend Firebase app
 const backendApp = getApps().length < 2 ? initializeApp(backendFirebaseConfig, 'backend') : getApp('backend');
 const backendDb = getFirestore(backendApp);
 
-export { frontendAuth as auth, frontendDb as db, backendDb };
+export { frontendAuth as auth, frontendDb as db, frontendStorage as storage, backendDb };

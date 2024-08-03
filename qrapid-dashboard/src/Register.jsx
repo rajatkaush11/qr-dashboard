@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth, db } from './firebase-config';
+import { auth, db, storage } from './firebase-config';
 import { doc, setDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import './Register.css';
 import { useNavigate } from 'react-router-dom';
 
@@ -26,13 +27,19 @@ const Register = () => {
       const user = userCredential.user;
       console.log('User created with UID:', user.uid);
 
+      // Upload restaurant image to Firebase Storage
+      const imageRef = ref(storage, `restaurantImages/${user.uid}`);
+      await uploadBytes(imageRef, restaurantImage);
+      const imageUrl = await getDownloadURL(imageRef);
+
       // Save additional data in Firestore
       await setDoc(doc(db, "restaurants", user.uid), {
         restaurantName,
         address,
         description,
         timing,
-        email: user.email // Use the email from userCredential
+        email: user.email, // Use the email from userCredential
+        imageUrl // Save the image URL
       });
       console.log('Restaurant details saved in Firestore');
 
@@ -48,7 +55,8 @@ const Register = () => {
           address,
           description,
           timing,
-          email: user.email
+          email: user.email,
+          imageUrl // Include image URL in the request body
         })
       });
 
@@ -68,6 +76,7 @@ const Register = () => {
 
   return (
     <div className="restaurant-details">
+      <button className="login-btn" onClick={() => navigate('/login')}>Login</button>
       <h2>Register Restaurant</h2>
       <form onSubmit={handleRegister}>
         <input
@@ -121,7 +130,6 @@ const Register = () => {
         <button type="submit">Register</button>
         {message && <p className="message">{message}</p>}
       </form>
-      <button className="back-to-login-btn" onClick={() => navigate('/login')}>Back to Login</button>
     </div>
   );
 };

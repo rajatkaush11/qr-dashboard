@@ -15,7 +15,7 @@ body {
 /* Menu Container */
 .menu-container {
   padding: 40px 20px; /* Adjusted left and right padding */
-  margin-top: 80px;
+  margin-top: 0px;
   text-align: center;
   overflow-y: auto;
   height: calc(100vh - 80px);

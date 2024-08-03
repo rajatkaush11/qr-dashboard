@@ -90,20 +90,20 @@ body {
   margin-top: 20px;
 }
 
-.login-btn {
-  padding: 5px 10px;
-  font-size: 14px;
-  color: white;
-  background-color: #2E865F;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  transition: background-color 0.3s;
-}
-
-.login-btn:hover {
-  background-color: #1C6145;
-}
+.back-to-login-btn {
+    margin-top: 20px;
+    padding: 10px;
+    font-size: 18px;
+    color: white;
+    background-color: #2E865F;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.3s;
+  }
+  
+  .back-to-login-btn:hover {
+    background-color: #1C6145;
+  }
+  

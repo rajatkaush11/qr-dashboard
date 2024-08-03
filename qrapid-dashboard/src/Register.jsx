@@ -79,55 +79,70 @@ const Register = () => {
       <button className="login-btn" onClick={() => navigate('/login')}>Login</button>
       <h2>Register Restaurant</h2>
       <form onSubmit={handleRegister}>
-        <input
-          type="text"
-          placeholder="Name of the Restaurant"
-          value={restaurantName}
-          onChange={(e) => setRestaurantName(e.target.value)}
-          required
-        />
-        <input
-          type="text"
-          placeholder="Address of the Restaurant"
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          required
-        />
-        <input
-          type="text"
-          placeholder="Description of the Restaurant"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          required
-        />
-        <input
-          type="text"
-          placeholder="Timing of the Restaurant"
-          value={timing}
-          onChange={(e) => setTiming(e.target.value)}
-          required
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => setRestaurantImage(e.target.files[0])}
-          required
-        />
-        <button type="submit">Register</button>
+        <div className="input-group">
+          <label>Name of the Restaurant</label>
+          <input
+            type="text"
+            value={restaurantName}
+            onChange={(e) => setRestaurantName(e.target.value)}
+            required
+          />
+        </div>
+        <div className="input-group">
+          <label>Address of the Restaurant</label>
+          <input
+            type="text"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            required
+          />
+        </div>
+        <div className="input-group">
+          <label>Description of the Restaurant</label>
+          <input
+            type="text"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            required
+          />
+        </div>
+        <div className="input-group">
+          <label>Timing of the Restaurant</label>
+          <input
+            type="text"
+            value={timing}
+            onChange={(e) => setTiming(e.target.value)}
+            required
+          />
+        </div>
+        <div className="input-group">
+          <label>Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+        <div className="input-group">
+          <label>Password</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+        <div className="input-group">
+          <label>Upload Restaurant Image</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setRestaurantImage(e.target.files[0])}
+            required
+          />
+        </div>
+        <button type="submit" className="register-btn">Register</button>
         {message && <p className="message">{message}</p>}
       </form>
     </div>

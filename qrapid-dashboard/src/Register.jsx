@@ -129,7 +129,7 @@ const Register = () => {
         <button type="submit">Register</button>
         {message && <p className="message">{message}</p>}
       </form>
-      <button className="login-btn" onClick={() => navigate('/login')}>Login</button>
+      <button className="login-btn" onClick={() => navigate('/login')}>Back To Login</button>
     </div>
   );
 };

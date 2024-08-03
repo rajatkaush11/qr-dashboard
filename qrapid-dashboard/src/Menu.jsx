@@ -112,7 +112,7 @@ const Menu = () => {
           throw new Error('Failed to update category in MongoDB');
         }
 
-        // Fetch updated categories
+        // Re-fetch the categories to update the state and UI
         fetchCategories();
 
         setNewCategory({ name: '', image: '' });

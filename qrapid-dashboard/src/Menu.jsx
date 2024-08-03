@@ -206,7 +206,7 @@ const Menu = () => {
                 <button onClick={() => handleEditCategory(category)} className="edit-category-btn">
                   Edit
                 </button>
-                <button onClick={() => handleDeleteCategory(category.id)} className="delete-category-btn">
+                <button onClick={(e) => { e.stopPropagation(); handleDeleteCategory(category.id); }} className="delete-category-btn">
                   Delete
                 </button>
               </div>

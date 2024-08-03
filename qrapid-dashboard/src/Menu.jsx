@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { collection, doc, addDoc, setDoc, getDocs, deleteDoc } from 'firebase/firestore';
 import { auth, db } from './firebase-config';
 import './Menu.css';
@@ -9,7 +8,6 @@ const Menu = () => {
   const [showCategoryInput, setShowCategoryInput] = useState(false);
   const [newCategory, setNewCategory] = useState({ name: '', image: '' });
   const [editingCategory, setEditingCategory] = useState(null);
-  const navigate = useNavigate();
   const userId = auth.currentUser ? auth.currentUser.uid : null; // Get current user's UID
   const apiBaseUrl = import.meta.env.VITE_BACKEND_API; // Use the environment variable for the base URL
 
@@ -152,10 +150,6 @@ const Menu = () => {
     }
   };
 
-  const handleCategoryClick = (category) => {
-    navigate(`/category/${category.id}/items`);
-  };
-
   return (
     <div className="menu-container">
       <div className="menu-header">
@@ -198,7 +192,7 @@ const Menu = () => {
       )}
       <div className="menu-items">
         {categories.map((category, index) => (
-          <div className="menu-item" key={index} onClick={() => handleCategoryClick(category)}>
+          <div className="menu-item" key={index}>
             <img src={category.image} alt={category.name} />
             <div className="menu-item-details">
               <h2>{category.name}</h2>

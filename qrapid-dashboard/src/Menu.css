@@ -8,18 +8,18 @@
 body {
   font-family: Arial, sans-serif;
   line-height: 1.6;
-  color: #333;
-  background-color: #f9f9f9;
+  color: #000; /* Black text */
+  background-color: #fff; /* White background */
 }
 
 /* Menu Container */
 .menu-container {
-  padding: 40px 20px; /* Adjusted left and right padding */
+  padding: 40px 20px;
   margin-top: 0px;
   text-align: center;
   overflow-y: auto;
   height: calc(100vh - 80px);
-  background-color: #f9f9f9;
+  background-color: #fff; /* White background */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -33,14 +33,14 @@ body {
 
 .menu-header h1 {
   font-size: 2.5em;
-  color: #333;
+  color: #000; /* Black text */
   font-weight: bold;
   margin: 0;
 }
 
 /* Add Food Category Button */
 .add-food-category-btn {
-  background-color: #34C759;
+  background-color: #000; /* Black button */
   color: #fff;
   border: none;
   border-radius: 5px;
@@ -50,7 +50,7 @@ body {
 }
 
 .add-food-category-btn:hover {
-  background-color: #2E865F;
+  background-color: #333; /* Darker black on hover */
 }
 
 /* Menu Tabs */
@@ -63,7 +63,7 @@ body {
 
 .menu-tabs a {
   text-decoration: none;
-  color: #333;
+  color: #000; /* Black text */
   background-color: #f0f0f0;
   padding: 12px 25px;
   border-radius: 20px;
@@ -71,8 +71,8 @@ body {
 }
 
 .menu-tabs a.active {
-  background-color: #007bff;
-  color: #fff;
+  background-color: #000; /* Black background */
+  color: #fff; /* White text */
 }
 
 /* New Category Item */
@@ -90,10 +90,12 @@ body {
   border-radius: 5px;
   width: 100%;
   max-width: 400px;
+  color: #000; /* Black text */
+  background-color: #fff; /* White background */
 }
 
 .add-category-btn {
-  background-color: #34C759;
+  background-color: #000; /* Black button */
   color: #fff;
   border: none;
   border-radius: 5px;
@@ -103,7 +105,7 @@ body {
 }
 
 .add-category-btn:hover {
-  background-color: #2E865F;
+  background-color: #333; /* Darker black on hover */
 }
 
 /* Menu Items */
@@ -114,8 +116,8 @@ body {
 }
 
 .menu-item {
-  background-color: #fff;
-  padding: 20px; /* Adjusted padding */
+  background-color: #fff; /* White background */
+  padding: 20px;
   border: 1px solid #ddd;
   border-radius: 10px;
   cursor: pointer;
@@ -147,7 +149,7 @@ body {
 
 .menu-item-details h2 {
   font-size: 1.2em;
-  color: #333;
+  color: #000; /* Black text */
   margin: 5px 0;
 }
 
@@ -159,7 +161,7 @@ body {
 }
 
 .edit-category-btn, .delete-category-btn {
-  background-color: #000; /* Changed to black */
+  background-color: #000; /* Black button */
   color: #fff;
   border: none;
   border-radius: 5px;
@@ -169,5 +171,71 @@ body {
 }
 
 .edit-category-btn:hover, .delete-category-btn:hover {
+  background-color: #333; /* Darker black on hover */
+}
+
+/* Update Menu */
+.update-menu-item {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 25px;
+  align-items: center;
+}
+
+.update-menu-input {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  width: 100%;
+  max-width: 400px;
+  color: #000; /* Black text */
+  background-color: #fff; /* White background */
+}
+
+.update-menu-btn {
+  background-color: #000; /* Black button */
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 12px 25px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.update-menu-btn:hover {
+  background-color: #333; /* Darker black on hover */
+}
+
+/* Add Menu Item */
+.add-menu-item {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 25px;
+  align-items: center;
+}
+
+.add-menu-input {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  width: 100%;
+  max-width: 400px;
+  color: #000; /* Black text */
+  background-color: #fff; /* White background */
+}
+
+.add-menu-btn {
+  background-color: #000; /* Black button */
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 12px 25px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.add-menu-btn:hover {
   background-color: #333; /* Darker black on hover */
 }

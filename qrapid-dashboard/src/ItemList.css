@@ -1,15 +1,17 @@
 .item-list-container {
   padding: 20px;
-  background-color: #f8f9fa;
+  background-color: #ffffff; /* White background */
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   max-height: calc(100vh - 100px); /* Adjust as needed */
   overflow-y: auto; /* Enable vertical scrolling */
+  color: #000000; /* Black text */
 }
 
 .item-list-container h1 {
   font-size: 24px;
   margin-bottom: 20px;
+  color: #000000; /* Black text */
 }
 
 .new-item-form {
@@ -17,7 +19,7 @@
   flex-direction: column;
   gap: 10px;
   margin-bottom: 20px;
-  background-color: #ffffff;
+  background-color: #ffffff; /* White background */
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -25,10 +27,12 @@
 
 .new-item-form input {
   padding: 10px;
-  border: 1px solid #ced4da;
+  border: 1px solid #000000; /* Black border */
   border-radius: 5px;
   width: 100%;
   box-sizing: border-box;
+  color: #000000; /* Black text */
+  background-color: #ffffff; /* White background */
 }
 
 .new-item-form input[type="file"] {
@@ -37,7 +41,7 @@
 
 .new-item-form button {
   padding: 10px 20px;
-  background-color: #007bff;
+  background-color: #000000; /* Black button */
   color: white;
   border: none;
   border-radius: 5px;
@@ -46,7 +50,7 @@
 }
 
 .new-item-form button:hover {
-  background-color: #0056b3;
+  background-color: #333333; /* Darker black on hover */
 }
 
 .item-list {
@@ -56,8 +60,8 @@
 }
 
 .item {
-  background-color: #ffffff;
-  border: 1px solid #ced4da;
+  background-color: #ffffff; /* White background */
+  border: 1px solid #000000; /* Black border */
   border-radius: 10px;
   padding: 20px;
   box-sizing: border-box;
@@ -80,11 +84,12 @@
 .item-details h2 {
   font-size: 18px;
   margin-bottom: 10px;
+  color: #000000; /* Black text */
 }
 
 .item-details p {
   margin: 5px 0;
-  color: #6c757d;
+  color: #000000; /* Black text */
 }
 
 .item-actions {
@@ -94,7 +99,7 @@
 
 .item-actions button {
   padding: 5px 10px;
-  background-color: #dc3545;
+  background-color: #000000; /* Black button */
   color: white;
   border: none;
   border-radius: 5px;
@@ -103,7 +108,7 @@
 }
 
 .item-actions button:hover {
-  background-color: #c82333;
+  background-color: #333333; /* Darker black on hover */
 }
 
 .delete-confirmation {
@@ -111,9 +116,9 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background-color: white;
+  background-color: #ffffff; /* White background */
   padding: 20px;
-  border: 1px solid #ced4da;
+  border: 1px solid #000000; /* Black border */
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   display: flex;
@@ -123,11 +128,12 @@
 
 .delete-confirmation p {
   font-size: 16px;
+  color: #000000; /* Black text */
 }
 
 .delete-confirmation button {
   padding: 10px 20px;
-  background-color: #007bff;
+  background-color: #000000; /* Black button */
   color: white;
   border: none;
   border-radius: 5px;
@@ -136,13 +142,13 @@
 }
 
 .delete-confirmation button:hover {
-  background-color: #0056b3;
+  background-color: #333333; /* Darker black on hover */
 }
 
 .delete-confirmation button:nth-child(2) {
-  background-color: #dc3545;
+  background-color: #000000; /* Black button */
 }
 
 .delete-confirmation button:nth-child(2):hover {
-  background-color: #c82333;
+  background-color: #333333; /* Darker black on hover */
 }

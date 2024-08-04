@@ -169,3 +169,14 @@
 .delete-confirmation button:nth-child(2):hover {
   background-color: #333333; /* Darker black on hover */
 }
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: black;
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  opacity: 0.8;
+  z-index: 1000;
+}

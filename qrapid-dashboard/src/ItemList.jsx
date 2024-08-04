@@ -14,6 +14,7 @@ const ItemList = () => {
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
+  const [notification, setNotification] = useState(null);
   const apiBaseUrl = import.meta.env.VITE_BACKEND_API;
   const formRef = useRef(null);
 
@@ -90,6 +91,8 @@ const ItemList = () => {
           const addedItem = await response.json();
           setItems([...items, { ...addedItem, id: docRef.id }]);
           setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '' });
+          fetchItems(); // Re-fetch items to update UI
+          showNotification("Item added successfully");
         } else {
           console.error('User not authenticated');
         }
@@ -130,6 +133,8 @@ const ItemList = () => {
           setItems(updatedItems);
           setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '' });
           setEditingItem(null);
+          fetchItems(); // Re-fetch items to update UI
+          showNotification("Item updated successfully");
         } else {
           console.error('User not authenticated');
         }
@@ -161,6 +166,7 @@ const ItemList = () => {
           setItems(items.filter(item => item.id !== itemToDelete.id));
           setShowDeleteConfirmation(false);
           setItemToDelete(null);
+          showNotification("Item deleted successfully");
         } else {
           console.error('User not authenticated');
         }
@@ -197,6 +203,11 @@ const ItemList = () => {
     const [movedItem] = reorderedItems.splice(result.source.index, 1);
     reorderedItems.splice(result.destination.index, 0, movedItem);
     setItems(reorderedItems);
+  };
+
+  const showNotification = (message) => {
+    setNotification(message);
+    setTimeout(() => setNotification(null), 3000);
   };
 
   return (
@@ -259,6 +270,11 @@ const ItemList = () => {
           )}
         </Droppable>
       </DragDropContext>
+      {notification && (
+        <div className="notification">
+          {notification}
+        </div>
+      )}
       {showDeleteConfirmation && (
         <div className="delete-confirmation">
           <p>Are you sure you want to delete this item?</p>

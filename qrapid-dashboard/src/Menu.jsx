@@ -9,6 +9,7 @@ const Menu = () => {
   const [showCategoryInput, setShowCategoryInput] = useState(false);
   const [newCategory, setNewCategory] = useState({ name: '', image: '' });
   const [editingCategory, setEditingCategory] = useState(null);
+  const [notification, setNotification] = useState(null);
   const userId = auth.currentUser ? auth.currentUser.uid : null; // Get current user's UID
   const apiBaseUrl = import.meta.env.VITE_BACKEND_API; // Use the environment variable for the base URL
   const navigate = useNavigate();
@@ -78,6 +79,8 @@ const Menu = () => {
 
         setNewCategory({ name: '', image: '' });
         setShowCategoryInput(false);
+        fetchCategories(); // Re-fetch categories to update UI
+        showNotification("Category added successfully");
       } catch (error) {
         console.error('Error adding category:', error);
       }
@@ -114,12 +117,12 @@ const Menu = () => {
           throw new Error('Failed to update category in MongoDB');
         }
 
-        // Re-fetch the categories to update the state and UI
-        fetchCategories();
+        fetchCategories(); // Re-fetch categories to update the state and UI
 
         setNewCategory({ name: '', image: '' });
         setEditingCategory(null);
         setShowCategoryInput(false);
+        showNotification("Category updated successfully");
       } catch (error) {
         console.error('Error updating category:', error);
       }
@@ -147,6 +150,7 @@ const Menu = () => {
         }
 
         setCategories(categories.filter(category => category.id !== categoryId));
+        showNotification("Category deleted successfully");
       } catch (error) {
         console.error('Error deleting category:', error);
       }
@@ -155,6 +159,11 @@ const Menu = () => {
 
   const handleCategoryClick = (categoryId) => {
     navigate(`/category/${categoryId}/items`);
+  };
+
+  const showNotification = (message) => {
+    setNotification(message);
+    setTimeout(() => setNotification(null), 3000);
   };
 
   return (
@@ -187,6 +196,11 @@ const Menu = () => {
           >
             {editingCategory ? 'Update' : 'Add'}
           </button>
+        </div>
+      )}
+      {notification && (
+        <div className="notification">
+          {notification}
         </div>
       )}
       <div className="menu-items">

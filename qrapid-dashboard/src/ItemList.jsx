@@ -216,12 +216,12 @@ const ItemList = () => {
                 Description: 
                 {expandedDescriptions[item.id] ? (
                   <>
-                    {item.description} <button onClick={() => toggleDescription(item.id)}>Read less</button>
+                    {item.description} <span onClick={() => toggleDescription(item.id)} className="toggle-description">Show less</span>
                   </>
                 ) : (
                   <>
                     {item.description.length > 100 ? `${item.description.slice(0, 100)}...` : item.description} 
-                    {item.description.length > 100 && <button onClick={() => toggleDescription(item.id)}>Read more</button>}
+                    {item.description.length > 100 && <span onClick={() => toggleDescription(item.id)} className="toggle-description">Read more</span>}
                   </>
                 )}
               </p>

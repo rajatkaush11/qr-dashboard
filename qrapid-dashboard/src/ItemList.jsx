@@ -12,8 +12,9 @@ const ItemList = () => {
   const [editingItem, setEditingItem] = useState(null);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
+  const [expandedDescriptions, setExpandedDescriptions] = useState({});
   const apiBaseUrl = import.meta.env.VITE_BACKEND_API;
-  const formRef = useRef(null); // Reference for the form element
+  const formRef = useRef(null);
 
   useEffect(() => {
     fetchItems();
@@ -100,7 +101,7 @@ const ItemList = () => {
   const handleEditItem = (item) => {
     setEditingItem(item);
     setNewItem({ name: item.name, price: item.price, description: item.description, image: item.image, weight: item.weight, unit: item.unit });
-    formRef.current.scrollIntoView({ behavior: 'smooth' }); // Scroll to the form
+    formRef.current.scrollIntoView({ behavior: 'smooth' });
   };
 
   const handleUpdateItem = async () => {
@@ -178,6 +179,13 @@ const ItemList = () => {
     setShowDeleteConfirmation(false);
   };
 
+  const toggleDescription = (id) => {
+    setExpandedDescriptions(prevState => ({
+      ...prevState,
+      [id]: !prevState[id]
+    }));
+  };
+
   const handleBack = () => {
     navigate(-1);
   };
@@ -204,7 +212,19 @@ const ItemList = () => {
             <div className="item-details">
               <h2>{item.name}</h2>
               <p>Price: {item.price}</p>
-              <p>Description: {item.description}</p>
+              <p>
+                Description: 
+                {expandedDescriptions[item.id] ? (
+                  <>
+                    {item.description} <button onClick={() => toggleDescription(item.id)}>Read less</button>
+                  </>
+                ) : (
+                  <>
+                    {item.description.length > 100 ? `${item.description.slice(0, 100)}...` : item.description} 
+                    {item.description.length > 100 && <button onClick={() => toggleDescription(item.id)}>Read more</button>}
+                  </>
+                )}
+              </p>
               <p>Weight: {item.weight} {item.unit}</p>
               <div className="item-actions">
                 <button onClick={() => handleEditItem(item)}>Edit</button>

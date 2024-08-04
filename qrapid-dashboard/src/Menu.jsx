@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, doc, addDoc, setDoc, getDocs, deleteDoc } from 'firebase/firestore';
 import { auth, db } from './firebase-config';
+import { useNavigate } from 'react-router-dom';
 import './Menu.css';
 
 const Menu = () => {
@@ -10,6 +11,7 @@ const Menu = () => {
   const [editingCategory, setEditingCategory] = useState(null);
   const userId = auth.currentUser ? auth.currentUser.uid : null; // Get current user's UID
   const apiBaseUrl = import.meta.env.VITE_BACKEND_API; // Use the environment variable for the base URL
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (userId) {
@@ -151,6 +153,10 @@ const Menu = () => {
     }
   };
 
+  const handleCategoryClick = (categoryId) => {
+    navigate(`/category/${categoryId}/items`);
+  };
+
   return (
     <div className="menu-container">
       <div className="menu-header">
@@ -185,12 +191,12 @@ const Menu = () => {
       )}
       <div className="menu-items">
         {categories.map((category, index) => (
-          <div className="menu-item" key={index}>
+          <div className="menu-item" key={index} onClick={() => handleCategoryClick(category.id)}>
             <img src={category.image} alt={category.name} />
             <div className="menu-item-details">
               <h2>{category.name}</h2>
               <div className="menu-item-actions">
-                <button onClick={() => handleEditCategory(category)} className="edit-category-btn">
+                <button onClick={(e) => { e.stopPropagation(); handleEditCategory(category); }} className="edit-category-btn">
                   Edit
                 </button>
                 <button onClick={(e) => { e.stopPropagation(); handleDeleteCategory(category.id); }} className="delete-category-btn">

@@ -16,7 +16,7 @@
   .back-button {  
     display: flex;  
     align-items: center;  
-    background-color: #000; /* light background color for a more premium look */  
+    background-color: #f2f2f2; /* light background color for a more premium look */  
     border: none;  
     border-radius: 25px; /* increased radius for a softer look */  
     padding: 12px 25px; /* adjusted padding for better spacing */  

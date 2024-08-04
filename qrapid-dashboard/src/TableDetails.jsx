@@ -20,23 +20,23 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       orderBy('createdAt', 'desc')
     );
 
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      if (!orderFetched) {
-        console.log('Query snapshot size:', querySnapshot.size);
-        const allOrders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        console.log('Query snapshot data:', allOrders);
-        setOrders(allOrders);
+    // const unsubscribe = onSnapshot(q, (querySnapshot) => {
+    //   if (!orderFetched) {
+    //     console.log('Query snapshot size:', querySnapshot.size);
+    //     const allOrders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    //     console.log('Query snapshot data:', allOrders);
+    //     setOrders(allOrders);
 
-        // Update table color to blue for new orders
-        if (allOrders.length > 0) {
-          updateTableColor(tableNumber, 'blue');
-        }
+    //     // Update table color to blue for new orders
+    //     if (allOrders.length > 0) {
+    //       updateTableColor(tableNumber, 'blue');
+    //     }
 
-        setOrderFetched(true); // Set orderFetched to true after initial fetch
-      }
-    }, (error) => {
-      console.error('Error fetching orders:', error);
-    });
+    //     setOrderFetched(true); // Set orderFetched to true after initial fetch
+    //   }
+    // }, (error) => {
+    //   console.error('Error fetching orders:', error);
+    // });
 
     const fetchCompletedOrderIds = async () => {
       const q = query(collection(db, 'bills'));
@@ -47,7 +47,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
     fetchCompletedOrderIds();
 
-    return () => unsubscribe();
+    // return () => unsubscribe();
   }, [tableNumber, updateTableColor, orderFetched]);
 
   const printContent = async (orders, isKOT) => {

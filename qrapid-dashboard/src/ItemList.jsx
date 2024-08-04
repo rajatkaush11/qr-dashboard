@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { collection, addDoc, getDocs, doc, deleteDoc, setDoc } from 'firebase/firestore';
 import { db, auth } from './firebase-config';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import './ItemList.css';
 
 const ItemList = () => {
@@ -190,6 +191,14 @@ const ItemList = () => {
     navigate(-1);
   };
 
+  const onDragEnd = (result) => {
+    if (!result.destination) return;
+    const reorderedItems = Array.from(items);
+    const [movedItem] = reorderedItems.splice(result.source.index, 1);
+    reorderedItems.splice(result.destination.index, 0, movedItem);
+    setItems(reorderedItems);
+  };
+
   return (
     <div className="item-list-container">
       <button onClick={handleBack} className="back-button">Back to Categories</button>
@@ -205,35 +214,51 @@ const ItemList = () => {
           {editingItem ? 'Update Item' : 'Add Item'}
         </button>
       </div>
-      <div className="item-list">
-        {items.map((item, index) => (
-          <div className="item" key={index}>
-            <img src={item.image} alt={item.name} />
-            <div className="item-details">
-              <h2>{item.name}</h2>
-              <p>Price: {item.price}</p>
-              <p>
-                Description: 
-                {expandedDescriptions[item.id] ? (
-                  <>
-                    {item.description} <span onClick={() => toggleDescription(item.id)} className="toggle-description">Show less</span>
-                  </>
-                ) : (
-                  <>
-                    {item.description.length > 100 ? `${item.description.slice(0, 100)}...` : item.description} 
-                    {item.description.length > 100 && <span onClick={() => toggleDescription(item.id)} className="toggle-description">Read more</span>}
-                  </>
-                )}
-              </p>
-              <p>Weight: {item.weight} {item.unit}</p>
-              <div className="item-actions">
-                <button onClick={() => handleEditItem(item)}>Edit</button>
-                <button onClick={() => confirmDeleteItem(item)}>Delete</button>
-              </div>
+      <DragDropContext onDragEnd={onDragEnd}>
+        <Droppable droppableId="itemList">
+          {(provided) => (
+            <div className="item-list" {...provided.droppableProps} ref={provided.innerRef}>
+              {items.map((item, index) => (
+                <Draggable key={item.id} draggableId={item.id} index={index}>
+                  {(provided) => (
+                    <div
+                      className="item"
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                    >
+                      <img src={item.image} alt={item.name} />
+                      <div className="item-details">
+                        <h2>{item.name}</h2>
+                        <p>Price: {item.price}</p>
+                        <p>
+                          Description: 
+                          {expandedDescriptions[item.id] ? (
+                            <>
+                              {item.description} <span onClick={() => toggleDescription(item.id)} className="toggle-description">Show less</span>
+                            </>
+                          ) : (
+                            <>
+                              {item.description.length > 100 ? `${item.description.slice(0, 100)}...` : item.description} 
+                              {item.description.length > 100 && <span onClick={() => toggleDescription(item.id)} className="toggle-description">Read more</span>}
+                            </>
+                          )}
+                        </p>
+                        <p>Weight: {item.weight} {item.unit}</p>
+                        <div className="item-actions">
+                          <button onClick={() => handleEditItem(item)}>Edit</button>
+                          <button onClick={() => confirmDeleteItem(item)}>Delete</button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
             </div>
-          </div>
-        ))}
-      </div>
+          )}
+        </Droppable>
+      </DragDropContext>
       {showDeleteConfirmation && (
         <div className="delete-confirmation">
           <p>Are you sure you want to delete this item?</p>

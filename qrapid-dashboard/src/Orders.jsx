@@ -1,3 +1,4 @@
+// Orders.js
 import React, { useState, useEffect } from 'react';
 import { collection, query, onSnapshot } from 'firebase/firestore';
 import { backendDb } from './firebase-config';
@@ -12,27 +13,27 @@ const Orders = () => {
     console.log('Setting up Firestore listener for orders...');
     const q = query(collection(backendDb, 'orders'));
 
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      console.log('Received Firestore snapshot.');
-      const fetchedOrders = [];
+    // const unsubscribe = onSnapshot(q, (querySnapshot) => {
+    //   console.log('Received Firestore snapshot.');
+    //   const fetchedOrders = [];
 
-      querySnapshot.forEach((doc) => {
-        const order = doc.data();
-        console.log('Fetched order:', order);
-        fetchedOrders.push({
-          id: doc.id,
-          ...order,
-        });
-      });
+    //   querySnapshot.forEach((doc) => {
+    //     const order = doc.data();
+    //     console.log('Fetched order:', order);
+    //     fetchedOrders.push({
+    //       id: doc.id,
+    //       ...order,
+    //     });
+    //   });
 
-      console.log('All fetched orders:', fetchedOrders);
-      setOrders(fetchedOrders);
-    });
+    //   console.log('All fetched orders:', fetchedOrders);
+    //   setOrders(fetchedOrders);
+    // });
 
-    return () => {
-      console.log('Cleaning up Firestore listener...');
-      unsubscribe();
-    };
+    // return () => {
+    //   console.log('Cleaning up Firestore listener...');
+    //   unsubscribe();
+    // };
   }, []);
 
   const handleSearch = (e) => {

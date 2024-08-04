@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { collection, addDoc, getDocs, doc, deleteDoc, setDoc } from 'firebase/firestore';
 import { db, auth } from './firebase-config';
@@ -13,6 +13,7 @@ const ItemList = () => {
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const apiBaseUrl = import.meta.env.VITE_BACKEND_API;
+  const formRef = useRef(null); // Reference for the form element
 
   useEffect(() => {
     fetchItems();
@@ -99,6 +100,7 @@ const ItemList = () => {
   const handleEditItem = (item) => {
     setEditingItem(item);
     setNewItem({ name: item.name, price: item.price, description: item.description, image: item.image, weight: item.weight, unit: item.unit });
+    formRef.current.scrollIntoView({ behavior: 'smooth' }); // Scroll to the form
   };
 
   const handleUpdateItem = async () => {
@@ -184,7 +186,7 @@ const ItemList = () => {
     <div className="item-list-container">
       <button onClick={handleBack} className="back-button">Back to Categories</button>
       <h1>Items</h1>
-      <div className="new-item-form">
+      <div ref={formRef} className="new-item-form">
         <input type="file" accept="image/*" onChange={handleFileChange} />
         <input type="text" name="name" placeholder="Name" value={newItem.name} onChange={handleInputChange} />
         <input type="number" name="price" placeholder="Price" value={newItem.price} onChange={handleInputChange} />

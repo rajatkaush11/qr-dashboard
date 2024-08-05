@@ -85,7 +85,7 @@ const ItemList = () => {
   };
 
   const handleAddItem = async () => {
-    if (newItem.name && newItem.description && (!showVariations || newItem.variations.length > 0)) {
+    if (newItem.name && (!showVariations || newItem.variations.length > 0)) {
       try {
         const user = auth.currentUser;
         if (user) {
@@ -116,7 +116,10 @@ const ItemList = () => {
         }
       } catch (error) {
         console.error('Error adding item:', error);
+        showNotification(error.message);
       }
+    } else {
+      showNotification("Name is required and variations must be added if enabled.");
     }
   };
 
@@ -128,7 +131,7 @@ const ItemList = () => {
   };
 
   const handleUpdateItem = async () => {
-    if (newItem.name && newItem.description && editingItem && (!showVariations || newItem.variations.length > 0)) {
+    if (newItem.name && editingItem && (!showVariations || newItem.variations.length > 0)) {
       try {
         const user = auth.currentUser;
         if (user) {
@@ -160,7 +163,10 @@ const ItemList = () => {
         }
       } catch (error) {
         console.error('Error updating item:', error);
+        showNotification(error.message);
       }
+    } else {
+      showNotification("Name is required and variations must be added if enabled.");
     }
   };
 
@@ -192,6 +198,7 @@ const ItemList = () => {
         }
       } catch (error) {
         console.error('Error deleting item:', error);
+        showNotification(error.message);
       }
     }
   };

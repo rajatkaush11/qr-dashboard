@@ -9,7 +9,8 @@ const ItemList = () => {
   const { categoryId } = useParams();
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
-  const [newItem, setNewItem] = useState({ name: '', price: '', description: '', image: '', weight: '', unit: '' });
+  const [newItem, setNewItem] = useState({ name: '', price: '', description: '', image: '', weight: '', unit: '', variations: [] });
+  const [newVariation, setNewVariation] = useState({ name: '', price: '', weight: '', unit: '' });
   const [editingItem, setEditingItem] = useState(null);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
@@ -56,6 +57,21 @@ const ItemList = () => {
     setNewItem({ ...newItem, [name]: value });
   };
 
+  const handleVariationChange = (e) => {
+    const { name, value } = e.target;
+    setNewVariation({ ...newVariation, [name]: value });
+  };
+
+  const handleAddVariation = () => {
+    if (newVariation.name && newVariation.price && newVariation.weight && newVariation.unit) {
+      setNewItem(prevState => ({
+        ...prevState,
+        variations: [...prevState.variations, newVariation]
+      }));
+      setNewVariation({ name: '', price: '', weight: '', unit: '' });
+    }
+  };
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -90,7 +106,7 @@ const ItemList = () => {
 
           const addedItem = await response.json();
           setItems([...items, { ...addedItem, id: docRef.id }]);
-          setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '' });
+          setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '', variations: [] });
           fetchItems(); // Re-fetch items to update UI
           showNotification("Item added successfully");
         } else {
@@ -104,7 +120,7 @@ const ItemList = () => {
 
   const handleEditItem = (item) => {
     setEditingItem(item);
-    setNewItem({ name: item.name, price: item.price, description: item.description, image: item.image, weight: item.weight, unit: item.unit });
+    setNewItem({ name: item.name, price: item.price, description: item.description, image: item.image, weight: item.weight, unit: item.unit, variations: item.variations || [] });
     formRef.current.scrollIntoView({ behavior: 'smooth' });
   };
 
@@ -131,7 +147,7 @@ const ItemList = () => {
 
           const updatedItems = items.map(item => (item.id === editingItem.id ? { ...newItem, id: editingItem.id } : item));
           setItems(updatedItems);
-          setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '' });
+          setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '', variations: [] });
           setEditingItem(null);
           fetchItems(); // Re-fetch items to update UI
           showNotification("Item updated successfully");
@@ -221,6 +237,21 @@ const ItemList = () => {
         <input type="text" name="description" placeholder="Description" value={newItem.description} onChange={handleInputChange} />
         <input type="number" name="weight" placeholder="Weight" value={newItem.weight} onChange={handleInputChange} />
         <input type="text" name="unit" placeholder="Unit" value={newItem.unit} onChange={handleInputChange} />
+        <div className="variations">
+          <h3>Variations</h3>
+          {newItem.variations.map((variation, index) => (
+            <div key={index} className="variation">
+              <p>Name: {variation.name}</p>
+              <p>Price: {variation.price}</p>
+              <p>Weight: {variation.weight} {variation.unit}</p>
+            </div>
+          ))}
+          <input type="text" name="name" placeholder="Variation Name" value={newVariation.name} onChange={handleVariationChange} />
+          <input type="number" name="price" placeholder="Variation Price" value={newVariation.price} onChange={handleVariationChange} />
+          <input type="number" name="weight" placeholder="Variation Weight" value={newVariation.weight} onChange={handleVariationChange} />
+          <input type="text" name="unit" placeholder="Variation Unit" value={newVariation.unit} onChange={handleVariationChange} />
+          <button onClick={handleAddVariation}>Add Variation</button>
+        </div>
         <button onClick={editingItem ? handleUpdateItem : handleAddItem}>
           {editingItem ? 'Update Item' : 'Add Item'}
         </button>
@@ -256,6 +287,20 @@ const ItemList = () => {
                           )}
                         </p>
                         <p>Weight: {item.weight} {item.unit}</p>
+                        <div className="item-variations">
+                          <h4>Variations:</h4>
+                          {item.variations && item.variations.length > 0 ? (
+                            item.variations.map((variation, index) => (
+                              <div key={index} className="variation">
+                                <p>Name: {variation.name}</p>
+                                <p>Price: {variation.price}</p>
+                                <p>Weight: {variation.weight} {variation.unit}</p>
+                              </div>
+                            ))
+                          ) : (
+                            <p>No variations</p>
+                          )}
+                        </div>
                         <div className="item-actions">
                           <button onClick={() => handleEditItem(item)}>Edit</button>
                           <button onClick={() => confirmDeleteItem(item)}>Delete</button>

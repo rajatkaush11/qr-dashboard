@@ -14,10 +14,20 @@
   color: #000000; /* Black text */
 }
 
-.item-list-container .back-button{
-  color:#fff;
+.item-list-container .back-button {
+  color: #fff;
   background-color: #000000;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s;
 }
+
+.item-list-container .back-button:hover {
+  background-color: #333333; /* Darker black on hover */
+}
+
 .new-item-form {
   display: flex;
   flex-direction: column;
@@ -55,6 +65,23 @@
 
 .new-item-form button:hover {
   background-color: #333333; /* Darker black on hover */
+}
+
+.variations {
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid #000000; /* Black border */
+  border-radius: 10px;
+}
+
+.variation {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #000000; /* Black border */
+  border-radius: 5px;
+  background-color: #f9f9f9; /* Light gray background */
 }
 
 .item-list {
@@ -105,6 +132,25 @@
 .item-details p {
   margin: 5px 0;
   color: #000000; /* Black text */
+}
+
+.item-variations {
+  margin-top: 10px;
+  border-top: 1px solid #000000; /* Black border */
+  padding-top: 10px;
+}
+
+.item-variations h4 {
+  margin-bottom: 10px;
+  color: #000000; /* Black text */
+}
+
+.variation {
+  background-color: #f9f9f9; /* Light gray background */
+  border: 1px solid #000000; /* Black border */
+  border-radius: 5px;
+  padding: 10px;
+  margin-bottom: 10px;
 }
 
 .toggle-description {
@@ -173,6 +219,7 @@
 .delete-confirmation button:nth-child(2):hover {
   background-color: #333333; /* Darker black on hover */
 }
+
 .notification {
   position: fixed;
   top: 20px;

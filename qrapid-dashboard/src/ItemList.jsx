@@ -9,7 +9,7 @@ const ItemList = () => {
   const { categoryId } = useParams();
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
-  const [newItem, setNewItem] = useState({ name: '', description: '', image: '', variations: [] });
+  const [newItem, setNewItem] = useState({ name: '', price: '', description: '', image: '', weight: '', unit: '', variations: [] });
   const [newVariation, setNewVariation] = useState({ name: '', price: '', weight: '', unit: '' });
   const [editingItem, setEditingItem] = useState(null);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
@@ -85,7 +85,7 @@ const ItemList = () => {
   };
 
   const handleAddItem = async () => {
-    if (newItem.name && newItem.description) {
+    if (newItem.name && newItem.description && (!showVariations || newItem.variations.length > 0)) {
       try {
         const user = auth.currentUser;
         if (user) {
@@ -107,7 +107,7 @@ const ItemList = () => {
 
           const addedItem = await response.json();
           setItems([...items, { ...addedItem, id: docRef.id }]);
-          setNewItem({ name: '', description: '', image: '', variations: [] });
+          setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '', variations: [] });
           setShowVariations(false);
           fetchItems(); // Re-fetch items to update UI
           showNotification("Item added successfully");
@@ -122,13 +122,13 @@ const ItemList = () => {
 
   const handleEditItem = (item) => {
     setEditingItem(item);
-    setNewItem({ name: item.name, description: item.description, image: item.image, variations: item.variations || [] });
+    setNewItem({ name: item.name, price: item.price, description: item.description, image: item.image, weight: item.weight, unit: item.unit, variations: item.variations || [] });
     setShowVariations(item.variations && item.variations.length > 0);
     formRef.current.scrollIntoView({ behavior: 'smooth' });
   };
 
   const handleUpdateItem = async () => {
-    if (newItem.name && newItem.description && editingItem) {
+    if (newItem.name && newItem.description && editingItem && (!showVariations || newItem.variations.length > 0)) {
       try {
         const user = auth.currentUser;
         if (user) {
@@ -150,7 +150,7 @@ const ItemList = () => {
 
           const updatedItems = items.map(item => (item.id === editingItem.id ? { ...newItem, id: editingItem.id } : item));
           setItems(updatedItems);
-          setNewItem({ name: '', description: '', image: '', variations: [] });
+          setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '', variations: [] });
           setEditingItem(null);
           setShowVariations(false);
           fetchItems(); // Re-fetch items to update UI
@@ -237,8 +237,16 @@ const ItemList = () => {
       <div ref={formRef} className="new-item-form">
         <input type="file" accept="image/*" onChange={handleFileChange} />
         <input type="text" name="name" placeholder="Name" value={newItem.name} onChange={handleInputChange} />
+        {!showVariations && (
+          <>
+            <input type="number" name="price" placeholder="Price" value={newItem.price} onChange={handleInputChange} />
+            <input type="number" name="weight" placeholder="Weight" value={newItem.weight} onChange={handleInputChange} />
+          </>
+        )}
         <input type="text" name="description" placeholder="Description" value={newItem.description} onChange={handleInputChange} />
-        
+        {!showVariations && (
+          <input type="text" name="unit" placeholder="Unit" value={newItem.unit} onChange={handleInputChange} />
+        )}
         <button onClick={() => setShowVariations(!showVariations)}>
           {showVariations ? 'Remove Variations' : 'Add Variations'}
         </button>

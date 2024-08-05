@@ -9,13 +9,14 @@ const ItemList = () => {
   const { categoryId } = useParams();
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
-  const [newItem, setNewItem] = useState({ name: '', price: '', description: '', image: '', weight: '', unit: '', variations: [] });
+  const [newItem, setNewItem] = useState({ name: '', description: '', image: '', variations: [] });
   const [newVariation, setNewVariation] = useState({ name: '', price: '', weight: '', unit: '' });
   const [editingItem, setEditingItem] = useState(null);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
   const [notification, setNotification] = useState(null);
+  const [showVariations, setShowVariations] = useState(false);
   const apiBaseUrl = import.meta.env.VITE_BACKEND_API;
   const formRef = useRef(null);
 
@@ -84,7 +85,7 @@ const ItemList = () => {
   };
 
   const handleAddItem = async () => {
-    if (newItem.name && newItem.price && newItem.description && newItem.weight && newItem.unit) {
+    if (newItem.name && newItem.description) {
       try {
         const user = auth.currentUser;
         if (user) {
@@ -106,7 +107,8 @@ const ItemList = () => {
 
           const addedItem = await response.json();
           setItems([...items, { ...addedItem, id: docRef.id }]);
-          setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '', variations: [] });
+          setNewItem({ name: '', description: '', image: '', variations: [] });
+          setShowVariations(false);
           fetchItems(); // Re-fetch items to update UI
           showNotification("Item added successfully");
         } else {
@@ -120,12 +122,13 @@ const ItemList = () => {
 
   const handleEditItem = (item) => {
     setEditingItem(item);
-    setNewItem({ name: item.name, price: item.price, description: item.description, image: item.image, weight: item.weight, unit: item.unit, variations: item.variations || [] });
+    setNewItem({ name: item.name, description: item.description, image: item.image, variations: item.variations || [] });
+    setShowVariations(item.variations && item.variations.length > 0);
     formRef.current.scrollIntoView({ behavior: 'smooth' });
   };
 
   const handleUpdateItem = async () => {
-    if (newItem.name && newItem.price && newItem.description && newItem.weight && newItem.unit && editingItem) {
+    if (newItem.name && newItem.description && editingItem) {
       try {
         const user = auth.currentUser;
         if (user) {
@@ -147,8 +150,9 @@ const ItemList = () => {
 
           const updatedItems = items.map(item => (item.id === editingItem.id ? { ...newItem, id: editingItem.id } : item));
           setItems(updatedItems);
-          setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '', variations: [] });
+          setNewItem({ name: '', description: '', image: '', variations: [] });
           setEditingItem(null);
+          setShowVariations(false);
           fetchItems(); // Re-fetch items to update UI
           showNotification("Item updated successfully");
         } else {
@@ -233,25 +237,30 @@ const ItemList = () => {
       <div ref={formRef} className="new-item-form">
         <input type="file" accept="image/*" onChange={handleFileChange} />
         <input type="text" name="name" placeholder="Name" value={newItem.name} onChange={handleInputChange} />
-        <input type="number" name="price" placeholder="Price" value={newItem.price} onChange={handleInputChange} />
         <input type="text" name="description" placeholder="Description" value={newItem.description} onChange={handleInputChange} />
-        <input type="number" name="weight" placeholder="Weight" value={newItem.weight} onChange={handleInputChange} />
-        <input type="text" name="unit" placeholder="Unit" value={newItem.unit} onChange={handleInputChange} />
-        <div className="variations">
-          <h3>Variations</h3>
-          {newItem.variations.map((variation, index) => (
-            <div key={index} className="variation">
-              <p>Name: {variation.name}</p>
-              <p>Price: {variation.price}</p>
-              <p>Weight: {variation.weight} {variation.unit}</p>
-            </div>
-          ))}
-          <input type="text" name="name" placeholder="Variation Name" value={newVariation.name} onChange={handleVariationChange} />
-          <input type="number" name="price" placeholder="Variation Price" value={newVariation.price} onChange={handleVariationChange} />
-          <input type="number" name="weight" placeholder="Variation Weight" value={newVariation.weight} onChange={handleVariationChange} />
-          <input type="text" name="unit" placeholder="Variation Unit" value={newVariation.unit} onChange={handleVariationChange} />
-          <button onClick={handleAddVariation}>Add Variation</button>
-        </div>
+        
+        <button onClick={() => setShowVariations(!showVariations)}>
+          {showVariations ? 'Remove Variations' : 'Add Variations'}
+        </button>
+
+        {showVariations && (
+          <div className="variations">
+            <h3>Variations</h3>
+            {newItem.variations.map((variation, index) => (
+              <div key={index} className="variation">
+                <p>Name: {variation.name}</p>
+                <p>Price: {variation.price}</p>
+                <p>Weight: {variation.weight} {variation.unit}</p>
+              </div>
+            ))}
+            <input type="text" name="name" placeholder="Variation Name" value={newVariation.name} onChange={handleVariationChange} />
+            <input type="number" name="price" placeholder="Variation Price" value={newVariation.price} onChange={handleVariationChange} />
+            <input type="number" name="weight" placeholder="Variation Weight" value={newVariation.weight} onChange={handleVariationChange} />
+            <input type="text" name="unit" placeholder="Variation Unit" value={newVariation.unit} onChange={handleVariationChange} />
+            <button onClick={handleAddVariation}>Add Variation</button>
+          </div>
+        )}
+        
         <button onClick={editingItem ? handleUpdateItem : handleAddItem}>
           {editingItem ? 'Update Item' : 'Add Item'}
         </button>

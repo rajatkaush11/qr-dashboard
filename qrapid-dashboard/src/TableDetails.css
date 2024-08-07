@@ -19,19 +19,6 @@
   overflow-y: auto; /* Make it scrollable */
 }
 
-.middle-content {
-  width: 40%;
-  padding: 10px;
-  overflow-y: auto; /* Make it scrollable */
-  position: relative;
-}
-
-.right-content {
-  width: 40%;
-  padding: 10px;
-  overflow-y: auto; /* Make it scrollable */
-}
-
 .back-button {
   display: block;
   margin-bottom: 20px;
@@ -45,6 +32,30 @@
 
 .back-button:hover {
   background-color: #0056b3;
+}
+
+.menu-category {
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #ddd;
+}
+
+.menu-category.active {
+  background-color: #007bff;
+  color: white;
+}
+
+.middle-content {
+  width: 40%;
+  padding: 10px;
+  overflow-y: auto; /* Make it scrollable */
+  position: relative;
+}
+
+.right-content {
+  width: 40%;
+  padding: 10px;
+  overflow-y: auto; /* Make it scrollable */
 }
 
 .table-title {
@@ -169,15 +180,4 @@
 
 .menu-item p {
   margin: 5px 0; /* Adjust margin for better spacing */
-}
-
-.menu-category {
-  padding: 10px;
-  cursor: pointer;
-  border-bottom: 1px solid #ddd;
-}
-
-.menu-category.active {
-  background-color: #007bff;
-  color: white;
 }

@@ -12,19 +12,17 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor, categories }
   const [items, setItems] = useState([]);
 
   useEffect(() => {
-    const fetchItems = async () => {
-      if (selectedCategory) {
+    if (selectedCategory) {
+      const fetchItems = async () => {
         const userId = auth.currentUser ? auth.currentUser.uid : null;
         const itemsRef = collection(db, 'restaurants', userId, 'categories', selectedCategory.id, 'items');
         const querySnapshot = await getDocs(itemsRef);
         const itemsData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
         setItems(itemsData);
-      } else {
-        setItems([]);
-      }
-    };
+      };
 
-    fetchItems();
+      fetchItems();
+    }
   }, [selectedCategory]);
 
   useEffect(() => {
@@ -173,7 +171,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor, categories }
       <div className="left-menu">
         <button className="back-button" onClick={onBackClick}>Back</button>
         <div className="menu-category">MENU</div>
-        {categories.map((category) => (
+        {categories && categories.length > 0 ? categories.map((category) => (
           <div
             key={category.id}
             className={`menu-category ${selectedCategory && selectedCategory.id === category.id ? 'active' : ''}`}
@@ -181,7 +179,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor, categories }
           >
             {category.name}
           </div>
-        ))}
+        )) : <p>No categories available</p>}
       </div>
       <div className="middle-content">
         <div className="table-title">Table {tableNumber}</div>

@@ -12,20 +12,18 @@ import ItemList from './ItemList';
 import Dashboard from './Dashboard';
 import Orders from './Orders';
 import Reports from './Reports';
-import TableDetails from './TableDetails'; // Import the TableDetails component
+import ParentComponent from './ParentComponent'; // Import ParentComponent
 import './index.css';
 
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activePage, setActivePage] = useState('Home');
-  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUser(user);
-        fetchCategories(user.uid);
       } else {
         setUser(null);
       }
@@ -34,13 +32,6 @@ function App() {
 
     return () => unsubscribe();
   }, []);
-
-  const fetchCategories = async (userId) => {
-    const categoriesRef = collection(db, 'restaurants', userId, 'categories');
-    const querySnapshot = await getDocs(categoriesRef);
-    const categoriesData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-    setCategories(categoriesData);
-  };
 
   const handleNavClick = (page) => {
     setActivePage(page);
@@ -64,7 +55,7 @@ function App() {
           <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" replace />} />
           <Route path="/orders" element={user ? <Orders /> : <Navigate to="/login" replace />} />
           <Route path="/reports" element={user ? <Reports /> : <Navigate to="/login" replace />} />
-          <Route path="/table/:tableNumber" element={user ? <TableDetails categories={categories} /> : <Navigate to="/login" replace />} />
+          <Route path="/table/:tableNumber" element={user ? <ParentComponent /> : <Navigate to="/login" replace />} />
           <Route path="/" element={<Navigate to="/login" replace />} /> {/* Redirect to login if not authenticated */}
         </Routes>
       </div>

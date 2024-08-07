@@ -3,26 +3,13 @@ import { backendDb, db, auth } from './firebase-config';
 import { collection, query, where, onSnapshot, orderBy, getDocs, writeBatch, doc } from 'firebase/firestore';
 import './TableDetails.css';
 
-const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
+const TableDetails = ({ tableNumber, onBackClick, updateTableColor, categories }) => {
   const [orders, setOrders] = useState([]);
   const [restaurant, setRestaurant] = useState({ name: 'QRapid', address: '', contact: '' });
   const [completedOrderIds, setCompletedOrderIds] = useState([]);
   const [orderFetched, setOrderFetched] = useState(false);
-  const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [items, setItems] = useState([]);
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      const userId = auth.currentUser ? auth.currentUser.uid : null;
-      const categoriesRef = collection(db, 'restaurants', userId, 'categories');
-      const querySnapshot = await getDocs(categoriesRef);
-      const categoriesData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-      setCategories(categoriesData);
-    };
-
-    fetchCategories();
-  }, []);
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -48,6 +35,23 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       orderBy('createdAt', 'desc')
     );
 
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      if (!orderFetched) {
+        console.log('Query snapshot size:', querySnapshot.size);
+        const allOrders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        console.log('Query snapshot data:', allOrders);
+        setOrders(allOrders);
+
+        if (allOrders.length > 0) {
+          updateTableColor(tableNumber, 'blue');
+        }
+
+        setOrderFetched(true);
+      }
+    }, (error) => {
+      console.error('Error fetching orders:', error);
+    });
+
     const fetchCompletedOrderIds = async () => {
       const q = query(collection(db, 'bills'));
       const querySnapshot = await getDocs(q);
@@ -56,6 +60,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     };
 
     fetchCompletedOrderIds();
+
+    return () => unsubscribe();
   }, [tableNumber, updateTableColor, orderFetched]);
 
   const printContent = async (orders, isKOT) => {

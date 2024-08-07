@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { backendDb, db, auth } from './firebase-config';
 import { collection, query, where, orderBy, getDocs, writeBatch, doc } from 'firebase/firestore';
 import './TableDetails.css';
+import successSound from './assets/success.mp3'; // Import the sound file
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [orders, setOrders] = useState([]);
@@ -12,6 +13,12 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [items, setItems] = useState([]);
+
+  // Function to play a sound
+  const playSound = () => {
+    const audio = new Audio(successSound); // Use the imported sound file
+    audio.play();
+  };
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -189,6 +196,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           orderItem.id === item.id ? { ...orderItem, quantity: orderItem.quantity + 1 } : orderItem
         );
       }
+      playSound();
       return [...prevOrder, { ...item, quantity: 1 }];
     });
   };
@@ -209,6 +217,10 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         )
         .filter((orderItem) => orderItem.quantity > 0)
     );
+  };
+
+  const handleDelete = (itemId) => {
+    setCurrentOrder((prevOrder) => prevOrder.filter((orderItem) => orderItem.id !== itemId));
   };
 
   return (
@@ -277,6 +289,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
                   <button className="action-button decrement" onClick={() => handleDecrement(item.id)}>-</button>
                   <span>{item.quantity}</span>
                   <button className="action-button increment" onClick={() => handleIncrement(item.id)}>+</button>
+                  <button className="action-button delete" onClick={() => handleDelete(item.id)}>Delete</button>
                 </div>
               </div>
             ))

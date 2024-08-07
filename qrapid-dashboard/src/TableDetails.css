@@ -206,7 +206,8 @@
 }
 
 .action-button.increment,
-.action-button.decrement {
+.action-button.decrement,
+.action-button.delete {
   background-color: #007bff;
   color: white;
   border: none;
@@ -218,6 +219,7 @@
 }
 
 .action-button.increment:hover,
-.action-button.decrement:hover {
+.action-button.decrement:hover,
+.action-button.delete:hover {
   background-color: #0056b3;
 }

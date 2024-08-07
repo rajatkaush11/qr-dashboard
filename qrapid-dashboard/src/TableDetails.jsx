@@ -245,7 +245,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         <div className="current-orders">
           <h3>Current Orders</h3>
           {orders.length === 0 ? (
-            <p>No current orders.</p>
+            <p>No digital orders.</p>
           ) : (
             orders
               .filter(order => order.status !== 'completed')

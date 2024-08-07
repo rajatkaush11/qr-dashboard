@@ -163,6 +163,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   return (
     <div className="table-details">
       <div className="left-menu">
+        <button className="back-button" onClick={onBackClick}>Back</button>
         <div className="menu-category">MENU</div>
         {categories.map((category) => (
           <div
@@ -173,6 +174,25 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
             {category.name}
           </div>
         ))}
+      </div>
+      <div className="right-content">
+        <div className="item-list">
+          <div className="items">
+            <h3>{selectedCategory ? `${selectedCategory.name} Items` : 'Items'}</h3>
+            <div className="item-grid">
+              {items.length === 0 ? (
+                <p>Select a category to view items</p>
+              ) : (
+                items.map((item) => (
+                  <div key={item.id} className="menu-item">
+                    <p>{item.name}</p>
+                    <p>{item.price}</p>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
       </div>
       <div className="middle-content">
         <div className="table-title">Table {tableNumber}</div>
@@ -214,25 +234,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           <button onClick={() => handleGenerateKOT()} className="action-button generate-kot">Generate KOT</button>
           <button onClick={() => handleGenerateBill()} className="action-button generate-bill">Generate Bill</button>
           <button onClick={() => handleCompleteOrder()} className="action-button complete">Complete Order</button>
-        </div>
-      </div>
-      <div className="right-content">
-        <div className="item-list">
-          <div className="items">
-            <h3>{selectedCategory ? `${selectedCategory.name} Items` : 'Items'}</h3>
-            <div className="item-grid">
-              {items.length === 0 ? (
-                <p>Select a category to view items</p>
-              ) : (
-                items.map((item) => (
-                  <div key={item.id} className="menu-item">
-                    <p>{item.name}</p>
-                    <p>{item.price}</p>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
         </div>
       </div>
     </div>

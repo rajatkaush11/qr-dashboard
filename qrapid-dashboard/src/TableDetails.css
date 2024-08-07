@@ -46,14 +46,14 @@
 }
 
 .middle-content {
-  width: 40%;
+  width: 50%;
   padding: 10px;
   overflow-y: auto; /* Make it scrollable */
   position: relative;
 }
 
 .right-content {
-  width: 40%;
+  width: 10%;
   padding: 10px;
   overflow-y: auto; /* Make it scrollable */
 }

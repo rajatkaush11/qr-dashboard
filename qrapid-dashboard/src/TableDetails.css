@@ -106,6 +106,9 @@
 .action-buttons {
   display: flex;
   gap: 15px;
+  position: absolute;
+  bottom: 20px; /* Position at the bottom */
+  width: calc(40% - 20px); /* Adjust width according to parent padding */
 }
 
 .action-button {
@@ -142,8 +145,16 @@
   margin-top: 20px;
 }
 
+.item-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .menu-item {
   border: 1px solid #ddd;
   padding: 10px;
   margin-bottom: 10px;
+  flex: 1 0 calc(33.333% - 10px); /* 3 items in a row */
+  box-sizing: border-box;
 }

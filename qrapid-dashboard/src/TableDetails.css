@@ -1,6 +1,6 @@
 .table-details {
   padding: 20px;
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
   text-align: left;
   background-color: #f7f7f7;
@@ -8,12 +8,15 @@
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   display: flex;
+  height: calc(100vh - 70px); /* Adjust height to be full screen minus navbar height */
+  overflow: hidden;
 }
 
 .left-menu {
   width: 20%;
   background-color: #f0f0f0;
   padding: 10px;
+  overflow-y: auto; /* Make it scrollable */
 }
 
 .menu-category {
@@ -28,8 +31,15 @@
 }
 
 .middle-content {
-  width: 80%;
+  width: 40%;
   padding: 10px;
+  overflow-y: auto; /* Make it scrollable */
+}
+
+.right-content {
+  width: 40%;
+  padding: 10px;
+  overflow-y: auto; /* Make it scrollable */
 }
 
 .table-title {
@@ -126,4 +136,14 @@
   background-color: #17a2b8;
   color: #fff;
   font-weight: bold;
+}
+
+.items {
+  margin-top: 20px;
+}
+
+.menu-item {
+  border: 1px solid #ddd;
+  padding: 10px;
+  margin-bottom: 10px;
 }

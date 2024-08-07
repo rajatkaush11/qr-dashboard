@@ -1,4 +1,3 @@
-// TableDetails.js
 import React, { useEffect, useState } from 'react';
 import { backendDb, db, auth } from './firebase-config';
 import { collection, query, where, onSnapshot, orderBy, getDocs, writeBatch, doc } from 'firebase/firestore';
@@ -217,6 +216,21 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
             <button onClick={() => handleGenerateBill()} className="action-button generate-bill">Generate Bill</button>
             <button onClick={() => handleCompleteOrder()} className="action-button complete">Complete Order</button>
           </div>
+        </div>
+      </div>
+      <div className="right-content">
+        <div className="item-list">
+          {selectedCategory && (
+            <div className="items">
+              <h3>{selectedCategory.name} Items</h3>
+              {items.map((item) => (
+                <div key={item.id} className="menu-item">
+                  <p>{item.name}</p>
+                  <p>{item.price}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

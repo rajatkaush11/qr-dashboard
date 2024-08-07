@@ -35,7 +35,7 @@
 }
 
 .menu-category {
-  padding: 20px;
+  padding: 40px;
   cursor: pointer;
   border-bottom: 1px solid #ddd;
 }
@@ -46,14 +46,14 @@
 }
 
 .middle-content {
-  width: 40%;
+  width: 30%;
   padding: 10px;
   overflow-y: auto; /* Make it scrollable */
   position: relative;
 }
 
 .right-content {
-  width: 40%;
+  width: 20%;
   padding: 10px;
   overflow-y: auto; /* Make it scrollable */
 }

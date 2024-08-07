@@ -1,42 +1,14 @@
+// TableDetails.js
 import React, { useEffect, useState } from 'react';
-import { backendDb, db, auth } from './firebase-config';
-import { collection, query, where, orderBy, getDocs, writeBatch, doc } from 'firebase/firestore';
+import { backendDb, db } from './firebase-config';
+import { collection, query, where, onSnapshot, orderBy, getDocs, writeBatch, doc } from 'firebase/firestore';
 import './TableDetails.css';
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [orders, setOrders] = useState([]);
   const [restaurant, setRestaurant] = useState({ name: 'QRapid', address: '', contact: '' });
   const [completedOrderIds, setCompletedOrderIds] = useState([]);
-  const [orderFetched, setOrderFetched] = useState(false);
-  const [categories, setCategories] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [items, setItems] = useState([]);
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      const userId = auth.currentUser ? auth.currentUser.uid : null;
-      const categoriesRef = collection(db, 'restaurants', userId, 'categories');
-      const querySnapshot = await getDocs(categoriesRef);
-      const categoriesData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-      setCategories(categoriesData);
-    };
-
-    fetchCategories();
-  }, []);
-
-  useEffect(() => {
-    const fetchItems = async () => {
-      if (selectedCategory) {
-        const userId = auth.currentUser ? auth.currentUser.uid : null;
-        const itemsRef = collection(db, 'restaurants', userId, 'categories', selectedCategory.id, 'items');
-        const querySnapshot = await getDocs(itemsRef);
-        const itemsData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-        setItems(itemsData);
-      }
-    };
-
-    fetchItems();
-  }, [selectedCategory]);
+  const [orderFetched, setOrderFetched] = useState(false); // New state to track order fetch
 
   useEffect(() => {
     const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
@@ -78,82 +50,62 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     // return () => unsubscribe();
   }, [tableNumber, updateTableColor, orderFetched]);
 
-  const connectBluetoothPrinter = async () => {
-    try {
-      console.log('Requesting Bluetooth device...');
-      const device = await navigator.bluetooth.requestDevice({
-        filters: [{ services: ['battery_service'] }] // Change this to the appropriate service UUID for your printer
-      });
-
-      console.log('Connecting to GATT server...');
-      const server = await device.gatt.connect();
-      console.log('Connected to GATT server');
-
-      // Get the primary service (replace 'battery_service' with your printer's service UUID)
-      const service = await server.getPrimaryService('battery_service');
-
-      // Get the characteristic (replace with the correct characteristic UUID for your printer)
-      const characteristic = await service.getCharacteristic('battery_level');
-
-      return characteristic;
-    } catch (error) {
-      console.error('Error connecting to Bluetooth device:', error);
-      throw error;
-    }
-  };
-
   const printContent = async (orders, isKOT) => {
-    try {
-      const characteristic = await connectBluetoothPrinter();
+    if ('serial' in navigator) {
+      try {
+        const port = await navigator.serial.requestPort();
+        await port.open({ baudRate: 9600 });
 
-      let content = '';
+        const writer = port.writable.getWriter();
+        const encoder = new TextEncoder();
+        let content = '';
 
-      content += `\x1b\x21\x30`;
-      content += `*** ${restaurant.name.toUpperCase()} ***\n`;
-      content += `${restaurant.address}\nContact: ${restaurant.contact}\n\n`;
-      content += `\x1b\x21\x00`;
-      content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`;
-      content += `Table No: ${tableNumber}\n\n`;
+        content += `\x1b\x21\x30`;
+        content += `*** ${restaurant.name.toUpperCase()} ***\n`;
+        content += `${restaurant.address}\nContact: ${restaurant.contact}\n\n`;
+        content += `\x1b\x21\x00`;
+        content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`;
+        content += `Table No: ${tableNumber}\n\n`;
 
-      if (isKOT) {
-        orders.forEach(order => {
-          order.items.forEach(item => {
-            content += `${item.name} (${item.specialNote || ''}) - ${item.quantity}\n`;
+        if (isKOT) {
+          orders.forEach(order => {
+            order.items.forEach(item => {
+              content += `${item.name} (${item.specialNote || ''}) - ${item.quantity}\n`;
+            });
           });
-        });
-        const totalItems = orders.reduce((sum, order) => sum + order.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
-        content += `Total Items to Prepare: ${totalItems}\n\n`;
-      } else {
-        let totalAmount = 0;
-        orders.forEach(order => {
-          order.items.forEach(item => {
-            const itemTotal = item.price * item.quantity;
-            totalAmount += itemTotal;
-            content += `${item.name} - ${item.quantity} x ${item.price} = ${itemTotal}\n`;
+          const totalItems = orders.reduce((sum, order) => sum + order.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
+          content += `Total Items to Prepare: ${totalItems}\n\n`;
+        } else {
+          let totalAmount = 0;
+          orders.forEach(order => {
+            order.items.forEach(item => {
+              const itemTotal = item.price * item.quantity;
+              totalAmount += itemTotal;
+              content += `${item.name} - ${item.quantity} x ${item.price} = ${itemTotal}\n`;
+            });
           });
-        });
-        const discount = orders.reduce((sum, order) => sum + (order.discount || 0), 0);
-        const cgst = totalAmount * 0.025;
-        const sgst = totalAmount * 0.025;
-        const grandTotal = totalAmount - discount + cgst + sgst;
-        content += `Sub Total: ${totalAmount}\n`;
-        content += `Discount: -${discount}\n`;
-        content += `CGST: +${cgst}\n`;
-        content += `SGST: +${sgst}\n`;
-        content += `Grand Total: ${grandTotal}\n\n`;
-        content += 'Thank you for dining with us!\n';
-        content += '--------------------------------\n';
+          const discount = orders.reduce((sum, order) => sum + (order.discount || 0), 0);
+          const cgst = totalAmount * 0.025;
+          const sgst = totalAmount * 0.025;
+          const grandTotal = totalAmount - discount + cgst + sgst;
+          content += `Sub Total: ${totalAmount}\n`;
+          content += `Discount: -${discount}\n`;
+          content += `CGST: +${cgst}\n`;
+          content += `SGST: +${sgst}\n`;
+          content += `Grand Total: ${grandTotal}\n\n`;
+          content += 'Thank you for dining with us!\n';
+          content += '--------------------------------\n';
+        }
+
+        await writer.write(encoder.encode(content));
+        writer.releaseLock();
+        await port.close();
+        console.log(isKOT ? 'KOT printed successfully' : 'Bill printed successfully');
+      } catch (error) {
+        console.error("Failed to print content via serial:", error);
       }
-
-      // Convert content to Uint8Array
-      const encoder = new TextEncoder();
-      const encodedContent = encoder.encode(content);
-
-      // Write to the Bluetooth characteristic
-      await characteristic.writeValue(encodedContent);
-      console.log(isKOT ? 'KOT printed successfully' : 'Bill printed successfully');
-    } catch (error) {
-      console.error('Failed to print content via Bluetooth:', error);
+    } else {
+      console.error("Web Serial API not supported.");
     }
   };
 
@@ -226,43 +178,10 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
             ))
         )}
       </div>
-      <div className="kot-generated">
-        <h3>KOT Generated</h3>
-        {orders.filter(order => order.status === 'KOT').map((order, orderIndex) => (
-          <div className="order-item" key={orderIndex}>
-            <p><strong>Name:</strong> {order.name}</p>
-            <p><strong>Items:</strong></p>
-            <ul>
-              {order.items && order.items.map((item, index) => (
-                <li key={index}>{item.name} - {item.price} x {item.quantity}</li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
       <div className="action-buttons">
         <button onClick={() => handleGenerateKOT()} className="action-button">Generate KOT</button>
         <button onClick={() => handleGenerateBill()} className="action-button">Generate Bill</button>
         <button onClick={() => handleCompleteOrder()} className="action-button">Complete Order</button>
-      </div>
-      <div className="left-menu">
-        <div className="item-list">
-          <div className="items">
-            <h3>{selectedCategory ? `${selectedCategory.name} Items` : 'Items'}</h3>
-            <div className="item-grid">
-              {items.length === 0 ? (
-                <p>Select a category to view items</p>
-              ) : (
-                items.map((item) => (
-                  <div key={item.id} className="menu-item">
-                    <p>{item.name}</p>
-                    <p>{item.price}</p>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

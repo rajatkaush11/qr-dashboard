@@ -34,6 +34,7 @@
   width: 40%;
   padding: 10px;
   overflow-y: auto; /* Make it scrollable */
+  position: relative;
 }
 
 .right-content {
@@ -108,7 +109,7 @@
   gap: 15px;
   position: absolute;
   bottom: 20px; /* Position at the bottom */
-  width: calc(40% - 20px); /* Adjust width according to parent padding */
+  width: calc(100% - 20px); /* Adjust width according to parent padding */
 }
 
 .action-button {

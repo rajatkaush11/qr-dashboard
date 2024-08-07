@@ -8,7 +8,36 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [orders, setOrders] = useState([]);
   const [restaurant, setRestaurant] = useState({ name: 'QRapid', address: '', contact: '' });
   const [completedOrderIds, setCompletedOrderIds] = useState([]);
-  const [orderFetched, setOrderFetched] = useState(false); // New state to track order fetch
+  const [orderFetched, setOrderFetched] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const userId = auth.currentUser ? auth.currentUser.uid : null;
+      const categoriesRef = collection(db, 'restaurants', userId, 'categories');
+      const querySnapshot = await getDocs(categoriesRef);
+      const categoriesData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+      setCategories(categoriesData);
+    };
+
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    const fetchItems = async () => {
+      if (selectedCategory) {
+        const userId = auth.currentUser ? auth.currentUser.uid : null;
+        const itemsRef = collection(db, 'restaurants', userId, 'categories', selectedCategory.id, 'items');
+        const querySnapshot = await getDocs(itemsRef);
+        const itemsData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+        setItems(itemsData);
+      }
+    };
+
+    fetchItems();
+  }, [selectedCategory]);
 
   useEffect(() => {
     const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
@@ -157,6 +186,31 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       <div className="header">
         <button onClick={onBackClick} className="back-button">Back</button>
         <h2>Table {tableNumber} Details</h2>
+      </div>
+      <div className="left-menu">
+        <h3>Menu</h3>
+        {categories.map((category) => (
+          <div
+            key={category.id}
+            className={`menu-category ${selectedCategory && selectedCategory.id === category.id ? 'active' : ''}`}
+            onClick={() => setSelectedCategory(category)}
+          >
+            {category.name}
+          </div>
+        ))}
+      </div>
+      <div className="middle-content">
+        {selectedCategory && (
+          <div className="category-items">
+            <h3>{selectedCategory.name} Items</h3>
+            {items.map((item) => (
+              <div key={item.id} className="menu-item">
+                <p>{item.name}</p>
+                <p>{item.price}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       <div className="current-order">
         <h3>Current Orders</h3>

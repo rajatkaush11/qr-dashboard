@@ -48,24 +48,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       orderBy('createdAt', 'desc')
     );
 
-    // const unsubscribe = onSnapshot(q, (querySnapshot) => {
-    //   if (!orderFetched) {
-    //     console.log('Query snapshot size:', querySnapshot.size);
-    //     const allOrders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    //     console.log('Query snapshot data:', allOrders);
-    //     setOrders(allOrders);
-
-    //     // Update table color to blue for new orders
-    //     if (allOrders.length > 0) {
-    //       updateTableColor(tableNumber, 'blue');
-    //     }
-
-    //     setOrderFetched(true); // Set orderFetched to true after initial fetch
-    //   }
-    // }, (error) => {
-    //   console.error('Error fetching orders:', error);
-    // });
-
     const fetchCompletedOrderIds = async () => {
       const q = query(collection(db, 'bills'));
       const querySnapshot = await getDocs(q);
@@ -74,8 +56,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     };
 
     fetchCompletedOrderIds();
-
-    // return () => unsubscribe();
   }, [tableNumber, updateTableColor, orderFetched]);
 
   const connectBluetoothPrinter = async () => {
@@ -202,48 +182,60 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   return (
     <div className="table-details">
-      <div className="header">
-        <button onClick={onBackClick} className="back-button">Back</button>
-        <h2>Table {tableNumber} Details</h2>
-      </div>
-      <div className="current-order">
-        <h3>Current Orders</h3>
-        {orders.length === 0 ? (
-          <p>No current orders.</p>
-        ) : (
-          orders
-            .filter(order => order.status !== 'completed')
-            .map((order, orderIndex) => (
-              <div className="order-item" key={orderIndex}>
-                <p><strong>Name:</strong> {order.name}</p>
-                <p><strong>Items:</strong></p>
-                <ul>
-                  {order.items && order.items.map((item, index) => (
-                    <li key={index}>{item.name} - {item.price} x {item.quantity}</li>
-                  ))}
-                </ul>
-              </div>
-            ))
-        )}
-      </div>
-      <div className="kot-generated">
-        <h3>KOT Generated</h3>
-        {orders.filter(order => order.status === 'KOT').map((order, orderIndex) => (
-          <div className="order-item" key={orderIndex}>
-            <p><strong>Name:</strong> {order.name}</p>
-            <p><strong>Items:</strong></p>
-            <ul>
-              {order.items && order.items.map((item, index) => (
-                <li key={index}>{item.name} - {item.price} x {item.quantity}</li>
-              ))}
-            </ul>
+      <div className="right-content">
+        <button className="back-button" onClick={onBackClick}>Back</button>
+        <div className="menu-category">MENU</div>
+        {categories.map((category) => (
+          <div
+            key={category.id}
+            className={`menu-category ${selectedCategory && selectedCategory.id === category.id ? 'active' : ''}`}
+            onClick={() => setSelectedCategory(category)}
+          >
+            {category.name}
           </div>
         ))}
       </div>
-      <div className="action-buttons">
-        <button onClick={() => handleGenerateKOT()} className="action-button">Generate KOT</button>
-        <button onClick={() => handleGenerateBill()} className="action-button">Generate Bill</button>
-        <button onClick={() => handleCompleteOrder()} className="action-button">Complete Order</button>
+      <div className="middle-content">
+        <div className="table-title">Table {tableNumber}</div>
+        <div className="kot-generated">
+          <h3>KOT Generated</h3>
+          {orders.filter(order => order.status === 'KOT').map((order, orderIndex) => (
+            <div className="order-item" key={orderIndex}>
+              <p><strong>Name:</strong> {order.name}</p>
+              <p><strong>Items:</strong></p>
+              <ul>
+                {order.items && order.items.map((item, index) => (
+                  <li key={index}>{item.name} - {item.price} x {item.quantity}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <div className="current-orders">
+          <h3>Current Orders</h3>
+          {orders.length === 0 ? (
+            <p>No current orders.</p>
+          ) : (
+            orders
+              .filter(order => order.status !== 'completed' && order.status !== 'KOT')
+              .map((order, orderIndex) => (
+                <div className="order-item" key={orderIndex}>
+                  <p><strong>Name:</strong> {order.name}</p>
+                  <p><strong>Items:</strong></p>
+                  <ul>
+                    {order.items && order.items.map((item, index) => (
+                      <li key={index}>{item.name} - {item.price} x {item.quantity}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))
+          )}
+        </div>
+        <div className="action-buttons">
+          <button onClick={handleGenerateKOT} className="action-button generate-kot">Generate KOT</button>
+          <button onClick={handleGenerateBill} className="action-button generate-bill">Generate Bill</button>
+          <button onClick={handleCompleteOrder} className="action-button complete">Complete Order</button>
+        </div>
       </div>
       <div className="left-menu">
         <div className="item-list">

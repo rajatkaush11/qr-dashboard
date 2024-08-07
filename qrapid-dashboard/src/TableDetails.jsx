@@ -17,7 +17,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   // Function to play a sound
   const playSound = () => {
     const audio = new Audio(successSound); // Use the imported sound file
-    audio.play();
+    audio.play().catch(error => console.error('Error playing sound:', error)); // Log any errors
   };
 
   useEffect(() => {

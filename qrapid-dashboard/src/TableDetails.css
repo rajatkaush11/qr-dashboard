@@ -170,7 +170,7 @@
 .menu-item {
   border: 1px solid #ddd;
   padding: 20px; /* Increased padding for better spacing */
-  flex: 1 0 calc(33.333% - 10px); /* 3 items in a row */
+  flex: 1 0 calc(50% - 20px); /* 2 items in a row with larger size */
   box-sizing: border-box;
   border-radius: 10px; /* Rounded corners for better aesthetics */
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */

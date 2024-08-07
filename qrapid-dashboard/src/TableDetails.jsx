@@ -4,6 +4,9 @@ import { collection, query, where, orderBy, getDocs, writeBatch, doc } from 'fir
 import './TableDetails.css';
 import successSound from './assets/success.mp3'; // Import the sound file
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
+
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [orders, setOrders] = useState([]);
   const [currentOrder, setCurrentOrder] = useState([]); // State for current order
@@ -289,7 +292,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
                   <button className="action-button decrement" onClick={() => handleDecrement(item.id)}>-</button>
                   <span>{item.quantity}</span>
                   <button className="action-button increment" onClick={() => handleIncrement(item.id)}>+</button>
-                  <button className="action-button delete" onClick={() => handleDelete(item.id)}>Delete</button>
+                  <button className="action-button delete" onClick={() => handleDelete(item.id)}>
+                    <FontAwesomeIcon icon={faTrash} />
+                  </button>
                 </div>
               </div>
             ))

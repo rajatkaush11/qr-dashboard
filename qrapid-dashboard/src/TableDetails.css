@@ -101,18 +101,16 @@
 }
 
 .delete-button {
-  background-color: #ff1a1a;
+  background-color: transparent;
   border: none;
-  border-radius: 10px;
-  color: white;
-  padding: 10px 15px;
+  color: #ff1a1a;
   cursor: pointer;
-  font-size: 18px;
-  transition: background-color 0.3s;
+  font-size: 20px;
+  transition: color 0.3s;
 }
 
 .delete-button:hover {
-  background-color: #ff3737;
+  color: #ff3737;
 }
 
 .actions {
@@ -219,7 +217,16 @@
 }
 
 .action-button.increment:hover,
-.action-button.decrement:hover,
-.action-button.delete:hover {
+.action-button.decrement:hover {
   background-color: #0056b3;
+}
+
+.action-button.delete {
+  color: #ff1a1a;
+  background-color: transparent;
+}
+
+.action-button.delete:hover {
+  color: #ff3737;
+  background-color: transparent;
 }

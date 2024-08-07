@@ -173,19 +173,15 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor, categories }
       <div className="left-menu">
         <button className="back-button" onClick={onBackClick}>Back</button>
         <div className="menu-category">MENU</div>
-        {categories && categories.length > 0 ? (
-          categories.map((category) => (
-            <div
-              key={category.id}
-              className={`menu-category ${selectedCategory && selectedCategory.id === category.id ? 'active' : ''}`}
-              onClick={() => setSelectedCategory(category)}
-            >
-              {category.name}
-            </div>
-          ))
-        ) : (
-          <p>Loading categories...</p>
-        )}
+        {categories.map((category) => (
+          <div
+            key={category.id}
+            className={`menu-category ${selectedCategory && selectedCategory.id === category.id ? 'active' : ''}`}
+            onClick={() => setSelectedCategory(category)}
+          >
+            {category.name}
+          </div>
+        ))}
       </div>
       <div className="middle-content">
         <div className="table-title">Table {tableNumber}</div>

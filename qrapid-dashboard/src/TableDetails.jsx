@@ -162,26 +162,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   return (
     <div className="table-details">
-      <div className="right-content">
-        <div className="item-list">
-          <div className="items">
-            <h3>{selectedCategory ? `${selectedCategory.name} Items` : 'Items'}</h3>
-            <div className="item-grid">
-              {items.length === 0 ? (
-                <p>Select a category to view items</p>
-              ) : (
-                items.map((item) => (
-                  <div key={item.id} className="menu-item">
-                    <p>{item.name}</p>
-                    <p>{item.price}</p>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="middle-content">
+      <div className="left-menu">
+        <button className="back-button" onClick={onBackClick}>Back</button>
         <div className="table-title">Table {tableNumber}</div>
         <div className="kot-generated">
           <h3>KOT Generated</h3>
@@ -223,8 +205,26 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           <button onClick={() => handleCompleteOrder()} className="action-button complete">Complete Order</button>
         </div>
       </div>
-      <div className="left-menu">
-        <button className="back-button" onClick={onBackClick}>Back</button>
+      <div className="middle-content">
+        <div className="item-list">
+          <div className="items">
+            <h3>{selectedCategory ? `${selectedCategory.name} Items` : 'Items'}</h3>
+            <div className="item-grid">
+              {items.length === 0 ? (
+                <p>Select a category to view items</p>
+              ) : (
+                items.map((item) => (
+                  <div key={item.id} className="menu-item">
+                    <p>{item.name}</p>
+                    <p>{item.price}</p>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="right-content">
         <div className="menu-category">MENU</div>
         {categories.map((category) => (
           <div

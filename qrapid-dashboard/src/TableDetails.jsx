@@ -232,9 +232,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           )}
         </div>
         <div className="action-buttons">
-          <button onClick={() => handleGenerateKOT()} className="action-button generate-kot">Generate KOT</button>
-          <button onClick={() => handleGenerateBill()} className="action-button generate-bill">Generate Bill</button>
-          <button onClick={() => handleCompleteOrder()} className="action-button complete">Complete Order</button>
+          <button onClick={handleGenerateKOT} className="action-button generate-kot">Generate KOT</button>
+          <button onClick={handleGenerateBill} className="action-button generate-bill">Generate Bill</button>
+          <button onClick={handleCompleteOrder} className="action-button complete">Complete Order</button>
         </div>
       </div>
       <div className="left-menu">

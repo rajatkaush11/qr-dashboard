@@ -5,6 +5,7 @@ import './TableDetails.css';
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [orders, setOrders] = useState([]);
+  const [currentOrder, setCurrentOrder] = useState([]); // State for current order
   const [restaurant, setRestaurant] = useState({ name: 'QRapid', address: '', contact: '' });
   const [completedOrderIds, setCompletedOrderIds] = useState([]);
   const [orderFetched, setOrderFetched] = useState(false);
@@ -180,6 +181,18 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     await batch.commit();
   };
 
+  const handleItemClick = (item) => {
+    setCurrentOrder((prevOrder) => {
+      const existingItem = prevOrder.find((orderItem) => orderItem.id === item.id);
+      if (existingItem) {
+        return prevOrder.map((orderItem) =>
+          orderItem.id === item.id ? { ...orderItem, quantity: orderItem.quantity + 1 } : orderItem
+        );
+      }
+      return [...prevOrder, { ...item, quantity: 1 }];
+    });
+  };
+
   return (
     <div className="table-details">
       <div className="right-content">
@@ -231,6 +244,20 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
               ))
           )}
         </div>
+        <div className="current-order">
+          <h3>Current Order</h3>
+          {currentOrder.length === 0 ? (
+            <p>No items in current order.</p>
+          ) : (
+            currentOrder.map((item, index) => (
+              <div className="current-order-item" key={index}>
+                <p>{item.name}</p>
+                <p>Quantity: {item.quantity}</p>
+                <p>Price: {item.price}</p>
+              </div>
+            ))
+          )}
+        </div>
         <div className="action-buttons">
           <button onClick={handleGenerateKOT} className="action-button generate-kot">Generate KOT</button>
           <button onClick={handleGenerateBill} className="action-button generate-bill">Generate Bill</button>
@@ -246,7 +273,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
                 <p>Select a category to view items</p>
               ) : (
                 items.map((item) => (
-                  <div key={item.id} className="menu-item">
+                  <div key={item.id} className="menu-item" onClick={() => handleItemClick(item)}>
                     <p>{item.name}</p>
                     <p>{item.price}</p>
                   </div>

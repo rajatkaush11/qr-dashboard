@@ -162,19 +162,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   return (
     <div className="table-details">
-      <div className="left-menu">
-        <button className="back-button" onClick={onBackClick}>Back</button>
-        <div className="menu-category">MENU</div>
-        {categories.map((category) => (
-          <div
-            key={category.id}
-            className={`menu-category ${selectedCategory && selectedCategory.id === category.id ? 'active' : ''}`}
-            onClick={() => setSelectedCategory(category)}
-          >
-            {category.name}
-          </div>
-        ))}
-      </div>
       <div className="middle-content">
         <div className="table-title">Table {tableNumber}</div>
         <div className="kot-generated">
@@ -216,6 +203,19 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           <button onClick={() => handleGenerateBill()} className="action-button generate-bill">Generate Bill</button>
           <button onClick={() => handleCompleteOrder()} className="action-button complete">Complete Order</button>
         </div>
+      </div>
+      <div className="left-menu">
+        <button className="back-button" onClick={onBackClick}>Back</button>
+        <div className="menu-category">MENU</div>
+        {categories.map((category) => (
+          <div
+            key={category.id}
+            className={`menu-category ${selectedCategory && selectedCategory.id === category.id ? 'active' : ''}`}
+            onClick={() => setSelectedCategory(category)}
+          >
+            {category.name}
+          </div>
+        ))}
       </div>
       <div className="right-content">
         <div className="item-list">

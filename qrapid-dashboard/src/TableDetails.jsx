@@ -177,20 +177,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       </div>
       <div className="middle-content">
         <div className="table-title">Table {tableNumber}</div>
-        <div className="kot-generated">
-          <h3>KOT Generated</h3>
-          {orders.filter(order => order.status === 'KOT').map((order, orderIndex) => (
-            <div className="order-item" key={orderIndex}>
-              <p><strong>Name:</strong> {order.name}</p>
-              <p><strong>Items:</strong></p>
-              <ul>
-                {order.items && order.items.map((item, index) => (
-                  <li key={index}>{item.name} - {item.price} x {item.quantity}</li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
         <div className="current-orders">
           <h3>Current Orders</h3>
           {orders.length === 0 ? (
@@ -210,6 +196,20 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
                 </div>
               ))
           )}
+        </div>
+        <div className="kot-generated">
+          <h3>KOT Generated</h3>
+          {orders.filter(order => order.status === 'KOT').map((order, orderIndex) => (
+            <div className="order-item" key={orderIndex}>
+              <p><strong>Name:</strong> {order.name}</p>
+              <p><strong>Items:</strong></p>
+              <ul>
+                {order.items && order.items.map((item, index) => (
+                  <li key={index}>{item.name} - {item.price} x {item.quantity}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
         <div className="action-buttons">
           <button onClick={() => handleGenerateKOT()} className="action-button generate-kot">Generate KOT</button>

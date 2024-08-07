@@ -46,14 +46,14 @@
 }
 
 .middle-content {
-  width: 30%;
+  width: 40%;
   padding: 10px;
   overflow-y: auto; /* Make it scrollable */
   position: relative;
 }
 
 .right-content {
-  width: 50%;
+  width: 40%;
   padding: 10px;
   overflow-y: auto; /* Make it scrollable */
 }
@@ -164,13 +164,13 @@
 .item-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 10px;
 }
 
 .menu-item {
   border: 1px solid #ddd;
   padding: 20px; /* Increased padding for better spacing */
-  flex: 1 0 calc(50% - 20px); /* 2 items in a row with larger size */
+  flex: 1 0 calc(33.333% - 5px); /* 3 items in a row */
   box-sizing: border-box;
   border-radius: 10px; /* Rounded corners for better aesthetics */
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */

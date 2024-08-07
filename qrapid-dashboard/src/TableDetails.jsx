@@ -193,6 +193,24 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     });
   };
 
+  const handleIncrement = (itemId) => {
+    setCurrentOrder((prevOrder) =>
+      prevOrder.map((orderItem) =>
+        orderItem.id === itemId ? { ...orderItem, quantity: orderItem.quantity + 1 } : orderItem
+      )
+    );
+  };
+
+  const handleDecrement = (itemId) => {
+    setCurrentOrder((prevOrder) =>
+      prevOrder
+        .map((orderItem) =>
+          orderItem.id === itemId ? { ...orderItem, quantity: orderItem.quantity - 1 } : orderItem
+        )
+        .filter((orderItem) => orderItem.quantity > 0)
+    );
+  };
+
   return (
     <div className="table-details">
       <div className="right-content">
@@ -251,9 +269,15 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           ) : (
             currentOrder.map((item, index) => (
               <div className="current-order-item" key={index}>
-                <p>{item.name}</p>
-                <p>Quantity: {item.quantity}</p>
-                <p>Price: {item.price}</p>
+                <div className="order-text">
+                  <p>{item.name}</p>
+                  <p>{item.price * item.quantity}</p>
+                </div>
+                <div className="order-actions">
+                  <button className="action-button decrement" onClick={() => handleDecrement(item.id)}>-</button>
+                  <span>{item.quantity}</span>
+                  <button className="action-button increment" onClick={() => handleIncrement(item.id)}>+</button>
+                </div>
               </div>
             ))
           )}

@@ -181,3 +181,43 @@
 .menu-item p {
   margin: 5px 0; /* Adjust margin for better spacing */
 }
+
+/* Styles for current order items */
+.current-order-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 15px;
+  margin-bottom: 10px;
+  background-color: #d4edda; /* Green background for active order */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.order-actions {
+  display: flex;
+  align-items: center;
+}
+
+.order-actions span {
+  margin: 0 10px;
+  font-size: 16px;
+}
+
+.action-button.increment,
+.action-button.decrement {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+.action-button.increment:hover,
+.action-button.decrement:hover {
+  background-color: #0056b3;
+}

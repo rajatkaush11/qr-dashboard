@@ -1,224 +1,213 @@
-.table-details {
-  padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-  text-align: left;
-  background-color: #f7f7f7;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  display: flex;
-  height: calc(100vh - 70px); /* Adjust height to be full screen minus navbar height */
-  overflow: hidden;
-}
-
-.left-menu {
-  width: 40%;
-  background-color: #f0f0f0;
-  padding: 10px;
-  overflow-y: auto; /* Make it scrollable */
-}
-
-.back-button {
-  display: block;
-  margin-bottom: 20px;
-  padding: 10px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.back-button:hover {
-  background-color: #0056b3;
-}
-
-.menu-category {
-  padding: 10px;
-  cursor: pointer;
-  border-bottom: 1px solid #ddd;
-}
-
-.menu-category.active {
-  background-color: #007bff;
-  color: white;
-}
-
-.middle-content {
-  width: 50%;
-  padding: 10px;
-  overflow-y: auto; /* Make it scrollable */
-  position: relative;
-}
-
-.right-content {
-  width: 20%;
-  padding: 10px;
-  overflow-y: auto; /* Make it scrollable */
-}
-
-.table-title {
-  font-size: 28px;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 20px;
-}
-
-.current-orders, .kot-generated {
-  margin-bottom: 30px;
-}
-
-.current-orders h3, .kot-generated h3 {
-  margin-bottom: 15px;
-  font-size: 20px;
-  font-weight: bold;
-  color: #333;
-}
-
-.order-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px;
-  border: 1px solid #ccc;
-  border-radius: 15px;
-  margin-bottom: 15px;
-  background-color: #f8f8f8;
-  transition: background-color 0.3s;
-}
-
-.order-item.active {
-  background-color: #d4edda;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-}
-
-.order-text {
-  display: flex;
-  justify-content: space-between;
-  flex: 1;
-  margin-right: 15px;
-}
-
-.delete-button {
-  background-color: transparent;
-  border: none;
-  color: #ff1a1a;
-  cursor: pointer;
-  font-size: 20px;
-  transition: color 0.3s;
-}
-
-.delete-button:hover {
-  color: #ff3737;
-}
-
-.actions {
-  margin-bottom: 30px;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 15px;
-  position: absolute;
-  bottom: 20px; /* Position at the bottom */
-  width: calc(100% - 20px); /* Adjust width according to parent padding */
-}
-
-.action-button {
-  display: inline-block;
-  padding: 12px 25px;
-  border: none;
-  border-radius: 25px;
-  cursor: pointer;
-  font-size: 18px;
-  transition: background-color 0.3s;
-  text-align: center;
-}
-
-.action-button.add-item {
-  background-color: #007bff;
-  color: #fff;
-}
-
-.action-button.generate-kot {
-  background-color: #ffc107;
-}
-
-.action-button.generate-bill {
-  background-color: #28a745;
-}
-
-.action-button.complete {
-  background-color: #17a2b8;
-  color: #fff;
-  font-weight: bold;
-}
-
-.items {
-  margin-top: 20px;
-}
-
-.item-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.menu-item {
-  border: 1px solid #ddd;
-  padding: 20px; /* Increased padding for better spacing */
-  flex: 1 0 calc(33.333% - 5px); /* 3 items in a row */
-  box-sizing: border-box;
-  border-radius: 10px; /* Rounded corners for better aesthetics */
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
-  background-color: white; /* White background for better contrast */
-  text-align: center; /* Center-align text */
-}
-
-.menu-item p {
-  margin: 5px 0; /* Adjust margin for better spacing */
-}
-
-/* Styles for current order items */
-.current-order-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 15px;
-  margin-bottom: 10px;
-  background-color: #d4edda; /* Green background for active order */
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-.order-actions {
-  display: flex;
-  align-items: center;
-}
-
-.order-actions span {
-  margin: 0 10px;
-  font-size: 16px;
-}
-
-.action-button.increment,
-.action-button.decrement,
-.action-button.delete {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  padding: 5px 10px;
-  cursor: pointer;
-  font-size: 16px;
-  transition: background-color 0.3s;
-}
-
-.action-button.increment:hover,
-.action-button.decrement:hover {
-  background-color: #0056b3;
+.table-details {  
+  padding: 20px;  
+  max-width: 1200px;  
+  margin: 0 auto;  
+  text-align: left;  
+  background-color: #f7f7f7;  
+  border: 1px solid #ddd;  
+  border-radius: 10px;  
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);  
+  display: flex;  
+  height: calc(100vh - 70px); /* Adjust height to be full screen minus navbar height */  
+  overflow: hidden;  
+}  
+  
+.left-menu {  
+  width: 40%;  
+  background-color: #f0f0f0;  
+  padding: 10px;  
+  overflow-y: auto; /* Make it scrollable */  
+  display: flex;  
+  flex-wrap: wrap;  
+  justify-content: center;  
+}  
+  
+.menu-category {  
+  width: calc(50% - 10px);  
+  margin: 10px;  
+  padding: 10px;  
+  cursor: pointer;  
+  border-bottom: 1px solid #ddd;  
+  border-radius: 10px;  
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);  
+}  
+  
+.menu-category.active {  
+  background-color: #007bff;  
+  color: white;  
+}  
+  
+.middle-content {  
+  width: 50%;  
+  padding: 10px;  
+  overflow-y: auto; /* Make it scrollable */  
+  position: relative;  
+}  
+  
+.right-content {  
+  width: 20%;  
+  padding: 10px;  
+  overflow-y: auto; /* Make it scrollable */  
+}  
+  
+.table-title {  
+  font-size: 28px;  
+  font-weight: bold;  
+  color: #333;  
+  margin-bottom: 20px;  
+}  
+  
+.current-orders,.kot-generated {  
+  margin-bottom: 30px;  
+}  
+  
+.current-orders h3,.kot-generated h3 {  
+  margin-bottom: 15px;  
+  font-size: 20px;  
+  font-weight: bold;  
+  color: #333;  
+}  
+  
+.order-item {  
+  display: flex;  
+  justify-content: space-between;  
+  align-items: center;  
+  padding: 15px;  
+  border: 1px solid #ccc;  
+  border-radius: 15px;  
+  margin-bottom: 15px;  
+  background-color: #f8f8f8;  
+  transition: background-color 0.3s;  
+}  
+  
+.order-item.active {  
+  background-color: #d4edda;  
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);  
+}  
+  
+.order-text {  
+  display: flex;  
+  justify-content: space-between;  
+  flex: 1;  
+  margin-right: 15px;  
+}  
+  
+.delete-button {  
+  background-color: transparent;  
+  border: none;  
+  color: #ff1a1a;  
+  cursor: pointer;  
+  font-size: 20px;  
+  transition: color 0.3s;  
+}  
+  
+.delete-button:hover {  
+  color: #ff3737;  
+}  
+  
+.actions {  
+  margin-bottom: 30px;  
+}  
+  
+.action-buttons {  
+  display: flex;  
+  gap: 15px;  
+  position: absolute;  
+  bottom: 20px; /* Position at the bottom */  
+  width: calc(100% - 20px); /* Adjust width according to parent padding */  
+}  
+  
+.action-button {  
+  display: inline-block;  
+  padding: 12px 25px;  
+  border: none;  
+  border-radius: 25px;  
+  cursor: pointer;  
+  font-size: 18px;  
+  transition: background-color 0.3s;  
+  text-align: center;  
+}  
+  
+.action-button.add-item {  
+  background-color: #007bff;  
+  color: #fff;  
+}  
+  
+.action-button.generate-kot {  
+  background-color: #ffc107;  
+}  
+  
+.action-button.generate-bill {  
+  background-color: #28a745;  
+}  
+  
+.action-button.complete {  
+  background-color: #17a2b8;  
+  color: #fff;  
+  font-weight: bold;  
+}  
+  
+.items {  
+  margin-top: 20px;  
+}  
+  
+.item-grid {  
+  display: flex;  
+  flex-wrap: wrap;  
+  gap: 10px;  
+}  
+  
+.menu-item {  
+  border: 1px solid #ddd;  
+  padding: 20px; /* Increased padding for better spacing */  
+  flex: 1 0 calc(33.333% - 5px); /* 3 items in a row */  
+  box-sizing: border-box;  
+  border-radius: 10px; /* Rounded corners for better aesthetics */  
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */  
+  background-color: white; /* White background for better contrast */  
+  text-align: center; /* Center-align text */  
+}  
+  
+.menu-item p {  
+  margin: 5px 0; /* Adjust margin for better spacing */  
+}  
+  
+/* Styles for current order items */  
+.current-order-item {  
+  display: flex;  
+  justify-content: space-between;  
+  align-items: center;  
+  padding: 10px;  
+  border: 1px solid #ccc;  
+  border-radius: 15px;  
+  margin-bottom: 10px;  
+  background-color: #d4edda; /* Green background for active order */  
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);  
+}  
+  
+.order-actions {  
+  display: flex;  
+  align-items: center;  
+}  
+  
+.order-actions span {  
+  margin: 0 10px;  
+  font-size: 16px;  
+}  
+  
+.action-button.increment,.action-button.decrement,.action-button.delete {  
+  background-color: #007bff;  
+  color: white;  
+  border: none;  
+  border-radius: 5px;  
+  padding: 5px 10px;  
+  cursor: pointer;  
+  font-size: 16px;  
+  transition: background-color 0.3s;  
+}  
+  
+.action-button.increment:hover,.action-button.decrement:hover {  
+  background-color: #0056b3
 }
 
 .action-button.delete {

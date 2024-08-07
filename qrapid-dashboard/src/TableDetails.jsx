@@ -3,13 +3,12 @@ import { backendDb, db, auth } from './firebase-config';
 import { collection, query, where, orderBy, getDocs, writeBatch, doc } from 'firebase/firestore';
 import './TableDetails.css';
 import successSound from './assets/success.mp3'; // Import the sound file
-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [orders, setOrders] = useState([]);
-  const [currentOrder, setCurrentOrder] = useState([]); // State for current order
+  const [currentOrder, setCurrentOrder] = useState([]);
   const [restaurant, setRestaurant] = useState({ name: 'QRapid', address: '', contact: '' });
   const [completedOrderIds, setCompletedOrderIds] = useState([]);
   const [orderFetched, setOrderFetched] = useState(false);
@@ -17,10 +16,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [items, setItems] = useState([]);
 
-  // Function to play a sound
   const playSound = () => {
-    const audio = new Audio(successSound); // Use the imported sound file
-    audio.play().catch(error => console.error('Error playing sound:', error)); // Log any errors
+    const audio = new Audio(successSound);
+    audio.play().catch(error => console.error('Error playing sound:', error));
   };
 
   useEffect(() => {
@@ -31,7 +29,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       const categoriesData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
       setCategories(categoriesData);
     };
-
     fetchCategories();
   }, []);
 
@@ -45,19 +42,23 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         setItems(itemsData);
       }
     };
-
     fetchItems();
   }, [selectedCategory]);
 
   useEffect(() => {
     const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
-    console.log(`Querying for table number: ${normalizedTableNumber}`);
-
     const q = query(
       collection(backendDb, 'orders'),
       where('tableNo', '==', normalizedTableNumber),
       orderBy('createdAt', 'desc')
     );
+
+    const fetchOrders = async () => {
+      const querySnapshot = await getDocs(q);
+      const ordersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setOrders(ordersData);
+      setOrderFetched(true);
+    };
 
     const fetchCompletedOrderIds = async () => {
       const q = query(collection(db, 'bills'));
@@ -66,26 +67,18 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       setCompletedOrderIds(ids);
     };
 
+    fetchOrders();
     fetchCompletedOrderIds();
   }, [tableNumber, updateTableColor, orderFetched]);
 
   const connectBluetoothPrinter = async () => {
     try {
-      console.log('Requesting Bluetooth device...');
       const device = await navigator.bluetooth.requestDevice({
-        filters: [{ services: ['battery_service'] }] // Change this to the appropriate service UUID for your printer
+        filters: [{ services: ['battery_service'] }]
       });
-
-      console.log('Connecting to GATT server...');
       const server = await device.gatt.connect();
-      console.log('Connected to GATT server');
-
-      // Get the primary service (replace 'battery_service' with your printer's service UUID)
       const service = await server.getPrimaryService('battery_service');
-
-      // Get the characteristic (replace with the correct characteristic UUID for your printer)
       const characteristic = await service.getCharacteristic('battery_level');
-
       return characteristic;
     } catch (error) {
       console.error('Error connecting to Bluetooth device:', error);
@@ -96,9 +89,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const printContent = async (orders, isKOT) => {
     try {
       const characteristic = await connectBluetoothPrinter();
-
       let content = '';
-
       content += `\x1b\x21\x30`;
       content += `*** ${restaurant.name.toUpperCase()} ***\n`;
       content += `${restaurant.address}\nContact: ${restaurant.contact}\n\n`;
@@ -136,11 +127,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         content += '--------------------------------\n';
       }
 
-      // Convert content to Uint8Array
       const encoder = new TextEncoder();
       const encodedContent = encoder.encode(content);
-
-      // Write to the Bluetooth characteristic
       await characteristic.writeValue(encodedContent);
       console.log(isKOT ? 'KOT printed successfully' : 'Bill printed successfully');
     } catch (error) {
@@ -167,19 +155,16 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const handleCompleteOrder = async () => {
     const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
     const batch = writeBatch(db);
-
     filteredOrders.forEach(order => {
       const billRef = doc(collection(db, 'bills'));
       batch.set(billRef, { orderId: order.id, ...order });
     });
-
     await batch.commit();
     await updateOrderStatus(filteredOrders, 'completed');
-
     setCompletedOrderIds([...completedOrderIds, ...filteredOrders.map(order => order.id)]);
     setOrders(prevOrders => prevOrders.filter(order => !filteredOrders.map(o => o.id).includes(order.id)));
     await updateTableColor(tableNumber, 'blank');
-    setOrderFetched(false); // Reset orderFetched to false to listen for new orders
+    setOrderFetched(false);
   };
 
   const updateOrderStatus = async (orders, status) => {
@@ -263,7 +248,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
             <p>No current orders.</p>
           ) : (
             orders
-              .filter(order => order.status !== 'completed' && order.status !== 'KOT')
+              .filter(order => order.status !== 'completed')
               .map((order, orderIndex) => (
                 <div className="order-item" key={orderIndex}>
                   <p><strong>Name:</strong> {order.name}</p>
@@ -276,9 +261,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
                 </div>
               ))
           )}
-        </div>
-        <div className="current-order">
-          <h3>Current Order</h3>
           {currentOrder.length === 0 ? (
             <p>No items in current order.</p>
           ) : (

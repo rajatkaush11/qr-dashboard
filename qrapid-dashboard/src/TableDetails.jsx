@@ -161,13 +161,19 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     if (filteredOrders.length === 0 && currentOrder.length === 0) return;
 
     if (currentOrder.length > 0) {
+      // Get the current time in IST
+      const now = new Date();
+      const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC + 5:30
+      const istTime = new Date(now.getTime() + istOffset).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+
       // Temporarily store current order as a new order
       const newOrder = {
         id: `temp-${Date.now()}`, // Generate a temporary unique ID
         tableNo: tableNumber.slice(1),
         items: currentOrder,
         status: 'KOT',
-        createdAt: new Date(),
+        createdAt: now,
+        istTime,
         name: 'Temporary Order'
       };
       await setDoc(doc(collection(backendDb, 'manual-orders'), newOrder.id), newOrder);
@@ -298,6 +304,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
                   <li key={index}>{item.name} - {item.price} x {item.quantity}</li>
                 ))}
               </ul>
+              <p><strong>Time:</strong> {order.istTime}</p>
             </div>
           ))}
         </div>

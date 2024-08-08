@@ -24,27 +24,27 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   useEffect(() => {
-  //   const fetchCategories = async () => {
-  //     const userId = auth.currentUser ? auth.currentUser.uid : null;
-  //     const categoriesRef = collection(db, 'restaurants', userId, 'categories');
-  //     const querySnapshot = await getDocs(categoriesRef);
-  //     const categoriesData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-  //     setCategories(categoriesData);
-  //   };
-  //   fetchCategories();
-  // }, []);
+    const fetchCategories = async () => {
+      const userId = auth.currentUser ? auth.currentUser.uid : null;
+      const categoriesRef = collection(db, 'restaurants', userId, 'categories');
+      const querySnapshot = await getDocs(categoriesRef);
+      const categoriesData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+      setCategories(categoriesData);
+    };
+    fetchCategories();
+  }, []);
 
-  // useEffect(() => {
-  //   const fetchItems = async () => {
-  //     if (selectedCategory) {
-  //       const userId = auth.currentUser ? auth.currentUser.uid : null;
-  //       const itemsRef = collection(db, 'restaurants', userId, 'categories', selectedCategory.id, 'items');
-  //       const querySnapshot = await getDocs(itemsRef);
-  //       const itemsData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-  //       setItems(itemsData);
-  //     }
-  //   };
-  //   fetchItems();
+  useEffect(() => {
+    const fetchItems = async () => {
+      if (selectedCategory) {
+        const userId = auth.currentUser ? auth.currentUser.uid : null;
+        const itemsRef = collection(db, 'restaurants', userId, 'categories', selectedCategory.id, 'items');
+        const querySnapshot = await getDocs(itemsRef);
+        const itemsData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+        setItems(itemsData);
+      }
+    };
+    fetchItems();
   }, [selectedCategory]);
 
   // useEffect(() => {

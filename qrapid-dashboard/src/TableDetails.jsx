@@ -122,7 +122,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       console.error('Error printing:', error);
     }
   };
-
+  
   const handleGenerateKOT = async () => {
     try {
       const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
@@ -130,7 +130,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         console.log('No orders to generate KOT');
         return;
       }
-
+  
       if (currentOrder.length > 0) {
         const now = new Date();
         const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000).toLocaleTimeString('en-IN', {
@@ -138,7 +138,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           minute: '2-digit',
           timeZone: 'Asia/Kolkata',
         });
-
+  
         const newOrder = {
           id: `temp-${Date.now()}`,
           tableNo: tableNumber.slice(1),
@@ -156,8 +156,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         setKotTime(istTime);
         console.log('Temporary order created:', newOrder);
       }
-
-      await printViaServer('https://us-central1-qr-dashboard-1107.web.app/printKOT', tableNumber, filteredOrders.map(order => order.id));
+  
+      await printViaServer('https://us-central1-qr-dashboard-1107.cloudfunctions.net/printKOT', tableNumber, filteredOrders.map(order => order.id));
       updateTableColor(tableNumber, 'running-kot');
       await updateOrderStatus(filteredOrders, 'KOT');
       setOrders(prevOrders =>
@@ -172,7 +172,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       console.error('Error generating KOT:', error);
     }
   };
-
+  
   const handleGenerateBill = async () => {
     try {
       const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
@@ -180,7 +180,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         console.log('No orders to generate Bill');
         return;
       }
-      await printViaServer('https://us-central1-qr-dashboard-1107.web.app/printBill', tableNumber, filteredOrders.map(order => order.id));
+      await printViaServer('https://us-central1-qr-dashboard-1107.cloudfunctions.net/printBill', tableNumber, filteredOrders.map(order => order.id));
       await updateTableColor(tableNumber, 'green');
       await updateOrderStatus(filteredOrders, 'billed');
       console.log('Bill generated and printed successfully');
@@ -189,7 +189,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     }
   };
   
-
   const handleCompleteOrder = async () => {
     try {
       const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));

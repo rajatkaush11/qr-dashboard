@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { collection, query, where, orderBy, getDocs, writeBatch, doc, setDoc, deleteDoc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, writeBatch, doc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { backendDb, db, auth } from './firebase-config';
 import './TableDetails.css';
 import successSound from './assets/success.mp3';
@@ -15,7 +15,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [items, setItems] = useState([]);
-  const [kotOrders, setKotOrders] = useState([]);
+  const [temporaryOrders, setTemporaryOrders] = useState([]);
   const [kotTime, setKotTime] = useState('');
 
   const playSound = () => {
@@ -62,16 +62,34 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       setOrderFetched(true);
     });
 
+    const fetchTemporaryOrders = async () => {
+      const tempOrdersRef = collection(backendDb, 'manual-orders');
+      const tempOrdersSnapshot = await getDocs(tempOrdersRef);
+      const tempOrdersData = tempOrdersSnapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter(order => order.tableNo === normalizedTableNumber && order.status !== 'deleted');
+      setTemporaryOrders(tempOrdersData);
+    };
+
+    const fetchCompletedOrderIds = async () => {
+      const q = query(collection(db, 'bills'));
+      const querySnapshot = await getDocs(q);
+      const ids = querySnapshot.docs.map(doc => doc.data().orderId);
+      setCompletedOrderIds(ids);
+    };
+
+    fetchTemporaryOrders();
+    fetchCompletedOrderIds();
+
     return () => unsubscribeOrders();
   }, [tableNumber, updateTableColor, orderFetched]);
 
   useEffect(() => {
-    const filteredKotOrders = orders.filter(order => order.status === 'KOT');
-    setKotOrders(filteredKotOrders);
-
-    if (filteredKotOrders.length > 0) {
+    const kotOrders = [...orders, ...temporaryOrders].filter(order => order.status === 'KOT');
+    if (kotOrders.length > 0) {
       updateTableColor(tableNumber, 'running-kot');
       if (!kotTime) {
+        // Set KOT time in IST if not already set
         const now = new Date();
         const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000).toLocaleTimeString('en-IN', {
           hour: '2-digit',
@@ -84,7 +102,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       updateTableColor(tableNumber, 'blank');
       setKotTime('');
     }
-  }, [orders, tableNumber, updateTableColor, kotTime]);
+  }, [orders, temporaryOrders, tableNumber, updateTableColor, kotTime]);
 
   const connectBluetoothPrinter = async () => {
     try {
@@ -103,6 +121,10 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const printContent = async (orders, isKOT) => {
     try {
+      if (orders.length === 0) {
+        alert('No items to print');
+        return;
+      }
       const characteristic = await connectBluetoothPrinter();
       let content = '';
       content += '\x1b\x21\x30';
@@ -152,8 +174,17 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   const handleGenerateKOT = async () => {
-    if (currentOrder.length === 0) return;  // Don't proceed if there's no current order
+    if (currentOrder.length === 0) {
+      const kotOrders = temporaryOrders.filter(order => order.status === 'KOT');
+      if (kotOrders.length === 0) {
+        alert('No items to print');
+        return;
+      }
+      await printContent(kotOrders, true);
+      return;
+    }
 
+    // Get the current time in IST
     const now = new Date();
     const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000).toLocaleTimeString('en-IN', {
       hour: '2-digit',
@@ -161,8 +192,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       timeZone: 'Asia/Kolkata',
     });
 
+    // Temporarily store current order as a new order
     const newOrder = {
-      id: `temp-${Date.now()}`,
+      id: `temp-${Date.now()}`, // Generate a temporary unique ID
       tableNo: tableNumber.slice(1),
       items: currentOrder,
       status: 'KOT',
@@ -170,25 +202,34 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       istTime,
       name: 'Temporary Order'
     };
-
     await setDoc(doc(collection(backendDb, 'manual-orders'), newOrder.id), newOrder);
-    setKotOrders(prev => [...prev, newOrder]);
+    setTemporaryOrders(prev => [...prev, newOrder]);
+    setOrders([...orders, newOrder]);
     setCurrentOrder([]);
-    setKotTime(istTime);
+    setKotTime(istTime); // Set KOT time in IST
 
-    await printContent([...kotOrders, newOrder], true);
+    await printContent([...temporaryOrders, newOrder], true);
     updateTableColor(tableNumber, 'running-kot');
+    await updateOrderStatus([...temporaryOrders, newOrder], 'KOT');
+    setOrders(prevOrders =>
+      prevOrders.map(order =>
+        [...temporaryOrders, newOrder].some(updatedOrder => updatedOrder.id === order.id)
+          ? { ...order, status: 'KOT' }
+          : order
+      )
+    );
   };
 
   const handleGenerateBill = async () => {
-    if (kotOrders.length === 0) return;  // Don't proceed if there are no KOT orders
-    await printContent(kotOrders, false);
+    const filteredOrders = orders.filter(order => order.status === 'KOT');
+    if (filteredOrders.length === 0) return;
+    await printContent(filteredOrders, false);
     updateTableColor(tableNumber, 'green');
-    await updateOrderStatus(kotOrders, 'billed');
+    await updateOrderStatus(filteredOrders, 'billed');
   };
 
   const handleCompleteOrder = async () => {
-    const filteredOrders = kotOrders.filter(order => order.status === 'billed');
+    const filteredOrders = orders.filter(order => order.status === 'billed');
     const batch = writeBatch(db);
     filteredOrders.forEach(order => {
       const billRef = doc(collection(db, 'bills'));
@@ -196,9 +237,18 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     });
     await batch.commit();
     await updateOrderStatus(filteredOrders, 'completed');
+    setCompletedOrderIds([...completedOrderIds, ...filteredOrders.map(order => order.id)]);
     setOrders(prevOrders => prevOrders.filter(order => !filteredOrders.map(o => o.id).includes(order.id)));
     updateTableColor(tableNumber, 'blank');
-    setKotOrders(prev => prev.filter(order => !filteredOrders.map(o => o.id).includes(order.id)));
+    setOrderFetched(false);
+
+    const tempOrderIds = filteredOrders.filter(order => order.id.startsWith('temp-')).map(order => order.id);
+    const batchDelete = writeBatch(backendDb);
+    tempOrderIds.forEach(id => {
+      batchDelete.delete(doc(backendDb, 'manual-orders', id));
+    });
+    await batchDelete.commit();
+    setTemporaryOrders(prev => prev.filter(order => !tempOrderIds.includes(order.id)));
   };
 
   const updateOrderStatus = async (orders, status) => {
@@ -252,7 +302,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       const reason = prompt('Please provide a reason for deleting this order:');
       if (reason) {
         await updateDoc(doc(backendDb, 'manual-orders', itemId), { status: 'deleted', deleteReason: reason });
-        setKotOrders((prevOrders) => prevOrders.filter(order => order.id !== itemId));
+        setTemporaryOrders((prevOrders) => prevOrders.filter(order => order.id !== itemId));
+        setOrders(prevOrders => prevOrders.filter(order => order.id !== itemId));
       }
     }
   };
@@ -276,7 +327,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         <div className="table-title">Table {tableNumber}</div>
         <div className="kot-generated">
           <h3>KOT Generated <span>{kotTime}</span></h3>
-          {kotOrders.map((order, orderIndex) => (
+          {[...orders, ...temporaryOrders].filter(order => order.status === 'KOT').map((order, orderIndex) => (
             <div className="order-item" key={orderIndex}>
               <FontAwesomeIcon icon={faTrash} className="delete-button" onClick={() => handleDelete(order.id)} />
               <p><strong>{order.name}</strong></p>

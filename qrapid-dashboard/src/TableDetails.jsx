@@ -106,10 +106,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     try {
       const response = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ tableNumber, orderIds })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tableNumber, orderIds }),
       });
       const result = await response.json();
       if (result.success) {
@@ -145,7 +143,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           status: 'KOT',
           createdAt: now,
           istTime,
-          name: 'Temporary Order'
+          name: 'Temporary Order',
         };
         await setDoc(doc(collection(backendDb, 'manual-orders'), newOrder.id), newOrder);
         setTemporaryOrders(prev => [...prev, newOrder]);

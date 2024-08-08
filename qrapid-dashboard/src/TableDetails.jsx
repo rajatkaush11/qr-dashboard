@@ -171,35 +171,32 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   const handleGenerateKOT = async () => {
-    const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id) && order.status !== 'deleted');
-    if (filteredOrders.length === 0 && currentOrder.length === 0) return;
+    const filteredOrders = [...currentOrder, ...temporaryOrders].filter(order => order.status !== 'deleted');
+    if (filteredOrders.length === 0) return;
 
-    if (currentOrder.length > 0) {
-      // Get the current time in IST
-      const now = new Date();
-      const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000).toLocaleTimeString('en-IN', {
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZone: 'Asia/Kolkata',
-      });
+    // Get the current time in IST
+    const now = new Date();
+    const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000).toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'Asia/Kolkata',
+    });
 
-      // Temporarily store current order as a new order
-      const newOrder = {
-        id: `temp-${Date.now()}`, // Generate a temporary unique ID
-        tableNo: tableNumber.slice(1),
-        items: currentOrder,
-        status: 'KOT',
-        createdAt: now,
-        istTime,
-        name: 'Temporary Order'
-      };
-      await setDoc(doc(collection(backendDb, 'manual-orders'), newOrder.id), newOrder);
-      setTemporaryOrders(prev => [...prev, newOrder]);
-      filteredOrders.push(newOrder);
-      setOrders([...orders, newOrder]);
-      setCurrentOrder([]);
-      setKotTime(istTime); // Set KOT time in IST
-    }
+    // Temporarily store current order as a new order
+    const newOrder = {
+      id: `temp-${Date.now()}`, // Generate a temporary unique ID
+      tableNo: tableNumber.slice(1),
+      items: currentOrder,
+      status: 'KOT',
+      createdAt: now,
+      istTime,
+      name: 'Temporary Order'
+    };
+    await setDoc(doc(collection(backendDb, 'manual-orders'), newOrder.id), newOrder);
+    setTemporaryOrders(prev => [...prev, newOrder]);
+    setOrders([...orders, newOrder]);
+    setCurrentOrder([]);
+    setKotTime(istTime); // Set KOT time in IST
 
     await printContent(filteredOrders, true);
     updateTableColor(tableNumber, 'running-kot');
@@ -214,15 +211,15 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   const handleGenerateBill = async () => {
-    const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id) && order.status !== 'deleted');
+    const filteredOrders = orders.filter(order => order.status === 'KOT');
     if (filteredOrders.length === 0) return;
     await printContent(filteredOrders, false);
-    await updateTableColor(tableNumber, 'green');
+    updateTableColor(tableNumber, 'green');
     await updateOrderStatus(filteredOrders, 'billed');
   };
 
   const handleCompleteOrder = async () => {
-    const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id) && order.status !== 'deleted');
+    const filteredOrders = orders.filter(order => order.status === 'billed');
     const batch = writeBatch(db);
     filteredOrders.forEach(order => {
       const billRef = doc(collection(db, 'bills'));
@@ -232,7 +229,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     await updateOrderStatus(filteredOrders, 'completed');
     setCompletedOrderIds([...completedOrderIds, ...filteredOrders.map(order => order.id)]);
     setOrders(prevOrders => prevOrders.filter(order => !filteredOrders.map(o => o.id).includes(order.id)));
-    await updateTableColor(tableNumber, 'blank');
+    updateTableColor(tableNumber, 'blank');
     setOrderFetched(false);
 
     const tempOrderIds = filteredOrders.filter(order => order.id.startsWith('temp-')).map(order => order.id);

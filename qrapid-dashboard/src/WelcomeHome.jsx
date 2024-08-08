@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth, backendDb } from './firebase-config';
-import { collection, query, onSnapshot, where, getDocs, updateDoc } from 'firebase/firestore';
+import { collection, query, onSnapshot } from 'firebase/firestore';
 import TableBox from './TableBox';
 import TableDetails from './TableDetails';
 import './TableOverview.css';
@@ -71,20 +71,13 @@ const WelcomeHome = () => {
     setView('overview');
   };
 
-  const updateTableColor = async (tableNumber, color) => {
+  const updateTableColor = (tableNumber, color) => {
     const tableIndex = tables.findIndex(t => t === tableNumber);
     if (tableIndex !== -1) {
       const updatedColors = [...tableColors];
       updatedColors[tableIndex] = color;
       setTableColors(updatedColors);
       sessionStorage.setItem('tableColors', JSON.stringify(updatedColors));
-
-      // Update Firestore with the new color
-      const orderRef = query(collection(backendDb, 'orders'), where('tableNo', '==', tableNumber.slice(1)));
-      const querySnapshot = await getDocs(orderRef);
-      querySnapshot.forEach(async (docSnapshot) => {
-        await updateDoc(docSnapshot.ref, { color });
-      });
     }
   };
 

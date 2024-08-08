@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { backendDb, db, auth } from './firebase-config';
-import { collection, query, where, orderBy, getDocs, writeBatch, doc } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, writeBatch, doc, setDoc } from 'firebase/firestore';
 import './TableDetails.css';
 import successSound from './assets/success.mp3';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -15,7 +15,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [items, setItems] = useState([]);
-  const [temporaryOrders, setTemporaryOrders] = useState({});
+  const [temporaryOrders, setTemporaryOrders] = useState([]);
 
   const playSound = () => {
     const audio = new Audio(successSound);
@@ -61,6 +61,15 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       setOrderFetched(true);
     };
 
+    const fetchTemporaryOrders = async () => {
+      const tempOrdersRef = collection(backendDb, 'manual-orders');
+      const tempOrdersSnapshot = await getDocs(tempOrdersRef);
+      const tempOrdersData = tempOrdersSnapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter(order => order.tableNo === normalizedTableNumber);
+      setTemporaryOrders(tempOrdersData);
+    };
+
     const fetchCompletedOrderIds = async () => {
       const q = query(collection(db, 'bills'));
       const querySnapshot = await getDocs(q);
@@ -69,8 +78,18 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     };
 
     fetchOrders();
+    fetchTemporaryOrders();
     fetchCompletedOrderIds();
   }, [tableNumber, updateTableColor, orderFetched]);
+
+  useEffect(() => {
+    const kotOrders = [...orders, ...temporaryOrders].filter(order => order.status === 'KOT');
+    if (kotOrders.length > 0) {
+      updateTableColor(tableNumber, 'running-kot');
+    } else {
+      updateTableColor(tableNumber, 'blank');
+    }
+  }, [orders, temporaryOrders, tableNumber, updateTableColor]);
 
   const connectBluetoothPrinter = async () => {
     try {
@@ -151,7 +170,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         createdAt: new Date(),
         name: 'Temporary Order'
       };
-      setTemporaryOrders(prev => ({ ...prev, [tableNumber]: newOrder }));
+      await setDoc(doc(collection(backendDb, 'manual-orders'), newOrder.id), newOrder);
+      setTemporaryOrders(prev => [...prev, newOrder]);
       filteredOrders.push(newOrder);
       setOrders([...orders, newOrder]);
       setCurrentOrder([]);
@@ -190,7 +210,14 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     setOrders(prevOrders => prevOrders.filter(order => !filteredOrders.map(o => o.id).includes(order.id)));
     await updateTableColor(tableNumber, 'blank');
     setOrderFetched(false);
-    setTemporaryOrders(prev => ({ ...prev, [tableNumber]: undefined }));
+
+    const tempOrderIds = filteredOrders.filter(order => order.id.startsWith('temp-')).map(order => order.id);
+    const batchDelete = writeBatch(backendDb);
+    tempOrderIds.forEach(id => {
+      batchDelete.delete(doc(backendDb, 'manual-orders', id));
+    });
+    await batchDelete.commit();
+    setTemporaryOrders(prev => prev.filter(order => !tempOrderIds.includes(order.id)));
   };
 
   const updateOrderStatus = async (orders, status) => {
@@ -243,15 +270,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     }
   };
 
-  useEffect(() => {
-    const kotOrders = orders.filter(order => order.status === 'KOT');
-    if (kotOrders.length > 0) {
-      updateTableColor(tableNumber, 'running-kot');
-    } else {
-      updateTableColor(tableNumber, 'blank');
-    }
-  }, [orders, tableNumber, updateTableColor]);
-
   return (
     <div className="table-details">
       <div className="right-content">
@@ -271,7 +289,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         <div className="table-title">Table {tableNumber}</div>
         <div className="kot-generated">
           <h3>KOT Generated</h3>
-          {orders.filter(order => order.status === 'KOT').map((order, orderIndex) => (
+          {[...orders, ...temporaryOrders].filter(order => order.status === 'KOT').map((order, orderIndex) => (
             <div className="order-item" key={orderIndex}>
               <p><strong>Name:</strong> {order.name}</p>
               <p><strong>Items:</strong></p>
@@ -289,7 +307,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
             <p>No digital orders.</p>
           ) : (
             orders
-              .filter(order => order.status !== 'completed')
+              .filter(order => order.status !== 'completed' && order.status !== 'KOT')
               .map((order, orderIndex) => (
                 <div className="order-item" key={orderIndex}>
                   <p><strong>Name:</strong> {order.name}</p>

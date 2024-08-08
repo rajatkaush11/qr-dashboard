@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, query, where, orderBy, getDocs, writeBatch, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, writeBatch, doc, setDoc, deleteDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { backendDb, db, auth } from './firebase-config';
 import './TableDetails.css';
 import successSound from './assets/success.mp3';
@@ -56,12 +56,11 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       orderBy('createdAt', 'desc')
     );
 
-    const fetchOrders = async () => {
-      const querySnapshot = await getDocs(q);
+    const unsubscribeOrders = onSnapshot(q, (querySnapshot) => {
       const ordersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setOrders(ordersData);
       setOrderFetched(true);
-    };
+    });
 
     const fetchTemporaryOrders = async () => {
       const tempOrdersRef = collection(backendDb, 'manual-orders');
@@ -79,9 +78,10 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       setCompletedOrderIds(ids);
     };
 
-    fetchOrders();
     fetchTemporaryOrders();
     fetchCompletedOrderIds();
+
+    return () => unsubscribeOrders();
   }, [tableNumber, updateTableColor, orderFetched]);
 
   useEffect(() => {
@@ -293,7 +293,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     } else {
       const reason = prompt('Please provide a reason for deleting this order:');
       if (reason) {
-        await deleteDoc(doc(collection(backendDb, 'manual-orders'), itemId));
+        await updateDoc(doc(backendDb, 'manual-orders', itemId), { status: 'deleted', deleteReason: reason });
         setTemporaryOrders((prevOrders) => prevOrders.filter(order => order.id !== itemId));
       }
     }

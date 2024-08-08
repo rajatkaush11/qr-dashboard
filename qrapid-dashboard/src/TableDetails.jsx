@@ -157,7 +157,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         console.log('Temporary order created:', newOrder);
       }
 
-      await printViaServer('https://us-central1-your-project-id.cloudfunctions.net/printKOT', tableNumber, filteredOrders.map(order => order.id));
+      await printViaServer('https://us-central1-qr-dashboard-1107.web.app/printKOT', tableNumber, filteredOrders.map(order => order.id));
       updateTableColor(tableNumber, 'running-kot');
       await updateOrderStatus(filteredOrders, 'KOT');
       setOrders(prevOrders =>
@@ -180,7 +180,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         console.log('No orders to generate Bill');
         return;
       }
-      await printViaServer('https://us-central1-your-project-id.cloudfunctions.net/printBill', tableNumber, filteredOrders.map(order => order.id));
+      await printViaServer('https://us-central1-qr-dashboard-1107.web.app/printBill', tableNumber, filteredOrders.map(order => order.id));
       await updateTableColor(tableNumber, 'green');
       await updateOrderStatus(filteredOrders, 'billed');
       console.log('Bill generated and printed successfully');
@@ -188,6 +188,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       console.error('Error generating Bill:', error);
     }
   };
+  
 
   const handleCompleteOrder = async () => {
     try {

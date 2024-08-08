@@ -5,11 +5,9 @@ const EscPosEncoder = require('esc-pos-encoder');
 const escpos = require('escpos');
 escpos.USB = require('escpos-usb');
 
-// Initialize Firebase Admin SDK
 admin.initializeApp();
 const db = admin.firestore();
 
-// Function to send content to the printer
 async function sendToPrinter(content) {
   return new Promise((resolve, reject) => {
     const device = new escpos.USB();
@@ -31,7 +29,6 @@ async function sendToPrinter(content) {
   });
 }
 
-// Function to print Kitchen Order Ticket (KOT)
 exports.printKOT = functions.https.onRequest((req, res) => {
   cors(req, res, async () => {
     if (req.method !== 'POST') {
@@ -40,7 +37,6 @@ exports.printKOT = functions.https.onRequest((req, res) => {
     try {
       const { tableNumber, orderIds } = req.body;
 
-      // Fetch order details from Firestore
       const orders = await Promise.all(orderIds.map(async (orderId) => {
         const orderRef = db.collection('orders').doc(orderId);
         const orderDoc = await orderRef.get();
@@ -50,7 +46,6 @@ exports.printKOT = functions.https.onRequest((req, res) => {
         return orderDoc.data();
       }));
 
-      // Generate KOT content
       let kotContent = `Table No: ${tableNumber}\n\n`;
       orders.forEach(order => {
         kotContent += `Order ID: ${order.id}\nItems:\n`;
@@ -60,7 +55,6 @@ exports.printKOT = functions.https.onRequest((req, res) => {
         kotContent += '\n';
       });
 
-      // Send KOT content to the printer
       await sendToPrinter(kotContent);
 
       return res.status(200).send({ success: true, message: "KOT printed successfully" });
@@ -71,7 +65,6 @@ exports.printKOT = functions.https.onRequest((req, res) => {
   });
 });
 
-// Function to print a bill
 exports.printBill = functions.https.onRequest((req, res) => {
   cors(req, res, async () => {
     if (req.method !== 'POST') {
@@ -80,7 +73,6 @@ exports.printBill = functions.https.onRequest((req, res) => {
     try {
       const { tableNumber, orderIds } = req.body;
 
-      // Fetch order details from Firestore
       const orders = await Promise.all(orderIds.map(async (orderId) => {
         const orderRef = db.collection('orders').doc(orderId);
         const orderDoc = await orderRef.get();
@@ -90,7 +82,6 @@ exports.printBill = functions.https.onRequest((req, res) => {
         return orderDoc.data();
       }));
 
-      // Generate Bill content
       let billContent = `Bill for Table No: ${tableNumber}\n\nItems:\n`;
       let totalAmount = 0;
       orders.forEach(order => {
@@ -102,7 +93,6 @@ exports.printBill = functions.https.onRequest((req, res) => {
       });
       billContent += `\nTotal Amount: ${totalAmount}\nThank you for dining with us!`;
 
-      // Send bill content to the printer
       await sendToPrinter(billContent);
 
       return res.status(200).send({ success: true, message: "Bill printed successfully" });

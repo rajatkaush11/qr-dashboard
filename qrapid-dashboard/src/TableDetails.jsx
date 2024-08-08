@@ -104,6 +104,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const printViaServer = async (url, tableNumber, orderIds) => {
     try {
+      console.log(`Sending print request to ${url} with tableNumber: ${tableNumber} and orderIds: ${orderIds}`);
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -123,75 +124,100 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   const handleGenerateKOT = async () => {
-    const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
-    if (filteredOrders.length === 0 && currentOrder.length === 0) return;
+    try {
+      console.log('handleGenerateKOT called');
+      const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
+      if (filteredOrders.length === 0 && currentOrder.length === 0) {
+        console.log('No orders to generate KOT');
+        return;
+      }
 
-    if (currentOrder.length > 0) {
-      const now = new Date();
-      const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000).toLocaleTimeString('en-IN', {
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZone: 'Asia/Kolkata',
-      });
+      if (currentOrder.length > 0) {
+        const now = new Date();
+        const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000).toLocaleTimeString('en-IN', {
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: 'Asia/Kolkata',
+        });
 
-      const newOrder = {
-        id: `temp-${Date.now()}`,
-        tableNo: tableNumber.slice(1),
-        items: currentOrder,
-        status: 'KOT',
-        createdAt: now,
-        istTime,
-        name: 'Temporary Order'
-      };
-      await setDoc(doc(collection(backendDb, 'manual-orders'), newOrder.id), newOrder);
-      setTemporaryOrders(prev => [...prev, newOrder]);
-      filteredOrders.push(newOrder);
-      setOrders([...orders, newOrder]);
-      setCurrentOrder([]);
-      setKotTime(istTime);
+        const newOrder = {
+          id: `temp-${Date.now()}`,
+          tableNo: tableNumber.slice(1),
+          items: currentOrder,
+          status: 'KOT',
+          createdAt: now,
+          istTime,
+          name: 'Temporary Order'
+        };
+        await setDoc(doc(collection(backendDb, 'manual-orders'), newOrder.id), newOrder);
+        setTemporaryOrders(prev => [...prev, newOrder]);
+        filteredOrders.push(newOrder);
+        setOrders([...orders, newOrder]);
+        setCurrentOrder([]);
+        setKotTime(istTime);
+        console.log('Temporary order created:', newOrder);
+      }
+
+      await printViaServer('https://us-central1-your-project-id.cloudfunctions.net/printKOT', tableNumber, filteredOrders.map(order => order.id));
+      updateTableColor(tableNumber, 'running-kot');
+      await updateOrderStatus(filteredOrders, 'KOT');
+      setOrders(prevOrders =>
+        prevOrders.map(order =>
+          filteredOrders.some(filteredOrder => filteredOrder.id === order.id)
+            ? { ...order, status: 'KOT' }
+            : order
+        )
+      );
+      console.log('KOT generated and printed successfully');
+    } catch (error) {
+      console.error('Error generating KOT:', error);
     }
-
-    await printViaServer('https://us-central1-your-project-id.cloudfunctions.net/printKOT', tableNumber, filteredOrders.map(order => order.id));
-    updateTableColor(tableNumber, 'running-kot');
-    await updateOrderStatus(filteredOrders, 'KOT');
-    setOrders(prevOrders =>
-      prevOrders.map(order =>
-        filteredOrders.some(filteredOrder => filteredOrder.id === order.id)
-          ? { ...order, status: 'KOT' }
-          : order
-      )
-    );
   };
 
   const handleGenerateBill = async () => {
-    const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
-    if (filteredOrders.length === 0) return;
-    await printViaServer('https://us-central1-your-project-id.cloudfunctions.net/printBill', tableNumber, filteredOrders.map(order => order.id));
-    await updateTableColor(tableNumber, 'green');
-    await updateOrderStatus(filteredOrders, 'billed');
+    try {
+      console.log('handleGenerateBill called');
+      const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
+      if (filteredOrders.length === 0) {
+        console.log('No orders to generate Bill');
+        return;
+      }
+      await printViaServer('https://us-central1-your-project-id.cloudfunctions.net/printBill', tableNumber, filteredOrders.map(order => order.id));
+      await updateTableColor(tableNumber, 'green');
+      await updateOrderStatus(filteredOrders, 'billed');
+      console.log('Bill generated and printed successfully');
+    } catch (error) {
+      console.error('Error generating Bill:', error);
+    }
   };
 
   const handleCompleteOrder = async () => {
-    const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
-    const batch = writeBatch(db);
-    filteredOrders.forEach(order => {
-      const billRef = doc(collection(db, 'bills'));
-      batch.set(billRef, { orderId: order.id, ...order });
-    });
-    await batch.commit();
-    await updateOrderStatus(filteredOrders, 'completed');
-    setCompletedOrderIds([...completedOrderIds, ...filteredOrders.map(order => order.id)]);
-    setOrders(prevOrders => prevOrders.filter(order => !filteredOrders.map(o => o.id).includes(order.id)));
-    await updateTableColor(tableNumber, 'blank');
-    setOrderFetched(false);
+    try {
+      console.log('handleCompleteOrder called');
+      const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
+      const batch = writeBatch(db);
+      filteredOrders.forEach(order => {
+        const billRef = doc(collection(db, 'bills'));
+        batch.set(billRef, { orderId: order.id, ...order });
+      });
+      await batch.commit();
+      await updateOrderStatus(filteredOrders, 'completed');
+      setCompletedOrderIds([...completedOrderIds, ...filteredOrders.map(order => order.id)]);
+      setOrders(prevOrders => prevOrders.filter(order => !filteredOrders.map(o => o.id).includes(order.id)));
+      await updateTableColor(tableNumber, 'blank');
+      setOrderFetched(false);
 
-    const tempOrderIds = filteredOrders.filter(order => order.id.startsWith('temp-')).map(order => order.id);
-    const batchDelete = writeBatch(backendDb);
-    tempOrderIds.forEach(id => {
-      batchDelete.delete(doc(backendDb, 'manual-orders', id));
-    });
-    await batchDelete.commit();
-    setTemporaryOrders(prev => prev.filter(order => !tempOrderIds.includes(order.id)));
+      const tempOrderIds = filteredOrders.filter(order => order.id.startsWith('temp-')).map(order => order.id);
+      const batchDelete = writeBatch(backendDb);
+      tempOrderIds.forEach(id => {
+        batchDelete.delete(doc(backendDb, 'manual-orders', id));
+      });
+      await batchDelete.commit();
+      setTemporaryOrders(prev => prev.filter(order => !tempOrderIds.includes(order.id)));
+      console.log('Order completed successfully');
+    } catch (error) {
+      console.error('Error completing order:', error);
+    }
   };
 
   const updateOrderStatus = async (orders, status) => {
@@ -201,6 +227,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       batch.update(orderRef, { status });
     });
     await batch.commit();
+    console.log(`Order status updated to ${status}`);
   };
 
   const handleItemClick = (item) => {

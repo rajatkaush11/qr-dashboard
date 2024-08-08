@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { backendDb, db, auth } from './firebase-config';
-import { collection, query, where, orderBy, getDocs, writeBatch, doc, setDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, writeBatch, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import './TableDetails.css';
 import successSound from './assets/success.mp3';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -272,12 +272,54 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     );
   };
 
-  const handleDelete = (itemId) => {
-    const itemToDelete = currentOrder.find(orderItem => orderItem.id === itemId);
-    if (itemToDelete) {
-      const reason = prompt('Please provide a reason for deleting this item:');
-      if (reason) {
-        setCurrentOrder((prevOrder) => prevOrder.filter((orderItem) => orderItem.id !== itemId));
+  const handleDelete = async (orderId, itemId, isTemporary) => {
+    const reason = prompt('Please provide a reason for deleting this item:');
+    if (reason) {
+      if (isTemporary) {
+        // Delete from temporary orders
+        const updatedOrders = temporaryOrders.map(order => {
+          if (order.id === orderId) {
+            return {
+              ...order,
+              items: order.items.filter(item => item.id !== itemId)
+            };
+          }
+          return order;
+        }).filter(order => order.items.length > 0);
+
+        setTemporaryOrders(updatedOrders);
+        await updateDoc(doc(backendDb, 'manual-orders', orderId), {
+          items: updatedOrders.find(order => order.id === orderId)?.items || []
+        });
+      } else {
+        // Delete from permanent orders
+        const updatedOrders = orders.map(order => {
+          if (order.id === orderId) {
+            return {
+              ...order,
+              items: order.items.filter(item => item.id !== itemId)
+            };
+          }
+          return order;
+        }).filter(order => order.items.length > 0);
+
+        setOrders(updatedOrders);
+        await updateDoc(doc(backendDb, 'orders', orderId), {
+          items: updatedOrders.find(order => order.id === orderId)?.items || []
+        });
+      }
+
+      // If the order is completely empty, delete it from Firestore
+      const updatedTempOrder = temporaryOrders.find(order => order.id === orderId);
+      if (updatedTempOrder && updatedTempOrder.items.length === 0) {
+        await deleteDoc(doc(backendDb, 'manual-orders', orderId));
+        setTemporaryOrders(prev => prev.filter(order => order.id !== orderId));
+      }
+
+      const updatedPermOrder = orders.find(order => order.id === orderId);
+      if (updatedPermOrder && updatedPermOrder.items.length === 0) {
+        await deleteDoc(doc(backendDb, 'orders', orderId));
+        setOrders(prev => prev.filter(order => order.id !== orderId));
       }
     }
   };
@@ -303,10 +345,17 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           <h3>KOT Generated {kotGeneratedTime && <span>@ {kotGeneratedTime}</span>}</h3>
           {[...orders, ...temporaryOrders].filter(order => order.status === 'KOT').map((order, orderIndex) => (
             <div className="order-item" key={orderIndex}>
-              <FontAwesomeIcon icon={faTrash} className="delete-button" onClick={() => handleDelete(order.id)} />
-              <p><strong>{order.name}</strong></p>
-              <p>{order.items.map(item => `${item.quantity} x ${item.name}`).join(', ')}</p>
-              <p><strong>{order.items.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2)}</strong></p>
+              {order.items.map((item, itemIndex) => (
+                <div key={itemIndex} className="order-item-detail">
+                  <FontAwesomeIcon
+                    icon={faTrash}
+                    className="delete-button"
+                    onClick={() => handleDelete(order.id, item.id, order.id.startsWith('temp-'))}
+                  />
+                  <p><strong>{item.quantity} x {item.name}</strong></p>
+                  <p><strong>{(item.price * item.quantity).toFixed(2)}</strong></p>
+                </div>
+              ))}
             </div>
           ))}
         </div>

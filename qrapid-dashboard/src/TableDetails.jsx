@@ -204,20 +204,13 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     };
     await setDoc(doc(collection(backendDb, 'manual-orders'), newOrder.id), newOrder);
     setTemporaryOrders(prev => [...prev, newOrder]);
-    setOrders([...orders, newOrder]);
+    setOrders(prev => [...prev, newOrder]);
     setCurrentOrder([]);
     setKotTime(istTime); // Set KOT time in IST
 
-    await printContent([...temporaryOrders, newOrder], true);
+    await printContent([newOrder], true);
     updateTableColor(tableNumber, 'running-kot');
-    await updateOrderStatus([...temporaryOrders, newOrder], 'KOT');
-    setOrders(prevOrders =>
-      prevOrders.map(order =>
-        [...temporaryOrders, newOrder].some(updatedOrder => updatedOrder.id === order.id)
-          ? { ...order, status: 'KOT' }
-          : order
-      )
-    );
+    await updateOrderStatus([newOrder], 'KOT');
   };
 
   const handleGenerateBill = async () => {
@@ -303,7 +296,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       if (reason) {
         await updateDoc(doc(backendDb, 'manual-orders', itemId), { status: 'deleted', deleteReason: reason });
         setTemporaryOrders((prevOrders) => prevOrders.filter(order => order.id !== itemId));
-        setOrders(prevOrders => prevOrders.filter(order => order.id !== itemId));
+        setOrders((prevOrders) => prevOrders.filter(order => order.id !== itemId));
       }
     }
   };

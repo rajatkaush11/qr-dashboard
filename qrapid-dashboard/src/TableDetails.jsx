@@ -270,6 +270,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     }
   };
 
+  
   return (
     <div className="table-details">
       <div className="right-content">

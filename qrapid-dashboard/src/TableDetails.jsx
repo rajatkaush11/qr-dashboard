@@ -138,7 +138,23 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const handleGenerateKOT = async () => {
     const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
-    if (filteredOrders.length === 0) return;
+    if (filteredOrders.length === 0 && currentOrder.length === 0) return;
+
+    if (currentOrder.length > 0) {
+      // Temporarily store current order as a new order
+      const newOrder = {
+        id: `temp-${Date.now()}`, // Generate a temporary unique ID
+        tableNo: tableNumber.slice(1),
+        items: currentOrder,
+        status: 'KOT',
+        createdAt: new Date(),
+        name: 'Temporary Order'
+      };
+      filteredOrders.push(newOrder);
+      setOrders([...orders, newOrder]);
+      setCurrentOrder([]);
+    }
+
     await printContent(filteredOrders, true);
     await updateTableColor(tableNumber, 'running-kot');
     await updateOrderStatus(filteredOrders, 'KOT');

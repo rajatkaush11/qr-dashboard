@@ -103,68 +103,23 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     }
   }, [orders, temporaryOrders, tableNumber, updateTableColor, kotTime]);
 
-  const connectBluetoothPrinter = async () => {
+  const printViaServer = async (url, tableNumber, orderId) => {
     try {
-      const device = await navigator.bluetooth.requestDevice({
-        filters: [{ services: ['battery_service'] }]
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ tableNumber, orderId })
       });
-      const server = await device.gatt.connect();
-      const service = await server.getPrimaryService('battery_service');
-      const characteristic = await service.getCharacteristic('battery_level');
-      return characteristic;
-    } catch (error) {
-      console.error('Error connecting to Bluetooth device:', error);
-      throw error;
-    }
-  };
-
-  const printContent = async (orders, isKOT) => {
-    try {
-      const characteristic = await connectBluetoothPrinter();
-      let content = '';
-      content += `\x1b\x21\x30`;
-      content += `*** ${restaurant.name.toUpperCase()} ***\n`;
-      content += `${restaurant.address}\nContact: ${restaurant.contact}\n\n`;
-      content += `\x1b\x21\x00`;
-      content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`;
-      content += `Table No: ${tableNumber}\n\n`;
-
-      if (isKOT) {
-        orders.forEach(order => {
-          order.items.forEach(item => {
-            content += `${item.name} (${item.specialNote || ''}) - ${item.quantity}\n`;
-          });
-        });
-        const totalItems = orders.reduce((sum, order) => sum + order.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
-        content += `Total Items to Prepare: ${totalItems}\n\n`;
+      const result = await response.json();
+      if (result.success) {
+        console.log('Printed successfully');
       } else {
-        let totalAmount = 0;
-        orders.forEach(order => {
-          order.items.forEach(item => {
-            const itemTotal = item.price * item.quantity;
-            totalAmount += itemTotal;
-            content += `${item.name} - ${item.quantity} x ${item.price} = ${itemTotal}\n`;
-          });
-        });
-        const discount = orders.reduce((sum, order) => sum + (order.discount || 0), 0);
-        const cgst = totalAmount * 0.025;
-        const sgst = totalAmount * 0.025;
-        const grandTotal = totalAmount - discount + cgst + sgst;
-        content += `Sub Total: ${totalAmount}\n`;
-        content += `Discount: -${discount}\n`;
-        content += `CGST: +${cgst}\n`;
-        content += `SGST: +${sgst}\n`;
-        content += `Grand Total: ${grandTotal}\n\n`;
-        content += 'Thank you for dining with us!\n';
-        content += '--------------------------------\n';
+        console.error('Printing failed:', result.message);
       }
-
-      const encoder = new TextEncoder();
-      const encodedContent = encoder.encode(content);
-      await characteristic.writeValue(encodedContent);
-      console.log(isKOT ? 'KOT printed successfully' : 'Bill printed successfully');
     } catch (error) {
-      console.error('Failed to print content via Bluetooth:', error);
+      console.error('Error printing:', error);
     }
   };
 
@@ -199,7 +154,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       setKotTime(istTime); // Set KOT time in IST
     }
 
-    await printContent(filteredOrders, true);
+    await printViaServer('https://us-central1-your-project-id.cloudfunctions.net/printKOT', tableNumber, filteredOrders.map(order => order.id));
     updateTableColor(tableNumber, 'running-kot');
     await updateOrderStatus(filteredOrders, 'KOT');
     setOrders(prevOrders =>
@@ -214,7 +169,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const handleGenerateBill = async () => {
     const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
     if (filteredOrders.length === 0) return;
-    await printContent(filteredOrders, false);
+    await printViaServer('https://us-central1-your-project-id.cloudfunctions.net/printBill', tableNumber, filteredOrders.map(order => order.id));
     await updateTableColor(tableNumber, 'green');
     await updateOrderStatus(filteredOrders, 'billed');
   };

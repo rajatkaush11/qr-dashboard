@@ -13,6 +13,7 @@
     "@fortawesome/fontawesome-svg-core": "^6.6.0",
     "@fortawesome/free-solid-svg-icons": "^6.6.0",
     "@fortawesome/react-fontawesome": "github:fortawesome/react-fontawesome",
+    "esc-pos-encoder": "^2.1.0",
     "firebase": "^10.12.4",
     "firebase-functions": "^5.0.1",
     "react": "^18.3.1",

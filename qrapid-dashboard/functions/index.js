@@ -1,6 +1,8 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const cors = require('cors')({ origin: true });
+const EscPosEncoder = require('esc-pos-encoder');
+const escpos = require('escpos');
 
 // Initialize Firebase Admin SDK
 admin.initializeApp();
@@ -26,14 +28,16 @@ exports.printKOT = functions.https.onRequest((req, res) => {
       const order = orderDoc.data();
 
       // Generate KOT content
-      let kotContent = `Table No: ${tableNumber}\nOrder ID: ${orderId}\nItems:\n`;
+      const encoder = new EscPosEncoder();
+      encoder.initialize();
+      encoder.text(`Table No: ${tableNumber}\nOrder ID: ${orderId}\nItems:\n`);
       order.items.forEach(item => {
-        kotContent += `${item.name} x ${item.quantity}\n`;
+        encoder.text(`${item.name} x ${item.quantity}\n`);
       });
+      encoder.text('\n\n');
 
-      // Here, you would add your logic to send the KOT content to your printer.
-      // Assuming you have a function `sendToPrinter` to handle this.
-      await sendToPrinter(kotContent);
+      // Send to printer
+      await sendToPrinter(encoder.encode());
 
       return res.status(200).send({ success: true, message: "KOT printed successfully" });
     } catch (error) {
@@ -62,18 +66,19 @@ exports.printBill = functions.https.onRequest((req, res) => {
       const order = orderDoc.data();
 
       // Generate Bill content
-      let billContent = `Bill for Table No: ${tableNumber}\n\nItems:\n`;
+      const encoder = new EscPosEncoder();
+      encoder.initialize();
+      encoder.text(`Bill for Table No: ${tableNumber}\n\nItems:\n`);
       let totalAmount = 0;
       order.items.forEach(item => {
         const itemTotal = item.price * item.quantity;
         totalAmount += itemTotal;
-        billContent += `${item.name} - ${item.price} x ${item.quantity} = ${itemTotal}\n`;
+        encoder.text(`${item.name} - ${item.price} x ${item.quantity} = ${itemTotal}\n`);
       });
-      billContent += `\nTotal Amount: ${totalAmount}\nThank you for dining with us!`;
+      encoder.text(`\nTotal Amount: ${totalAmount}\nThank you for dining with us!\n\n`);
 
-      // Here, you would add your logic to send the bill content to your printer.
-      // Assuming you have a function `sendToPrinter` to handle this.
-      await sendToPrinter(billContent);
+      // Send to printer
+      await sendToPrinter(encoder.encode());
 
       return res.status(200).send({ success: true, message: "Bill printed successfully" });
     } catch (error) {
@@ -83,7 +88,17 @@ exports.printBill = functions.https.onRequest((req, res) => {
 });
 
 async function sendToPrinter(content) {
-  // This function should include the logic to send content to your printer
-  // You can implement this according to your printer's specifications and API
-  console.log('Printing:', content);
+  const device = new escpos.USB();
+  const printer = new escpos.Printer(device);
+  device.open(function (error) {
+    if (error) {
+      console.error('Error opening device:', error);
+      throw error;
+    }
+    printer
+      .encode('cp850')
+      .text(content)
+      .cut()
+      .close();
+  });
 }

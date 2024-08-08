@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { collection, query, where, orderBy, getDocs, writeBatch, doc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { backendDb, db, auth } from './firebase-config';
+import { collection, query, where, orderBy, getDocs, writeBatch, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import './TableDetails.css';
 import successSound from './assets/success.mp3';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -52,22 +52,22 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     const q = query(
       collection(backendDb, 'orders'),
       where('tableNo', '==', normalizedTableNumber),
-      where('status', 'in', ['pending', 'KOT']),
       orderBy('createdAt', 'desc')
     );
 
-    const unsubscribeOrders = onSnapshot(q, (querySnapshot) => {
+    const fetchOrders = async () => {
+      const querySnapshot = await getDocs(q);
       const ordersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setOrders(ordersData);
       setOrderFetched(true);
-    });
+    };
 
     const fetchTemporaryOrders = async () => {
       const tempOrdersRef = collection(backendDb, 'manual-orders');
       const tempOrdersSnapshot = await getDocs(tempOrdersRef);
       const tempOrdersData = tempOrdersSnapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter(order => order.tableNo === normalizedTableNumber && order.status !== 'deleted');
+        .filter(order => order.tableNo === normalizedTableNumber);
       setTemporaryOrders(tempOrdersData);
     };
 
@@ -78,10 +78,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       setCompletedOrderIds(ids);
     };
 
+    fetchOrders();
     fetchTemporaryOrders();
     fetchCompletedOrderIds();
-
-    return () => unsubscribeOrders();
   }, [tableNumber, updateTableColor, orderFetched]);
 
   useEffect(() => {
@@ -121,16 +120,12 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const printContent = async (orders, isKOT) => {
     try {
-      if (orders.length === 0) {
-        alert('No items to print');
-        return;
-      }
       const characteristic = await connectBluetoothPrinter();
       let content = '';
-      content += '\x1b\x21\x30';
+      content += `\x1b\x21\x30`;
       content += `*** ${restaurant.name.toUpperCase()} ***\n`;
       content += `${restaurant.address}\nContact: ${restaurant.contact}\n\n`;
-      content += '\x1b\x21\x00';
+      content += `\x1b\x21\x00`;
       content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`;
       content += `Table No: ${tableNumber}\n\n`;
 
@@ -174,55 +169,58 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   const handleGenerateKOT = async () => {
-    if (currentOrder.length === 0) {
-      const kotOrders = temporaryOrders.filter(order => order.status === 'KOT');
-      if (kotOrders.length === 0) {
-        alert('No items to print');
-        return;
-      }
-      await printContent(kotOrders, true);
-      return;
+    const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
+    if (filteredOrders.length === 0 && currentOrder.length === 0) return;
+
+    if (currentOrder.length > 0) {
+      // Get the current time in IST
+      const now = new Date();
+      const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000).toLocaleTimeString('en-IN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Asia/Kolkata',
+      });
+
+      // Temporarily store current order as a new order
+      const newOrder = {
+        id: `temp-${Date.now()}`, // Generate a temporary unique ID
+        tableNo: tableNumber.slice(1),
+        items: currentOrder,
+        status: 'KOT',
+        createdAt: now,
+        istTime,
+        name: 'Temporary Order'
+      };
+      await setDoc(doc(collection(backendDb, 'manual-orders'), newOrder.id), newOrder);
+      setTemporaryOrders(prev => [...prev, newOrder]);
+      filteredOrders.push(newOrder);
+      setOrders([...orders, newOrder]);
+      setCurrentOrder([]);
+      setKotTime(istTime); // Set KOT time in IST
     }
 
-    // Get the current time in IST
-    const now = new Date();
-    const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000).toLocaleTimeString('en-IN', {
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZone: 'Asia/Kolkata',
-    });
-
-    // Temporarily store current order as a new order
-    const newOrder = {
-      id: `temp-${Date.now()}`, // Generate a temporary unique ID
-      tableNo: tableNumber.slice(1),
-      items: currentOrder,
-      status: 'KOT',
-      createdAt: now,
-      istTime,
-      name: 'Temporary Order'
-    };
-    await setDoc(doc(collection(backendDb, 'manual-orders'), newOrder.id), newOrder);
-    setTemporaryOrders(prev => [...prev, newOrder]);
-    setOrders(prev => [...prev, newOrder]);
-    setCurrentOrder([]);
-    setKotTime(istTime); // Set KOT time in IST
-
-    await printContent([newOrder], true);
+    await printContent(filteredOrders, true);
     updateTableColor(tableNumber, 'running-kot');
-    await updateOrderStatus([newOrder], 'KOT');
+    await updateOrderStatus(filteredOrders, 'KOT');
+    setOrders(prevOrders =>
+      prevOrders.map(order =>
+        filteredOrders.some(filteredOrder => filteredOrder.id === order.id)
+          ? { ...order, status: 'KOT' }
+          : order
+      )
+    );
   };
 
   const handleGenerateBill = async () => {
-    const filteredOrders = orders.filter(order => order.status === 'KOT');
+    const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
     if (filteredOrders.length === 0) return;
     await printContent(filteredOrders, false);
-    updateTableColor(tableNumber, 'green');
+    await updateTableColor(tableNumber, 'green');
     await updateOrderStatus(filteredOrders, 'billed');
   };
 
   const handleCompleteOrder = async () => {
-    const filteredOrders = orders.filter(order => order.status === 'billed');
+    const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
     const batch = writeBatch(db);
     filteredOrders.forEach(order => {
       const billRef = doc(collection(db, 'bills'));
@@ -232,7 +230,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     await updateOrderStatus(filteredOrders, 'completed');
     setCompletedOrderIds([...completedOrderIds, ...filteredOrders.map(order => order.id)]);
     setOrders(prevOrders => prevOrders.filter(order => !filteredOrders.map(o => o.id).includes(order.id)));
-    updateTableColor(tableNumber, 'blank');
+    await updateTableColor(tableNumber, 'blank');
     setOrderFetched(false);
 
     const tempOrderIds = filteredOrders.filter(order => order.id.startsWith('temp-')).map(order => order.id);
@@ -294,9 +292,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     } else {
       const reason = prompt('Please provide a reason for deleting this order:');
       if (reason) {
-        await updateDoc(doc(backendDb, 'manual-orders', itemId), { status: 'deleted', deleteReason: reason });
+        await deleteDoc(doc(collection(backendDb, 'manual-orders'), itemId));
         setTemporaryOrders((prevOrders) => prevOrders.filter(order => order.id !== itemId));
-        setOrders((prevOrders) => prevOrders.filter(order => order.id !== itemId));
       }
     }
   };
@@ -335,7 +332,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
             <p>No digital orders.</p>
           ) : (
             orders
-              .filter(order => order.status !== 'completed' && order.status !== 'KOT' && order.status !== 'billed')
+              .filter(order => order.status !== 'completed' && order.status !== 'KOT')
               .map((order, orderIndex) => (
                 <div className="order-item" key={orderIndex}>
                   <p><strong>Name:</strong> {order.name}</p>

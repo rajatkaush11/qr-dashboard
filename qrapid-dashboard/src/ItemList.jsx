@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { collection, addDoc, getDocs, doc, deleteDoc, setDoc } from 'firebase/firestore';
 import { db, auth } from './firebase-config';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import './ItemList.css';
 
 const ItemList = () => {
@@ -17,6 +18,7 @@ const ItemList = () => {
   const [notification, setNotification] = useState(null);
   const [showVariations, setShowVariations] = useState(false);
   const apiBaseUrl = import.meta.env.VITE_BACKEND_API;
+  const formRef = useRef(null);
 
   useEffect(() => {
     fetchItems();
@@ -125,6 +127,7 @@ const ItemList = () => {
     setEditingItem(item);
     setNewItem({ name: item.name, price: item.price, description: item.description, image: item.image, weight: item.weight, unit: item.unit, variations: item.variations || [] });
     setShowVariations(item.variations && item.variations.length > 0);
+    formRef.current.scrollIntoView({ behavior: 'smooth' });
   };
 
   const handleUpdateItem = async () => {
@@ -167,16 +170,15 @@ const ItemList = () => {
     }
   };
 
-  const handleDeleteItem = async (categoryId, itemId) => {
-    const confirmed = window.confirm('Are you sure you want to delete this item?');
-    if (confirmed) {
+  const handleDeleteItem = async () => {
+    if (itemToDelete) {
       try {
         const user = auth.currentUser;
         if (user) {
-          const itemDocRef = doc(db, 'restaurants', user.uid, 'categories', categoryId, 'items', itemId);
+          const itemDocRef = doc(db, 'restaurants', user.uid, 'categories', categoryId, 'items', itemToDelete.id);
           await deleteDoc(itemDocRef);
 
-          const response = await fetch(`${apiBaseUrl}/api/items/${itemId}`, {
+          const response = await fetch(`${apiBaseUrl}/api/items/${itemToDelete._id}`, {
             method: 'DELETE',
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -187,7 +189,9 @@ const ItemList = () => {
             throw new Error('Failed to delete item in MongoDB');
           }
 
-          setItems(items.filter(item => item.id !== itemId));
+          setItems(items.filter(item => item.id !== itemToDelete.id));
+          setShowDeleteConfirmation(false);
+          setItemToDelete(null);
           showNotification("Item deleted successfully");
         } else {
           console.error('User not authenticated');
@@ -220,11 +224,24 @@ const ItemList = () => {
     navigate(-1);
   };
 
+  const onDragEnd = (result) => {
+    if (!result.destination) return;
+    const reorderedItems = Array.from(items);
+    const [movedItem] = reorderedItems.splice(result.source.index, 1);
+    reorderedItems.splice(result.destination.index, 0, movedItem);
+    setItems(reorderedItems);
+  };
+
+  const showNotification = (message) => {
+    setNotification(message);
+    setTimeout(() => setNotification(null), 3000);
+  };
+
   return (
     <div className="item-list-container">
       <button onClick={handleBack} className="back-button">Back to Categories</button>
       <h1>Items</h1>
-      <div className="new-item-form">
+      <div ref={formRef} className="new-item-form">
         <input type="file" accept="image/*" onChange={handleFileChange} />
         <input type="text" name="name" placeholder="Name" value={newItem.name} onChange={handleInputChange} />
         {!showVariations && (
@@ -263,49 +280,65 @@ const ItemList = () => {
           {editingItem ? 'Update Item' : 'Add Item'}
         </button>
       </div>
-      <div className="item-list">
-        {items.map((item, index) => (
-          <div className="item" key={index}>
-            <img src={item.image} alt={item.name} />
-            <div className="item-details">
-              <h2>{item.name}</h2>
-              <p>Price: {item.price}</p>
-              <p>
-                Description: 
-                {expandedDescriptions[item.id] ? (
-                  <>
-                    {item.description} <span onClick={() => toggleDescription(item.id)} className="toggle-description">Show less</span>
-                  </>
-                ) : (
-                  <>
-                    {item.description.length > 100 ? `${item.description.slice(0, 100)}...` : item.description} 
-                    {item.description.length > 100 && <span onClick={() => toggleDescription(item.id)} className="toggle-description">Read more</span>}
-                  </>
-                )}
-              </p>
-              <p>Weight: {item.weight} {item.unit}</p>
-              <div className="item-variations">
-                <h4>Variations:</h4>
-                {item.variations && item.variations.length > 0 ? (
-                  item.variations.map((variation, index) => (
-                    <div key={index} className="variation">
-                      <p>Name: {variation.name}</p>
-                      <p>Price: {variation.price}</p>
-                      <p>Weight: {variation.weight} {variation.unit}</p>
+      <DragDropContext onDragEnd={onDragEnd}>
+        <Droppable droppableId="itemList">
+          {(provided) => (
+            <div className="item-list" {...provided.droppableProps} ref={provided.innerRef}>
+              {items.map((item, index) => (
+                <Draggable key={item.id} draggableId={item.id} index={index}>
+                  {(provided) => (
+                    <div
+                      className="item"
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                    >
+                      <img src={item.image} alt={item.name} />
+                      <div className="item-details">
+                        <h2>{item.name}</h2>
+                        <p>Price: {item.price}</p>
+                        <p>
+                          Description: 
+                          {expandedDescriptions[item.id] ? (
+                            <>
+                              {item.description} <span onClick={() => toggleDescription(item.id)} className="toggle-description">Show less</span>
+                            </>
+                          ) : (
+                            <>
+                              {item.description.length > 100 ? `${item.description.slice(0, 100)}...` : item.description} 
+                              {item.description.length > 100 && <span onClick={() => toggleDescription(item.id)} className="toggle-description">Read more</span>}
+                            </>
+                          )}
+                        </p>
+                        <p>Weight: {item.weight} {item.unit}</p>
+                        <div className="item-variations">
+                          <h4>Variations:</h4>
+                          {item.variations && item.variations.length > 0 ? (
+                            item.variations.map((variation, index) => (
+                              <div key={index} className="variation">
+                                <p>Name: {variation.name}</p>
+                                <p>Price: {variation.price}</p>
+                                <p>Weight: {variation.weight} {variation.unit}</p>
+                              </div>
+                            ))
+                          ) : (
+                            <p>No variations</p>
+                          )}
+                        </div>
+                        <div className="item-actions">
+                          <button onClick={() => handleEditItem(item)}>Edit</button>
+                          <button onClick={() => confirmDeleteItem(item)}>Delete</button>
+                        </div>
+                      </div>
                     </div>
-                  ))
-                ) : (
-                  <p>No variations</p>
-                )}
-              </div>
-              <div className="item-actions">
-                <button onClick={() => handleEditItem(item)}>Edit</button>
-                <button onClick={() => confirmDeleteItem(item)}>Delete</button>
-              </div>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
             </div>
-          </div>
-        ))}
-      </div>
+          )}
+        </Droppable>
+      </DragDropContext>
       {notification && (
         <div className="notification">
           {notification}

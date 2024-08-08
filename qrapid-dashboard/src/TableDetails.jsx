@@ -140,8 +140,15 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
     if (filteredOrders.length === 0) return;
     await printContent(filteredOrders, true);
-    await updateTableColor(tableNumber, 'orange');
+    await updateTableColor(tableNumber, 'running-kot');
     await updateOrderStatus(filteredOrders, 'KOT');
+    setOrders(prevOrders =>
+      prevOrders.map(order =>
+        filteredOrders.some(filteredOrder => filteredOrder.id === order.id)
+          ? { ...order, status: 'KOT' }
+          : order
+      )
+    );
   };
 
   const handleGenerateBill = async () => {
@@ -208,7 +215,13 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   const handleDelete = (itemId) => {
-    setCurrentOrder((prevOrder) => prevOrder.filter((orderItem) => orderItem.id !== itemId));
+    const itemToDelete = currentOrder.find(orderItem => orderItem.id === itemId);
+    if (itemToDelete) {
+      const reason = prompt('Please provide a reason for deleting this item:');
+      if (reason) {
+        setCurrentOrder((prevOrder) => prevOrder.filter((orderItem) => orderItem.id !== itemId));
+      }
+    }
   };
 
   return (

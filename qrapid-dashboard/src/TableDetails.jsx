@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { backendDb, db, auth } from './firebase-config';
+import { useNavigate } from 'react-router-dom';
 import { collection, query, where, orderBy, getDocs, writeBatch, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { backendDb, db, auth } from './firebase-config';
 import './TableDetails.css';
 import successSound from './assets/success.mp3';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -122,10 +123,10 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     try {
       const characteristic = await connectBluetoothPrinter();
       let content = '';
-      content += `\x1b\x21\x30`;
+      content += '\x1b\x21\x30';
       content += `*** ${restaurant.name.toUpperCase()} ***\n`;
       content += `${restaurant.address}\nContact: ${restaurant.contact}\n\n`;
-      content += `\x1b\x21\x00`;
+      content += '\x1b\x21\x00';
       content += `Date: ${new Date().toLocaleDateString()}    Time: ${new Date().toLocaleTimeString()}\n`;
       content += `Table No: ${tableNumber}\n\n`;
 

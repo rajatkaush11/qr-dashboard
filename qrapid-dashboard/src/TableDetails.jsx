@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { backendDb, db, auth } from './firebase-config';
-import { collection, query, where, orderBy, getDocs, writeBatch, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, writeBatch, doc, setDoc } from 'firebase/firestore';
 import './TableDetails.css';
 import successSound from './assets/success.mp3';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -16,7 +16,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [items, setItems] = useState([]);
   const [temporaryOrders, setTemporaryOrders] = useState([]);
-  const [kotTime, setKotTime] = useState('');
+  const [kotGeneratedTime, setKotGeneratedTime] = useState('');
 
   const playSound = () => {
     const audio = new Audio(successSound);
@@ -87,21 +87,10 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     const kotOrders = [...orders, ...temporaryOrders].filter(order => order.status === 'KOT');
     if (kotOrders.length > 0) {
       updateTableColor(tableNumber, 'running-kot');
-      if (!kotTime) {
-        // Set KOT time in IST if not already set
-        const now = new Date();
-        const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000).toLocaleTimeString('en-IN', {
-          hour: '2-digit',
-          minute: '2-digit',
-          timeZone: 'Asia/Kolkata',
-        });
-        setKotTime(istTime);
-      }
     } else {
       updateTableColor(tableNumber, 'blank');
-      setKotTime('');
     }
-  }, [orders, temporaryOrders, tableNumber, updateTableColor, kotTime]);
+  }, [orders, temporaryOrders, tableNumber, updateTableColor]);
 
   const connectBluetoothPrinter = async () => {
     try {
@@ -176,10 +165,13 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       // Get the current time in IST
       const now = new Date();
       const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000).toLocaleTimeString('en-IN', {
+        timeZone: 'Asia/Kolkata',
         hour: '2-digit',
         minute: '2-digit',
-        timeZone: 'Asia/Kolkata',
+        second: '2-digit'
       });
+
+      setKotGeneratedTime(istTime);
 
       // Temporarily store current order as a new order
       const newOrder = {
@@ -188,7 +180,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         items: currentOrder,
         status: 'KOT',
         createdAt: now,
-        istTime,
         name: 'Temporary Order'
       };
       await setDoc(doc(collection(backendDb, 'manual-orders'), newOrder.id), newOrder);
@@ -196,7 +187,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       filteredOrders.push(newOrder);
       setOrders([...orders, newOrder]);
       setCurrentOrder([]);
-      setKotTime(istTime); // Set KOT time in IST
     }
 
     await printContent(filteredOrders, true);
@@ -282,18 +272,12 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     );
   };
 
-  const handleDelete = async (itemId) => {
+  const handleDelete = (itemId) => {
     const itemToDelete = currentOrder.find(orderItem => orderItem.id === itemId);
     if (itemToDelete) {
       const reason = prompt('Please provide a reason for deleting this item:');
       if (reason) {
         setCurrentOrder((prevOrder) => prevOrder.filter((orderItem) => orderItem.id !== itemId));
-      }
-    } else {
-      const reason = prompt('Please provide a reason for deleting this order:');
-      if (reason) {
-        await deleteDoc(doc(collection(backendDb, 'manual-orders'), itemId));
-        setTemporaryOrders((prevOrders) => prevOrders.filter(order => order.id !== itemId));
       }
     }
   };
@@ -316,7 +300,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       <div className="middle-content">
         <div className="table-title">Table {tableNumber}</div>
         <div className="kot-generated">
-          <h3>KOT Generated <span>{kotTime}</span></h3>
+          <h3>KOT Generated {kotGeneratedTime && <span>@ {kotGeneratedTime}</span>}</h3>
           {[...orders, ...temporaryOrders].filter(order => order.status === 'KOT').map((order, orderIndex) => (
             <div className="order-item" key={orderIndex}>
               <FontAwesomeIcon icon={faTrash} className="delete-button" onClick={() => handleDelete(order.id)} />

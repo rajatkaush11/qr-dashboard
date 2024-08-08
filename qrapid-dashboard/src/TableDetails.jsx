@@ -103,6 +103,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const printViaServer = async (url, tableNumber, orderIds) => {
     try {
+      console.log(`Sending request to ${url} with tableNumber: ${tableNumber}, orderIds: ${orderIds}`);
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

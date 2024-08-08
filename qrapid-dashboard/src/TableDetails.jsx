@@ -88,7 +88,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     if (kotOrders.length > 0) {
       updateTableColor(tableNumber, 'running-kot');
       if (!kotTime) {
-        // Set KOT time in IST if not already set
         const now = new Date();
         const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000).toLocaleTimeString('en-IN', {
           hour: '2-digit',
@@ -103,14 +102,14 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     }
   }, [orders, temporaryOrders, tableNumber, updateTableColor, kotTime]);
 
-  const printViaServer = async (url, tableNumber, orderId) => {
+  const printViaServer = async (url, tableNumber, orderIds) => {
     try {
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ tableNumber, orderId })
+        body: JSON.stringify({ tableNumber, orderIds })
       });
       const result = await response.json();
       if (result.success) {
@@ -128,7 +127,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     if (filteredOrders.length === 0 && currentOrder.length === 0) return;
 
     if (currentOrder.length > 0) {
-      // Get the current time in IST
       const now = new Date();
       const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000).toLocaleTimeString('en-IN', {
         hour: '2-digit',
@@ -136,9 +134,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         timeZone: 'Asia/Kolkata',
       });
 
-      // Temporarily store current order as a new order
       const newOrder = {
-        id: `temp-${Date.now()}`, // Generate a temporary unique ID
+        id: `temp-${Date.now()}`,
         tableNo: tableNumber.slice(1),
         items: currentOrder,
         status: 'KOT',
@@ -151,7 +148,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       filteredOrders.push(newOrder);
       setOrders([...orders, newOrder]);
       setCurrentOrder([]);
-      setKotTime(istTime); // Set KOT time in IST
+      setKotTime(istTime);
     }
 
     await printViaServer('https://us-central1-your-project-id.cloudfunctions.net/printKOT', tableNumber, filteredOrders.map(order => order.id));

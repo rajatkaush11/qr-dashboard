@@ -3,6 +3,7 @@ const admin = require('firebase-admin');
 const cors = require('cors')({ origin: true });
 const EscPosEncoder = require('esc-pos-encoder');
 const escpos = require('escpos');
+escpos.USB = require('escpos-usb');
 
 // Initialize Firebase Admin SDK
 admin.initializeApp();

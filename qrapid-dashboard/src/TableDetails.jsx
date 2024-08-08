@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { backendDb, db, auth } from './firebase-config';
 import { collection, query, where, orderBy, getDocs, writeBatch, doc } from 'firebase/firestore';
 import './TableDetails.css';
-import successSound from './assets/success.mp3'; // Import the sound file
+import successSound from './assets/success.mp3';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 
@@ -158,7 +158,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     }
 
     await printContent(filteredOrders, true);
-    await updateTableColor(tableNumber, 'running-kot');
+    updateTableColor(tableNumber, 'running-kot');
     await updateOrderStatus(filteredOrders, 'KOT');
     setOrders(prevOrders =>
       prevOrders.map(order =>
@@ -242,6 +242,15 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       }
     }
   };
+
+  useEffect(() => {
+    const kotOrders = orders.filter(order => order.status === 'KOT');
+    if (kotOrders.length > 0) {
+      updateTableColor(tableNumber, 'running-kot');
+    } else {
+      updateTableColor(tableNumber, 'blank');
+    }
+  }, [orders, tableNumber, updateTableColor]);
 
   return (
     <div className="table-details">

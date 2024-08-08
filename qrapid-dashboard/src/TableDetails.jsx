@@ -9,7 +9,6 @@ import { faTrash } from '@fortawesome/free-solid-svg-icons';
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [orders, setOrders] = useState([]);
   const [currentOrder, setCurrentOrder] = useState([]);
-  const [restaurant, setRestaurant] = useState({ name: 'QRapid', address: '', contact: '' });
   const [completedOrderIds, setCompletedOrderIds] = useState([]);
   const [orderFetched, setOrderFetched] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -109,6 +108,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tableNumber, orderIds }),
       });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const result = await response.json();
       if (result.success) {
         console.log('Printed successfully');

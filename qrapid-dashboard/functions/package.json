@@ -4,6 +4,8 @@
     "dependencies": {
         "cors": "^2.8.5",
         "esc-pos-encoder": "^2.1.0",
+        "escpos": "^3.0.0-alpha.6",
+        "escpos-usb": "^3.0.0-alpha.4",
         "firebase-admin": "^12.3.0",
         "firebase-functions": "^4.9.0"
     },

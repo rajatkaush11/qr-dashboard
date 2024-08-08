@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { collection, query, where, orderBy, getDocs, writeBatch, doc, setDoc, deleteDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { backendDb, db, auth } from './firebase-config';
 import './TableDetails.css';
@@ -53,7 +52,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     const q = query(
       collection(backendDb, 'orders'),
       where('tableNo', '==', normalizedTableNumber),
-      where('status', 'in', ['pending', 'KOT', 'billed']),
+      where('status', 'in', ['pending', 'KOT']),
       orderBy('createdAt', 'desc')
     );
 
@@ -331,7 +330,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
             <p>No digital orders.</p>
           ) : (
             orders
-              .filter(order => order.status !== 'completed' && order.status !== 'KOT')
+              .filter(order => order.status !== 'completed' && order.status !== 'KOT' && order.status !== 'billed')
               .map((order, orderIndex) => (
                 <div className="order-item" key={orderIndex}>
                   <p><strong>Name:</strong> {order.name}</p>

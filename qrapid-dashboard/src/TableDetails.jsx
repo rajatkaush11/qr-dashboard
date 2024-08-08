@@ -15,6 +15,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [items, setItems] = useState([]);
+  const [temporaryOrders, setTemporaryOrders] = useState({});
 
   const playSound = () => {
     const audio = new Audio(successSound);
@@ -150,6 +151,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         createdAt: new Date(),
         name: 'Temporary Order'
       };
+      setTemporaryOrders(prev => ({ ...prev, [tableNumber]: newOrder }));
       filteredOrders.push(newOrder);
       setOrders([...orders, newOrder]);
       setCurrentOrder([]);
@@ -188,6 +190,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     setOrders(prevOrders => prevOrders.filter(order => !filteredOrders.map(o => o.id).includes(order.id)));
     await updateTableColor(tableNumber, 'blank');
     setOrderFetched(false);
+    setTemporaryOrders(prev => ({ ...prev, [tableNumber]: undefined }));
   };
 
   const updateOrderStatus = async (orders, status) => {

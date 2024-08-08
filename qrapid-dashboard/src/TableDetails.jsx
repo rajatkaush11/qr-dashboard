@@ -46,6 +46,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     fetchItems();
   }, [selectedCategory]);
 
+  /*
   useEffect(() => {
     const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
     const q = query(
@@ -81,6 +82,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     fetchTemporaryOrders();
     fetchCompletedOrderIds();
   }, [tableNumber, updateTableColor, orderFetched]);
+  */
 
   useEffect(() => {
     const kotOrders = [...orders, ...temporaryOrders].filter(order => order.status === 'KOT');

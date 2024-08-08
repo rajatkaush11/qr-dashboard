@@ -16,6 +16,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [items, setItems] = useState([]);
   const [temporaryOrders, setTemporaryOrders] = useState([]);
+  const [kotGeneratedTime, setKotGeneratedTime] = useState('');
 
   const playSound = () => {
     const audio = new Audio(successSound);
@@ -23,75 +24,73 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      const userId = auth.currentUser ? auth.currentUser.uid : null;
-      const categoriesRef = collection(db, 'restaurants', userId, 'categories');
-      const querySnapshot = await getDocs(categoriesRef);
-      const categoriesData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-      setCategories(categoriesData);
-    };
-    fetchCategories();
-  }, []);
+  //   const fetchCategories = async () => {
+  //     const userId = auth.currentUser ? auth.currentUser.uid : null;
+  //     const categoriesRef = collection(db, 'restaurants', userId, 'categories');
+  //     const querySnapshot = await getDocs(categoriesRef);
+  //     const categoriesData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+  //     setCategories(categoriesData);
+  //   };
+  //   fetchCategories();
+  // }, []);
 
-  useEffect(() => {
-    const fetchItems = async () => {
-      if (selectedCategory) {
-        const userId = auth.currentUser ? auth.currentUser.uid : null;
-        const itemsRef = collection(db, 'restaurants', userId, 'categories', selectedCategory.id, 'items');
-        const querySnapshot = await getDocs(itemsRef);
-        const itemsData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-        setItems(itemsData);
-      }
-    };
-    fetchItems();
+  // useEffect(() => {
+  //   const fetchItems = async () => {
+  //     if (selectedCategory) {
+  //       const userId = auth.currentUser ? auth.currentUser.uid : null;
+  //       const itemsRef = collection(db, 'restaurants', userId, 'categories', selectedCategory.id, 'items');
+  //       const querySnapshot = await getDocs(itemsRef);
+  //       const itemsData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+  //       setItems(itemsData);
+  //     }
+  //   };
+  //   fetchItems();
   }, [selectedCategory]);
 
-  /*
-  useEffect(() => {
-    const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
-    const q = query(
-      collection(backendDb, 'orders'),
-      where('tableNo', '==', normalizedTableNumber),
-      orderBy('createdAt', 'desc')
-    );
+  // useEffect(() => {
+  //   const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
+  //   const q = query(
+  //     collection(backendDb, 'orders'),
+  //     where('tableNo', '==', normalizedTableNumber),
+  //     orderBy('createdAt', 'desc')
+  //   );
 
-    const fetchOrders = async () => {
-      const querySnapshot = await getDocs(q);
-      const ordersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setOrders(ordersData);
-      setOrderFetched(true);
-    };
+  //   const fetchOrders = async () => {
+  //     const querySnapshot = await getDocs(q);
+  //     const ordersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  //     setOrders(ordersData);
+  //     setOrderFetched(true);
+  //   };
 
-    const fetchTemporaryOrders = async () => {
-      const tempOrdersRef = collection(backendDb, 'manual-orders');
-      const tempOrdersSnapshot = await getDocs(tempOrdersRef);
-      const tempOrdersData = tempOrdersSnapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter(order => order.tableNo === normalizedTableNumber);
-      setTemporaryOrders(tempOrdersData);
-    };
+  //   const fetchTemporaryOrders = async () => {
+  //     const tempOrdersRef = collection(backendDb, 'manual-orders');
+  //     const tempOrdersSnapshot = await getDocs(tempOrdersRef);
+  //     const tempOrdersData = tempOrdersSnapshot.docs
+  //       .map(doc => ({ id: doc.id, ...doc.data() }))
+  //       .filter(order => order.tableNo === normalizedTableNumber);
+  //     setTemporaryOrders(tempOrdersData);
+  //   };
 
-    const fetchCompletedOrderIds = async () => {
-      const q = query(collection(db, 'bills'));
-      const querySnapshot = await getDocs(q);
-      const ids = querySnapshot.docs.map(doc => doc.data().orderId);
-      setCompletedOrderIds(ids);
-    };
+  //   const fetchCompletedOrderIds = async () => {
+  //     const q = query(collection(db, 'bills'));
+  //     const querySnapshot = await getDocs(q);
+  //     const ids = querySnapshot.docs.map(doc => doc.data().orderId);
+  //     setCompletedOrderIds(ids);
+  //   };
 
-    fetchOrders();
-    fetchTemporaryOrders();
-    fetchCompletedOrderIds();
-  }, [tableNumber, updateTableColor, orderFetched]);
-  */
+  //   fetchOrders();
+  //   fetchTemporaryOrders();
+  //   fetchCompletedOrderIds();
+  // }, [tableNumber, updateTableColor, orderFetched]);
 
-  useEffect(() => {
-    const kotOrders = [...orders, ...temporaryOrders].filter(order => order.status === 'KOT');
-    if (kotOrders.length > 0) {
-      updateTableColor(tableNumber, 'running-kot');
-    } else {
-      updateTableColor(tableNumber, 'blank');
-    }
-  }, [orders, temporaryOrders, tableNumber, updateTableColor]);
+  // useEffect(() => {
+  //   const kotOrders = [...orders, ...temporaryOrders].filter(order => order.status === 'KOT');
+  //   if (kotOrders.length > 0) {
+  //     updateTableColor(tableNumber, 'running-kot');
+  //   } else {
+  //     updateTableColor(tableNumber, 'blank');
+  //   }
+  // }, [orders, temporaryOrders, tableNumber, updateTableColor]);
 
   const connectBluetoothPrinter = async () => {
     try {
@@ -163,13 +162,24 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     if (filteredOrders.length === 0 && currentOrder.length === 0) return;
 
     if (currentOrder.length > 0) {
+      // Get the current time in IST
+      const now = new Date();
+      const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000).toLocaleTimeString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+
+      setKotGeneratedTime(istTime);
+
       // Temporarily store current order as a new order
       const newOrder = {
         id: `temp-${Date.now()}`, // Generate a temporary unique ID
         tableNo: tableNumber.slice(1),
         items: currentOrder,
         status: 'KOT',
-        createdAt: new Date(),
+        createdAt: now,
         name: 'Temporary Order'
       };
       await setDoc(doc(collection(backendDb, 'manual-orders'), newOrder.id), newOrder);
@@ -272,7 +282,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     }
   };
 
-  
   return (
     <div className="table-details">
       <div className="right-content">
@@ -291,16 +300,13 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       <div className="middle-content">
         <div className="table-title">Table {tableNumber}</div>
         <div className="kot-generated">
-          <h3>KOT Generated</h3>
+          <h3>KOT Generated {kotGeneratedTime && <span>@ {kotGeneratedTime}</span>}</h3>
           {[...orders, ...temporaryOrders].filter(order => order.status === 'KOT').map((order, orderIndex) => (
             <div className="order-item" key={orderIndex}>
-              <p><strong>Name:</strong> {order.name}</p>
-              <p><strong>Items:</strong></p>
-              <ul>
-                {order.items && order.items.map((item, index) => (
-                  <li key={index}>{item.name} - {item.price} x {item.quantity}</li>
-                ))}
-              </ul>
+              <FontAwesomeIcon icon={faTrash} className="delete-button" onClick={() => handleDelete(order.id)} />
+              <p><strong>{order.name}</strong></p>
+              <p>{order.items.map(item => `${item.quantity} x ${item.name}`).join(', ')}</p>
+              <p><strong>{order.items.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2)}</strong></p>
             </div>
           ))}
         </div>

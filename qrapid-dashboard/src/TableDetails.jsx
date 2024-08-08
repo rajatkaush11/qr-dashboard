@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { backendDb, db, auth } from './firebase-config';
-import { collection, query, where, orderBy, getDocs, writeBatch, doc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, writeBatch, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import './TableDetails.css';
 import successSound from './assets/success.mp3';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -16,7 +16,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [items, setItems] = useState([]);
   const [temporaryOrders, setTemporaryOrders] = useState([]);
-  const [kotGeneratedTime, setKotGeneratedTime] = useState('');
+  const [kotTime, setKotTime] = useState('');
 
   const playSound = () => {
     const audio = new Audio(successSound);
@@ -87,10 +87,21 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     const kotOrders = [...orders, ...temporaryOrders].filter(order => order.status === 'KOT');
     if (kotOrders.length > 0) {
       updateTableColor(tableNumber, 'running-kot');
+      if (!kotTime) {
+        // Set KOT time in IST if not already set
+        const now = new Date();
+        const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000).toLocaleTimeString('en-IN', {
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: 'Asia/Kolkata',
+        });
+        setKotTime(istTime);
+      }
     } else {
       updateTableColor(tableNumber, 'blank');
+      setKotTime('');
     }
-  }, [orders, temporaryOrders, tableNumber, updateTableColor]);
+  }, [orders, temporaryOrders, tableNumber, updateTableColor, kotTime]);
 
   const connectBluetoothPrinter = async () => {
     try {
@@ -158,35 +169,46 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   const handleGenerateKOT = async () => {
-    if (currentOrder.length === 0) return;
+    const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
+    if (filteredOrders.length === 0 && currentOrder.length === 0) return;
 
-    // Get the current time in IST
-    const now = new Date();
-    const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000).toLocaleTimeString('en-IN', {
-      timeZone: 'Asia/Kolkata',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
+    if (currentOrder.length > 0) {
+      // Get the current time in IST
+      const now = new Date();
+      const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000).toLocaleTimeString('en-IN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Asia/Kolkata',
+      });
 
-    setKotGeneratedTime(istTime);
+      // Temporarily store current order as a new order
+      const newOrder = {
+        id: `temp-${Date.now()}`, // Generate a temporary unique ID
+        tableNo: tableNumber.slice(1),
+        items: currentOrder,
+        status: 'KOT',
+        createdAt: now,
+        istTime,
+        name: 'Temporary Order'
+      };
+      await setDoc(doc(collection(backendDb, 'manual-orders'), newOrder.id), newOrder);
+      setTemporaryOrders(prev => [...prev, newOrder]);
+      filteredOrders.push(newOrder);
+      setOrders([...orders, newOrder]);
+      setCurrentOrder([]);
+      setKotTime(istTime); // Set KOT time in IST
+    }
 
-    // Temporarily store current order as a new order
-    const newOrder = {
-      id: `temp-${Date.now()}`, // Generate a temporary unique ID
-      tableNo: tableNumber.slice(1),
-      items: currentOrder,
-      status: 'KOT',
-      createdAt: now,
-      name: 'Temporary Order'
-    };
-    await setDoc(doc(collection(backendDb, 'manual-orders'), newOrder.id), newOrder);
-    setTemporaryOrders(prev => [...prev, newOrder]);
-    setOrders([...orders, newOrder]);
-    setCurrentOrder([]);
-
-    await printContent([newOrder], true);
+    await printContent(filteredOrders, true);
     updateTableColor(tableNumber, 'running-kot');
+    await updateOrderStatus(filteredOrders, 'KOT');
+    setOrders(prevOrders =>
+      prevOrders.map(order =>
+        filteredOrders.some(filteredOrder => filteredOrder.id === order.id)
+          ? { ...order, status: 'KOT' }
+          : order
+      )
+    );
   };
 
   const handleGenerateBill = async () => {
@@ -260,54 +282,18 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     );
   };
 
-  const handleDelete = async (orderId, itemId, isTemporary) => {
-    const reason = prompt('Please provide a reason for deleting this item:');
-    if (reason) {
-      if (isTemporary) {
-        // Delete from temporary orders
-        const updatedOrders = temporaryOrders.map(order => {
-          if (order.id === orderId) {
-            return {
-              ...order,
-              items: order.items.filter(item => item.id !== itemId)
-            };
-          }
-          return order;
-        }).filter(order => order.items.length > 0);
-
-        setTemporaryOrders(updatedOrders);
-        await updateDoc(doc(backendDb, 'manual-orders', orderId), {
-          items: updatedOrders.find(order => order.id === orderId)?.items || []
-        });
-      } else {
-        // Delete from permanent orders
-        const updatedOrders = orders.map(order => {
-          if (order.id === orderId) {
-            return {
-              ...order,
-              items: order.items.filter(item => item.id !== itemId)
-            };
-          }
-          return order;
-        }).filter(order => order.items.length > 0);
-
-        setOrders(updatedOrders);
-        await updateDoc(doc(backendDb, 'orders', orderId), {
-          items: updatedOrders.find(order => order.id === orderId)?.items || []
-        });
+  const handleDelete = async (itemId) => {
+    const itemToDelete = currentOrder.find(orderItem => orderItem.id === itemId);
+    if (itemToDelete) {
+      const reason = prompt('Please provide a reason for deleting this item:');
+      if (reason) {
+        setCurrentOrder((prevOrder) => prevOrder.filter((orderItem) => orderItem.id !== itemId));
       }
-
-      // If the order is completely empty, delete it from Firestore
-      const updatedTempOrder = temporaryOrders.find(order => order.id === orderId);
-      if (updatedTempOrder && updatedTempOrder.items.length === 0) {
-        await deleteDoc(doc(backendDb, 'manual-orders', orderId));
-        setTemporaryOrders(prev => prev.filter(order => order.id !== orderId));
-      }
-
-      const updatedPermOrder = orders.find(order => order.id === orderId);
-      if (updatedPermOrder && updatedPermOrder.items.length === 0) {
-        await deleteDoc(doc(backendDb, 'orders', orderId));
-        setOrders(prev => prev.filter(order => order.id !== orderId));
+    } else {
+      const reason = prompt('Please provide a reason for deleting this order:');
+      if (reason) {
+        await deleteDoc(doc(collection(backendDb, 'manual-orders'), itemId));
+        setTemporaryOrders((prevOrders) => prevOrders.filter(order => order.id !== itemId));
       }
     }
   };
@@ -329,6 +315,17 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       </div>
       <div className="middle-content">
         <div className="table-title">Table {tableNumber}</div>
+        <div className="kot-generated">
+          <h3>KOT Generated <span>{kotTime}</span></h3>
+          {[...orders, ...temporaryOrders].filter(order => order.status === 'KOT').map((order, orderIndex) => (
+            <div className="order-item" key={orderIndex}>
+              <FontAwesomeIcon icon={faTrash} className="delete-button" onClick={() => handleDelete(order.id)} />
+              <p><strong>{order.name}</strong></p>
+              <p>{order.items.map(item => `${item.quantity} x ${item.name}`).join(', ')}</p>
+              <p><strong>{order.items.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2)}</strong></p>
+            </div>
+          ))}
+        </div>
         <div className="current-orders">
           <h3>Current Orders</h3>
           {orders.length === 0 ? (
@@ -361,31 +358,13 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
                   <button className="action-button decrement" onClick={() => handleDecrement(item.id)}>-</button>
                   <span>{item.quantity}</span>
                   <button className="action-button increment" onClick={() => handleIncrement(item.id)}>+</button>
-                  <button className="action-button delete" onClick={() => handleDelete(null, item.id, false)}>
+                  <button className="action-button delete" onClick={() => handleDelete(item.id)}>
                     <FontAwesomeIcon icon={faTrash} />
                   </button>
                 </div>
               </div>
             ))
           )}
-        </div>
-        <div className="kot-generated">
-          <h3>KOT Generated {kotGeneratedTime && <span>@ {kotGeneratedTime}</span>}</h3>
-          {[...orders, ...temporaryOrders].filter(order => order.status === 'KOT').map((order, orderIndex) => (
-            <div className="order-item" key={orderIndex}>
-              {order.items.map((item, itemIndex) => (
-                <div key={itemIndex} className="order-item-detail">
-                  <FontAwesomeIcon
-                    icon={faTrash}
-                    className="delete-button"
-                    onClick={() => handleDelete(order.id, item.id, order.id.startsWith('temp-'))}
-                  />
-                  <p><strong>{item.quantity} x {item.name}</strong></p>
-                  <p><strong>{(item.price * item.quantity).toFixed(2)}</strong></p>
-                </div>
-              ))}
-            </div>
-          ))}
         </div>
         <div className="action-buttons">
           <button onClick={handleGenerateKOT} className="action-button generate-kot">Generate KOT</button>

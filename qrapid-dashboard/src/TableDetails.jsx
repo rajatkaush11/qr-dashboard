@@ -163,8 +163,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     if (currentOrder.length > 0) {
       // Get the current time in IST
       const now = new Date();
-      const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC + 5:30
-      const istTime = new Date(now.getTime() + istOffset).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+      const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour12: true });
 
       // Temporarily store current order as a new order
       const newOrder = {
@@ -294,17 +293,14 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       <div className="middle-content">
         <div className="table-title">Table {tableNumber}</div>
         <div className="kot-generated">
-          <h3>KOT Generated</h3>
+          <h3>KOT Generated <span>@time(IST)</span></h3>
           {[...orders, ...temporaryOrders].filter(order => order.status === 'KOT').map((order, orderIndex) => (
             <div className="order-item" key={orderIndex}>
-              <p><strong>Name:</strong> {order.name}</p>
-              <p><strong>Items:</strong></p>
-              <ul>
-                {order.items && order.items.map((item, index) => (
-                  <li key={index}>{item.name} - {item.price} x {item.quantity}</li>
-                ))}
-              </ul>
-              <p><strong>Time:</strong> {order.istTime}</p>
+              <FontAwesomeIcon icon={faTrash} className="delete-button" onClick={() => handleDelete(order.id)} />
+              <p><strong>{order.name}</strong></p>
+              <p>{order.items.map(item => `${item.quantity} x ${item.name}`).join(', ')}</p>
+              <p><strong>{order.istTime}</strong></p>
+              <p><strong>{order.items.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2)}</strong></p>
             </div>
           ))}
         </div>

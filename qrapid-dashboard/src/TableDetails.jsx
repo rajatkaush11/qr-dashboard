@@ -53,6 +53,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     const q = query(
       collection(backendDb, 'orders'),
       where('tableNo', '==', normalizedTableNumber),
+      where('status', 'in', ['pending', 'KOT', 'billed']),
       orderBy('createdAt', 'desc')
     );
 
@@ -67,7 +68,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       const tempOrdersSnapshot = await getDocs(tempOrdersRef);
       const tempOrdersData = tempOrdersSnapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter(order => order.tableNo === normalizedTableNumber);
+        .filter(order => order.tableNo === normalizedTableNumber && order.status !== 'deleted');
       setTemporaryOrders(tempOrdersData);
     };
 
@@ -170,7 +171,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   const handleGenerateKOT = async () => {
-    const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
+    const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id) && order.status !== 'deleted');
     if (filteredOrders.length === 0 && currentOrder.length === 0) return;
 
     if (currentOrder.length > 0) {
@@ -213,7 +214,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   const handleGenerateBill = async () => {
-    const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
+    const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id) && order.status !== 'deleted');
     if (filteredOrders.length === 0) return;
     await printContent(filteredOrders, false);
     await updateTableColor(tableNumber, 'green');
@@ -221,7 +222,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   const handleCompleteOrder = async () => {
-    const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
+    const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id) && order.status !== 'deleted');
     const batch = writeBatch(db);
     filteredOrders.forEach(order => {
       const billRef = doc(collection(db, 'bills'));

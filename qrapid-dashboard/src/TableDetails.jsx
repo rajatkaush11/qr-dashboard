@@ -102,15 +102,14 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     }
   }, [orders, temporaryOrders, tableNumber, updateTableColor, kotTime]);
 
-  const printViaServer = async (url, tableNumber, orderIds) => {
+  const printViaUSB = async (content) => {
     try {
-      console.log(`Sending print request to ${url} with tableNumber: ${tableNumber} and orderIds: ${orderIds}`);
-      const response = await fetch(url, {
+      const response = await fetch('http://localhost:5000/print', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ tableNumber, orderIds })
+        body: JSON.stringify({ content })
       });
       const result = await response.json();
       if (result.success) {
@@ -125,7 +124,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const handleGenerateKOT = async () => {
     try {
-      console.log('handleGenerateKOT called');
       const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
       if (filteredOrders.length === 0 && currentOrder.length === 0) {
         console.log('No orders to generate KOT');
@@ -155,10 +153,11 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         setOrders([...orders, newOrder]);
         setCurrentOrder([]);
         setKotTime(istTime);
-        console.log('Temporary order created:', newOrder);
       }
 
-      await printViaServer('https://us-central1-your-project-id.cloudfunctions.net/printKOT', tableNumber, filteredOrders.map(order => order.id));
+      const kotContent = generatePrintContent(filteredOrders, 'KOT');
+      await printViaUSB(kotContent);
+
       updateTableColor(tableNumber, 'running-kot');
       await updateOrderStatus(filteredOrders, 'KOT');
       setOrders(prevOrders =>
@@ -168,7 +167,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
             : order
         )
       );
-      console.log('KOT generated and printed successfully');
     } catch (error) {
       console.error('Error generating KOT:', error);
     }
@@ -176,24 +174,41 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const handleGenerateBill = async () => {
     try {
-      console.log('handleGenerateBill called');
       const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
       if (filteredOrders.length === 0) {
         console.log('No orders to generate Bill');
         return;
       }
-      await printViaServer('https://us-central1-your-project-id.cloudfunctions.net/printBill', tableNumber, filteredOrders.map(order => order.id));
+
+      const billContent = generatePrintContent(filteredOrders, 'Bill');
+      await printViaUSB(billContent);
+
       await updateTableColor(tableNumber, 'green');
       await updateOrderStatus(filteredOrders, 'billed');
-      console.log('Bill generated and printed successfully');
     } catch (error) {
       console.error('Error generating Bill:', error);
     }
   };
 
+  const generatePrintContent = (orders, type) => {
+    let content = type === 'KOT' ? `Kitchen Order Ticket\nTable No: ${tableNumber}\n\n` : `Bill\nTable No: ${tableNumber}\n\n`;
+    let totalAmount = 0;
+    orders.forEach(order => {
+      content += `Order ID: ${order.id}\nItems:\n`;
+      order.items.forEach(item => {
+        content += `${item.name} x ${item.quantity} - ${item.price * item.quantity}\n`;
+        totalAmount += item.price * item.quantity;
+      });
+      content += '\n';
+    });
+    if (type === 'Bill') {
+      content += `Total Amount: ${totalAmount}\nThank you for dining with us!\n`;
+    }
+    return content;
+  };
+
   const handleCompleteOrder = async () => {
     try {
-      console.log('handleCompleteOrder called');
       const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
       const batch = writeBatch(db);
       filteredOrders.forEach(order => {
@@ -214,7 +229,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       });
       await batchDelete.commit();
       setTemporaryOrders(prev => prev.filter(order => !tempOrderIds.includes(order.id)));
-      console.log('Order completed successfully');
     } catch (error) {
       console.error('Error completing order:', error);
     }
@@ -227,7 +241,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       batch.update(orderRef, { status });
     });
     await batch.commit();
-    console.log(`Order status updated to ${status}`);
   };
 
   const handleItemClick = (item) => {

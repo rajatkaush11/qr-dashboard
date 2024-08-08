@@ -2,17 +2,18 @@
     "name": "functions",
     "description": "Cloud Functions for Firebase",
     "dependencies": {
-      "cors": "^2.8.5",
-      "esc-pos-encoder": "^2.1.0",
-      "escpos": "^3.0.0-alpha.6",
-      "escpos-usb": "^3.0.0-alpha.4",
-      "escpos-network": "^3.0.0-alpha.4",
-      "firebase-admin": "^12.3.0",
-      "firebase-functions": "^4.9.0"
+        "body-parser": "^1.20.2",
+        "cors": "^2.8.5",
+        "esc-pos-encoder": "^2.1.0",
+        "escpos": "^3.0.0-alpha.6",
+        "escpos-network": "^3.0.0-alpha.4",
+        "escpos-usb": "^3.0.0-alpha.4",
+        "express": "^4.19.2",
+        "firebase-admin": "^12.3.0",
+        "firebase-functions": "^4.9.0"
     },
     "engines": {
-      "node": "14"
+        "node": "14"
     },
     "private": true
-  }
-  
+}

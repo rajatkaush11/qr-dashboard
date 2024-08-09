@@ -1,16 +1,15 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const cors = require('cors')({ origin: true });
-const EscPosEncoder = require('esc-pos-encoder');
 const escpos = require('escpos');
-escpos.USB = require('escpos-usb');
+escpos.Network = require('escpos-network');
 
 admin.initializeApp();
 const db = admin.firestore();
 
 async function sendToPrinter(content) {
   return new Promise((resolve, reject) => {
-    const device = new escpos.USB();
+    const device = new escpos.Network('192.168.29.12', 9100);
     const printer = new escpos.Printer(device);
 
     device.open((error) => {
@@ -18,11 +17,8 @@ async function sendToPrinter(content) {
         return reject(error);
       }
 
-      const encoder = new EscPosEncoder();
-      const encodedContent = encoder.initialize().text(content).encode();
-
       printer
-        .text(encodedContent)
+        .text(content)
         .cut()
         .close(() => resolve());
     });

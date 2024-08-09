@@ -64,11 +64,25 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         printer.addText(`${item.quantity} x ${item.name}\n`);
       });
       printer.addText(`------------------------------\n`);
-      printer.sendData();
+  
+      // Send the print job and handle the response
+      printer.sendData({
+        success: () => {
+          console.log('KOT printed successfully');
+          // You can trigger any additional logic here, like updating the UI or sending a notification
+          // Optionally, play a success sound or send a notification to the user/admin
+        },
+        error: (error) => {
+          console.error('Error printing KOT:', error);
+          // Handle the error accordingly
+          // Optionally, send a notification to the user/admin about the failure
+        }
+      });
     } else {
       console.log('Printer not connected');
     }
   };
+  
 
   const printBill = (order) => {
     if (printer) {

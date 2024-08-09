@@ -21,9 +21,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   useEffect(() => {
     const ePosDevice = new epson.ePOSDevice();
-  
-    // Attempt to connect to USB Printer (ESDPRT001)
-    ePosDevice.connect('ESDPRT001', epson.ePOSDevice.DEVICE_TYPE_PRINTER, {
+    ePosDevice.connect('Printer_IP', epson.ePOSDevice.DEVICE_TYPE_PRINTER, {
       success: (device) => {
         printer = device;
         printer.onreceive = (response) => {
@@ -35,28 +33,10 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         };
       },
       error: (error) => {
-        console.log('Failed to connect USB Printer:', error);
-        
-        // Fallback to LAN Printer connection if USB fails
-        ePosDevice.connect('LAN_Printer_IP', epson.ePOSDevice.DEVICE_TYPE_PRINTER, {
-          success: (device) => {
-            printer = device;
-            printer.onreceive = (response) => {
-              if (response.success) {
-                console.log('Print successful via LAN Printer');
-              } else {
-                console.log('Print failed via LAN Printer');
-              }
-            };
-          },
-          error: (error) => {
-            console.log('Failed to connect LAN Printer:', error);
-          }
-        });
+        console.log('Failed to connect:', error);
       }
     });
   }, []);
-  
 
   const playSound = () => {
     const audio = new Audio(successSound);
@@ -145,36 +125,35 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const printKOT = (order) => {
     if (printer) {
       printer.addTextAlign(printer.ALIGN_CENTER);
-      printer.addText("KOT\n");
+      printer.addText(`KOT\n`);
       printer.addText(`Table No: ${tableNumber}\n`);
       order.items.forEach(item => {
         printer.addText(`${item.quantity} x ${item.name}\n`);
       });
-      printer.addText("------------------------------\n");
+      printer.addText(`------------------------------\n`);
       printer.print();
     } else {
-      console.log('Printer not connected or ready');
+      console.log('Printer not connected');
     }
   };
-  
+
   const printBill = (order) => {
     if (printer) {
       printer.addTextAlign(printer.ALIGN_CENTER);
-      printer.addText("BILL\n");
+      printer.addText(`BILL\n`);
       printer.addText(`Table No: ${tableNumber}\n`);
       let total = 0;
       order.items.forEach(item => {
         printer.addText(`${item.quantity} x ${item.name} - ${item.price * item.quantity}\n`);
         total += item.price * item.quantity;
       });
-      printer.addText("------------------------------\n");
+      printer.addText(`------------------------------\n`);
       printer.addText(`Total: ${total.toFixed(2)}\n`);
       printer.print();
     } else {
-      console.log('Printer not connected or ready');
+      console.log('Printer not connected');
     }
   };
-  
 
   const handleGenerateKOT = async () => {
     try {

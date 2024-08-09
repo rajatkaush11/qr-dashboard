@@ -17,6 +17,7 @@
     "esc-pos-encoder": "^2.1.0",
     "firebase": "^10.12.4",
     "firebase-functions": "^5.0.1",
+    "node-thermal-printer": "^4.4.2",
     "react": "^18.3.1",
     "react-beautiful-dnd": "^13.1.1",
     "react-dom": "^18.3.1",

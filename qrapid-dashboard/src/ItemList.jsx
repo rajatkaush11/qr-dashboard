@@ -246,7 +246,7 @@ const ItemList = () => {
         <input type="text" name="name" placeholder="Name" value={newItem.name} onChange={handleInputChange} />
         {!showVariations && (
           <>
-            <input type="number" name="price" placeholder="Price" value={newItem.price} onChange={handleInputChange} />
+            <input type="text" name="price" placeholder="Price" value={newItem.price} onChange={handleInputChange} />
             <input type="number" name="weight" placeholder="Weight" value={newItem.weight} onChange={handleInputChange} />
           </>
         )}

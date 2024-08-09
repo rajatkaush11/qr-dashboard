@@ -17,6 +17,47 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [temporaryOrders, setTemporaryOrders] = useState([]);
   const [kotTime, setKotTime] = useState('');
 
+  let printer = null;
+
+  useEffect(() => {
+    const ePosDevice = new epson.ePOSDevice();
+  
+    // Attempt to connect to USB Printer (ESDPRT001)
+    ePosDevice.connect('ESDPRT001', epson.ePOSDevice.DEVICE_TYPE_PRINTER, {
+      success: (device) => {
+        printer = device;
+        printer.onreceive = (response) => {
+          if (response.success) {
+            console.log('Print successful');
+          } else {
+            console.log('Print failed');
+          }
+        };
+      },
+      error: (error) => {
+        console.log('Failed to connect USB Printer:', error);
+        
+        // Fallback to LAN Printer connection if USB fails
+        ePosDevice.connect('LAN_Printer_IP', epson.ePOSDevice.DEVICE_TYPE_PRINTER, {
+          success: (device) => {
+            printer = device;
+            printer.onreceive = (response) => {
+              if (response.success) {
+                console.log('Print successful via LAN Printer');
+              } else {
+                console.log('Print failed via LAN Printer');
+              }
+            };
+          },
+          error: (error) => {
+            console.log('Failed to connect LAN Printer:', error);
+          }
+        });
+      }
+    });
+  }, []);
+  
+
   const playSound = () => {
     const audio = new Audio(successSound);
     audio.play().catch(error => console.error('Error playing sound:', error));
@@ -101,28 +142,40 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     }
   }, [orders, temporaryOrders, tableNumber, updateTableColor, kotTime]);
 
-  const printViaServer = async (url, tableNumber, orderIds) => {
-    try {
-      console.log(`Sending request to ${url} with tableNumber: ${tableNumber}, orderIds: ${orderIds}`);
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tableNumber, orderIds }),
+  const printKOT = (order) => {
+    if (printer) {
+      printer.addTextAlign(printer.ALIGN_CENTER);
+      printer.addText("KOT\n");
+      printer.addText(`Table No: ${tableNumber}\n`);
+      order.items.forEach(item => {
+        printer.addText(`${item.quantity} x ${item.name}\n`);
       });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const result = await response.json();
-      if (result.success) {
-        console.log('Printed successfully');
-      } else {
-        console.error('Printing failed:', result.message);
-      }
-    } catch (error) {
-      console.error('Error printing:', error);
+      printer.addText("------------------------------\n");
+      printer.print();
+    } else {
+      console.log('Printer not connected or ready');
     }
   };
   
+  const printBill = (order) => {
+    if (printer) {
+      printer.addTextAlign(printer.ALIGN_CENTER);
+      printer.addText("BILL\n");
+      printer.addText(`Table No: ${tableNumber}\n`);
+      let total = 0;
+      order.items.forEach(item => {
+        printer.addText(`${item.quantity} x ${item.name} - ${item.price * item.quantity}\n`);
+        total += item.price * item.quantity;
+      });
+      printer.addText("------------------------------\n");
+      printer.addText(`Total: ${total.toFixed(2)}\n`);
+      printer.print();
+    } else {
+      console.log('Printer not connected or ready');
+    }
+  };
+  
+
   const handleGenerateKOT = async () => {
     try {
       const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
@@ -157,7 +210,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         console.log('Temporary order created:', newOrder);
       }
   
-      await printViaServer('https://us-central1-qr-dashboard-1107.cloudfunctions.net/printKOT', tableNumber, filteredOrders.map(order => order.id));
+      // Print each order for KOT
+      filteredOrders.forEach(order => printKOT(order));
       updateTableColor(tableNumber, 'running-kot');
       await updateOrderStatus(filteredOrders, 'KOT');
       setOrders(prevOrders =>
@@ -180,7 +234,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         console.log('No orders to generate Bill');
         return;
       }
-      await printViaServer('https://us-central1-qr-dashboard-1107.cloudfunctions.net/printBill', tableNumber, filteredOrders.map(order => order.id));
+  
+      // Print each order for Bill
+      filteredOrders.forEach(order => printBill(order));
       await updateTableColor(tableNumber, 'green');
       await updateOrderStatus(filteredOrders, 'billed');
       console.log('Bill generated and printed successfully');
@@ -188,7 +244,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       console.error('Error generating Bill:', error);
     }
   };
-  
+
   const handleCompleteOrder = async () => {
     try {
       const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));

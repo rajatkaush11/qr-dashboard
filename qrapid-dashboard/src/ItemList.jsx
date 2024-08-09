@@ -269,7 +269,7 @@ const ItemList = () => {
               </div>
             ))}
             <input type="text" name="name" placeholder="Variation Name" value={newVariation.name} onChange={handleVariationChange} />
-            <input type="number" name="price" placeholder="Variation Price" value={newVariation.price} onChange={handleVariationChange} />
+            <input type="text" name="price" placeholder="Variation Price" value={newVariation.price} onChange={handleVariationChange} />
             <input type="number" name="weight" placeholder="Variation Weight" value={newVariation.weight} onChange={handleVariationChange} />
             <input type="text" name="unit" placeholder="Variation Unit" value={newVariation.unit} onChange={handleVariationChange} />
             <button onClick={handleAddVariation}>Add Variation</button>

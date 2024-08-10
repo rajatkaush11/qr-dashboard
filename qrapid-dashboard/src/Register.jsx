@@ -21,6 +21,12 @@ const Register = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     console.log('Starting registration process...');
+    
+    if (!restaurantImage) {
+      setMessage('Please upload a restaurant image.');
+      return;
+    }
+
     try {
       // Create user with email and password
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -31,6 +37,7 @@ const Register = () => {
       const imageRef = ref(storage, `restaurantImages/${user.uid}`);
       await uploadBytes(imageRef, restaurantImage);
       const imageUrl = await getDownloadURL(imageRef);
+      console.log('Image uploaded to Firebase Storage with URL:', imageUrl);
 
       // Save additional data in Firestore
       await setDoc(doc(db, "restaurants", user.uid), {

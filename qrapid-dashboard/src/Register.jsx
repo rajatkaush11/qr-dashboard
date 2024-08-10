@@ -21,11 +21,6 @@ const Register = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     console.log('Starting registration process...');
-    
-    if (!restaurantImage) {
-      setMessage('Please upload a restaurant image.');
-      return;
-    }
 
     try {
       // Create user with email and password
@@ -33,11 +28,16 @@ const Register = () => {
       const user = userCredential.user;
       console.log('User created with UID:', user.uid);
 
-      // Upload restaurant image to Firebase Storage
-      const imageRef = ref(storage, `restaurantImages/${user.uid}`);
-      await uploadBytes(imageRef, restaurantImage);
-      const imageUrl = await getDownloadURL(imageRef);
-      console.log('Image uploaded to Firebase Storage with URL:', imageUrl);
+      let imageUrl = ''; // Default to an empty string if no image is uploaded
+
+      // Check if an image is selected
+      if (restaurantImage) {
+        // Upload restaurant image to Firebase Storage
+        const imageRef = ref(storage, `restaurantImages/${user.uid}`);
+        await uploadBytes(imageRef, restaurantImage);
+        imageUrl = await getDownloadURL(imageRef);
+        console.log('Image uploaded to Firebase Storage with URL:', imageUrl);
+      }
 
       // Save additional data in Firestore
       await setDoc(doc(db, "restaurants", user.uid), {
@@ -46,7 +46,7 @@ const Register = () => {
         description,
         timing,
         email: user.email, // Use the email from userCredential
-        imageUrl // Save the image URL
+        imageUrl // Save the image URL, even if it's an empty string
       });
       console.log('Restaurant details saved in Firestore');
 
@@ -63,7 +63,7 @@ const Register = () => {
           description,
           timing,
           email: user.email,
-          imageUrl // Include image URL in the request body
+          imageUrl // Include image URL in the request body, even if it's an empty string
         })
       });
 
@@ -131,7 +131,6 @@ const Register = () => {
           type="file"
           accept="image/*"
           onChange={(e) => setRestaurantImage(e.target.files[0])}
-          required
         />
         <button type="submit">Register</button>
         {message && <p className="message">{message}</p>}

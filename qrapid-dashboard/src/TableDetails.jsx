@@ -67,44 +67,41 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     fetchItems();
   }, [selectedCategory]);
 
-  useEffect(() => {
-    const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
-    
-    // Optimized query to only fetch orders that are active
-    const q = query(
-      collection(backendDb, 'orders'),
-      where('tableNo', '==', normalizedTableNumber),
-      where('status', 'in', ['pending', 'running', 'KOT']),
-      orderBy('createdAt', 'desc')
-    );
+  // useEffect(() => {
+  //   const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
+  //   const q = query(
+  //     collection(backendDb, 'orders'),
+  //     where('tableNo', '==', normalizedTableNumber),
+  //     orderBy('createdAt', 'desc')
+  //   );
 
-    const fetchOrders = async () => {
-      const querySnapshot = await getDocs(q);
-      const ordersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setOrders(ordersData);
-      setOrderFetched(true);
-    };
+  //   const fetchOrders = async () => {
+  //     const querySnapshot = await getDocs(q);
+  //     const ordersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  //     setOrders(ordersData);
+  //     setOrderFetched(true);
+  //   };
 
-    const fetchTemporaryOrders = async () => {
-      const tempOrdersRef = collection(backendDb, 'manual-orders');
-      const tempOrdersSnapshot = await getDocs(tempOrdersRef);
-      const tempOrdersData = tempOrdersSnapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter(order => order.tableNo === normalizedTableNumber);
-      setTemporaryOrders(tempOrdersData);
-    };
+  //   const fetchTemporaryOrders = async () => {
+  //     const tempOrdersRef = collection(backendDb, 'manual-orders');
+  //     const tempOrdersSnapshot = await getDocs(tempOrdersRef);
+  //     const tempOrdersData = tempOrdersSnapshot.docs
+  //       .map(doc => ({ id: doc.id, ...doc.data() }))
+  //       .filter(order => order.tableNo === normalizedTableNumber);
+  //     setTemporaryOrders(tempOrdersData);
+  //   };
 
-    const fetchCompletedOrderIds = async () => {
-      const q = query(collection(db, 'bills'), where('status', '==', 'completed'));
-      const querySnapshot = await getDocs(q);
-      const ids = querySnapshot.docs.map(doc => doc.data().orderId);
-      setCompletedOrderIds(ids);
-    };
+  //   const fetchCompletedOrderIds = async () => {
+  //     const q = query(collection(db, 'bills'));
+  //     const querySnapshot = await getDocs(q);
+  //     const ids = querySnapshot.docs.map(doc => doc.data().orderId);
+  //     setCompletedOrderIds(ids);
+  //   };
 
-    fetchOrders();
-    fetchTemporaryOrders();
-    fetchCompletedOrderIds();
-  }, [tableNumber, updateTableColor, orderFetched]);
+  //   fetchOrders();
+  //   fetchTemporaryOrders();
+  //   fetchCompletedOrderIds();
+  // }, [tableNumber, updateTableColor, orderFetched]);
 
   useEffect(() => {
     const kotOrders = [...orders, ...temporaryOrders].filter(order => order.status === 'KOT');

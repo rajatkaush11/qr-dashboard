@@ -19,26 +19,27 @@ const WelcomeHome = () => {
   const [selectedTable, setSelectedTable] = useState(null);
   const [view, setView] = useState('overview');
 
-  useEffect(() => {
-    const q = query(collection(backendDb, 'orders'), where('status', 'in', ['pending', 'running', 'KOT']));
+  // useEffect(() => {
+  //   const q = query(collection(backendDb, 'orders'));
+  //   const unsubscribe = onSnapshot(q, (querySnapshot) => {
+  //     console.log('Real-time orders update:', querySnapshot.size);
+  //     const updatedColors = [...tableColors];
+  //     querySnapshot.forEach((doc) => {
+  //       const order = doc.data();
+  //       console.log('Fetched order:', order);
+  //       const tableIndex = tables.findIndex(t => t === `T${order.tableNo}` || t === `T${parseInt(order.tableNo, 10)}`);
+  //       if (tableIndex !== -1 && order.status !== 'completed' && order.status !== 'KOT' && order.status !== 'billed') {
+  //         updatedColors[tableIndex] = 'blue';
+  //       }
+  //     });
+  //     sessionStorage.setItem('tableColors', JSON.stringify(updatedColors));
+  //     setTableColors(updatedColors);
+  //   }, (error) => {
+  //     console.error('Error fetching snapshot:', error);
+  //   });
 
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const updatedColors = [...tableColors];
-      querySnapshot.forEach((doc) => {
-        const order = doc.data();
-        const tableIndex = tables.findIndex(t => t === `T${order.tableNo}` || t === `T${parseInt(order.tableNo, 10)}`);
-        if (tableIndex !== -1 && order.status !== 'completed') {
-          updatedColors[tableIndex] = 'blue';
-        }
-      });
-      sessionStorage.setItem('tableColors', JSON.stringify(updatedColors));
-      setTableColors(updatedColors);
-    }, (error) => {
-      console.error('Error fetching snapshot:', error);
-    });
-
-    return () => unsubscribe();
-  }, [tables, tableColors]);
+  //   return () => unsubscribe();
+  // }, [tables, tableColors]);
 
   const handleLogout = async () => {
     try {

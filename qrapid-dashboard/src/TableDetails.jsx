@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { backendDb, db, auth } from './firebase-config';
-import { collection, query, where, orderBy, getDocs, writeBatch, doc, setDoc, deleteDoc, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, writeBatch, doc, setDoc, deleteDoc, Timestamp } from 'firebase/firestore';
 import './TableDetails.css';
 import successSound from './assets/success.mp3';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -17,8 +17,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [items, setItems] = useState([]);
   const [temporaryOrders, setTemporaryOrders] = useState([]);
   const [kotTime, setKotTime] = useState('');
-  const [totalAmount, setTotalAmount] = useState(0); 
-  const [kotReady, setKotReady] = useState(false); 
+  const [totalAmount, setTotalAmount] = useState(0);
+  const [kotReady, setKotReady] = useState(false);
 
   const kotRef = useRef();
   const billRef = useRef();
@@ -98,46 +98,32 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     }, 0);
   };
 
+  const formatKOTContent = (order) => {
+    return `
+      Table No: ${order.tableNo}     Dt:${new Date(order.createdAt.toDate()).toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+      })}     Time:${order.istTime.toDate().toLocaleTimeString('en-IN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      })}\n
+      --------------------------------\n
+      ${order.items.map(item => `${item.quantity}    ${item.name}`).join('\n')}
+      --------------------------------\n
+      Total Items: ${order.items.reduce((total, item) => total + item.quantity, 0)}\n
+    `;
+  };
+
   const printKOT = (order) => {
     if (printer) {
       const builder = new window.epson.ePOSBuilder();
-
-      // Header with Table No, Date, and Time
       builder.addTextAlign(builder.ALIGN_LEFT);
-      builder.addText(`Table No: ${order.tableNo}   Dt:${new Date(order.createdAt.toDate()).toLocaleDateString('en-IN', {
-          day: '2-digit',
-          month: 'short',
-      })}   Time:${order.istTime.toDate().toLocaleTimeString('en-IN', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true,
-      })}\n`);
-      
-      builder.addText(`\n`);
-
-      // Items with Quantity and Name
-      order.items.forEach(item => {
-        builder.addTextAlign(builder.ALIGN_LEFT);
-        builder.addText(`${item.quantity}           ${item.name}\n`);
-      });
-
-      // Total Items
-      builder.addTextAlign(builder.ALIGN_LEFT);
-      builder.addText(`\nTotal Items: ${order.items.reduce((total, item) => total + item.quantity, 0)}\n`);
-      
-      builder.addText(`\n`);
-      builder.addTextAlign(builder.ALIGN_CENTER);
-      builder.addText(`(${order.istTime.toDate().toLocaleTimeString('en-IN', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true,
-      })})\n`);
-
-      // Final Cut
+      builder.addText(formatKOTContent(order));
       builder.addCut(window.epson.ePOSBuilder.CUT_FEED);
-      
+
       // Debugging: Log the content before printing
-      console.log('KOT content to be printed:', builder.toString());
+      console.log('KOT content to be printed:', formatKOTContent(order));
 
       printer.send(builder.toString());
     } else {
@@ -182,7 +168,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           tableNo: tableNumber.slice(1),
           items: currentOrder,
           status: 'KOT',
-          createdAt: Timestamp.fromDate(now), 
+          createdAt: Timestamp.fromDate(now),
           istTime,
           name: 'Temporary Order',
         };
@@ -200,17 +186,11 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       }
 
       populateKOTPrintSection(filteredOrders);
-      setKotReady(true); 
-      
+      setKotReady(true);
+
       for (const order of filteredOrders) {
-        const orderDoc = doc(backendDb, 'orders', order.id);
-        const docSnap = await getDocs(query(orderDoc));
-        if (docSnap.exists()) {
-          printKOT(order);
-          await updateOrderStatus([order], 'KOT');
-        } else {
-          console.log(`Document with ID ${order.id} does not exist.`);
-        }
+        printKOT(order);
+        await updateOrderStatus([order], 'KOT');
       }
 
       updateTableColor(tableNumber, 'running-kot');
@@ -240,14 +220,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       populateBillPrintSection(filteredOrders, amount);
 
       for (const order of filteredOrders) {
-        const orderDoc = doc(backendDb, 'orders', order.id);
-        const docSnap = await getDocs(query(orderDoc));
-        if (docSnap.exists()) {
-          printBill(order);
-          await updateOrderStatus([order], 'billed');
-        } else {
-          console.log(`Document with ID ${order.id} does not exist.`);
-        }
+        printBill(order);
+        await updateOrderStatus([order], 'billed');
       }
 
       updateTableColor(tableNumber, 'green');
@@ -278,7 +252,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     billRef.current.innerHTML = `
       <h1>Bill for Table ${tableNumber}</h1>
       <ul>${billContent}</ul>
-      <h2>Total: $${totalAmount.toFixed(2)}</h2>
+      <h2>Total: ₹${totalAmount.toFixed(2)}</h2>
     `;
     console.log("Bill content populated: ", billRef.current.innerHTML);
   };
@@ -442,9 +416,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
             content={() => kotRef.current}
             onBeforeGetContent={async () => {
               await handleGenerateKOT();
-              await new Promise(resolve => setTimeout(resolve, 500)); 
-              console.log('KOT content before print:', kotRef.current.innerHTML); 
-            }} 
+              await new Promise(resolve => setTimeout(resolve, 500));
+              console.log('KOT content before print:', kotRef.current.innerHTML);
+            }}
             onAfterPrint={() => {
               console.log('KOT print completed.');
             }}
@@ -454,9 +428,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
             content={() => billRef.current}
             onBeforeGetContent={async () => {
               await handleGenerateBill();
-              await new Promise(resolve => setTimeout(resolve, 500)); 
-              console.log('Bill content before print:', billRef.current.innerHTML); 
-            }} 
+              await new Promise(resolve => setTimeout(resolve, 500));
+              console.log('Bill content before print:', billRef.current.innerHTML);
+            }}
             onAfterPrint={() => {
               console.log('Bill print completed.');
             }}
@@ -485,14 +459,12 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       </div>
 
       {/* Print-Ready KOT Section */}
-      <div id="print-kot" ref={kotRef} style={{ display: kotReady ? 'block' : 'none' }}>
-        <h1>KOT for Table {tableNumber}</h1>
+      <div id="print-kot" ref={kotRef} style={{ display: kotReady ? 'block' : 'none', fontFamily: 'monospace', whiteSpace: 'pre' }}>
         {/* KOT content will be populated dynamically */}
       </div>
 
       {/* Print-Ready Bill Section */}
-      <div id="print-bill" ref={billRef} style={{ display: 'none' }}>
-        <h1>Bill for Table {tableNumber}</h1>
+      <div id="print-bill" ref={billRef} style={{ display: 'none', fontFamily: 'monospace', whiteSpace: 'pre' }}>
         {/* Bill content will be populated dynamically */}
       </div>
     </div>

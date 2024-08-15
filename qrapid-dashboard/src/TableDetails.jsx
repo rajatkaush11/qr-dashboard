@@ -18,7 +18,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [temporaryOrders, setTemporaryOrders] = useState([]);
   const [kotTime, setKotTime] = useState('');
   const [totalAmount, setTotalAmount] = useState(0); 
-  const [kotReady, setKotReady] = useState(false); // New state to track print readiness
+  const [kotReady, setKotReady] = useState(false); 
 
   const kotRef = useRef();
   const billRef = useRef();
@@ -100,51 +100,50 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const printKOT = (order) => {
     if (printer) {
-        const builder = new window.epson.ePOSBuilder();
+      const builder = new window.epson.ePOSBuilder();
 
-        // Header with Table No, Date, and Time
+      // Header with Table No, Date, and Time
+      builder.addTextAlign(builder.ALIGN_LEFT);
+      builder.addText(`Table No: ${order.tableNo}   Dt:${new Date(order.createdAt.toDate()).toLocaleDateString('en-IN', {
+          day: '2-digit',
+          month: 'short',
+      })}   Time:${order.istTime.toDate().toLocaleTimeString('en-IN', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+      })}\n`);
+      
+      builder.addText(`\n`);
+
+      // Items with Quantity and Name
+      order.items.forEach(item => {
         builder.addTextAlign(builder.ALIGN_LEFT);
-        builder.addText(`Table No: ${order.tableNo}   Dt:${new Date(order.createdAt.toDate()).toLocaleDateString('en-IN', {
-            day: '2-digit',
-            month: 'short',
-        })}   Time:${order.istTime.toDate().toLocaleTimeString('en-IN', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true,
-        })}\n`);
-        
-        // Spacer
-        builder.addText(`\n`);
+        builder.addText(`${item.quantity}           ${item.name}\n`);
+      });
 
-        // Items with Quantity and Name
-        order.items.forEach(item => {
-            builder.addTextAlign(builder.ALIGN_LEFT);
-            builder.addText(`${item.quantity}           ${item.name}\n`);
-        });
+      // Total Items
+      builder.addTextAlign(builder.ALIGN_LEFT);
+      builder.addText(`\nTotal Items: ${order.items.reduce((total, item) => total + item.quantity, 0)}\n`);
+      
+      builder.addText(`\n`);
+      builder.addTextAlign(builder.ALIGN_CENTER);
+      builder.addText(`(${order.istTime.toDate().toLocaleTimeString('en-IN', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+      })})\n`);
 
-        // Total Items
-        builder.addTextAlign(builder.ALIGN_LEFT);
-        builder.addText(`\nTotal Items: ${order.items.reduce((total, item) => total + item.quantity, 0)}\n`);
-        
-        // Spacer
-        builder.addText(`\n`);
-        builder.addTextAlign(builder.ALIGN_CENTER);
-        builder.addText(`(${order.istTime.toDate().toLocaleTimeString('en-IN', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true,
-        })})\n`);
+      // Final Cut
+      builder.addCut(window.epson.ePOSBuilder.CUT_FEED);
+      
+      // Debugging: Log the content before printing
+      console.log('KOT content to be printed:', builder.toString());
 
-        // Final Cut
-        builder.addCut(window.epson.ePOSBuilder.CUT_FEED);
-        printer.send(builder.toString());
+      printer.send(builder.toString());
     } else {
-        console.log('Printer not connected');
+      console.log('Printer not connected');
     }
-};
-
-
-
+  };
 
   const printBill = (order) => {
     if (printer) {
@@ -201,7 +200,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       }
 
       populateKOTPrintSection(filteredOrders);
-      setKotReady(true); // Set KOT ready state for print
+      setKotReady(true); 
       
       for (const order of filteredOrders) {
         const orderDoc = doc(backendDb, 'orders', order.id);

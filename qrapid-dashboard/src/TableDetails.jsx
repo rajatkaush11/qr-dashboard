@@ -102,10 +102,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     if (printer) {
         const builder = new window.epson.ePOSBuilder();
 
-        // Header
+        // Header with Table No, Date, and Time
         builder.addTextAlign(builder.ALIGN_LEFT);
-        builder.addText(`Order No: ${order.id.slice(-3)}  Table No: ${order.tableNo}\n`);
-        builder.addText(`Dt:${new Date(order.createdAt.toDate()).toLocaleDateString('en-IN', {
+        builder.addText(`Table No: ${order.tableNo}   Dt:${new Date(order.createdAt.toDate()).toLocaleDateString('en-IN', {
             day: '2-digit',
             month: 'short',
         })}   Time:${order.istTime.toDate().toLocaleTimeString('en-IN', {
@@ -117,10 +116,10 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         // Spacer
         builder.addText(`\n`);
 
-        // Items
+        // Items with Quantity and Name
         order.items.forEach(item => {
             builder.addTextAlign(builder.ALIGN_LEFT);
-            builder.addText(`${item.quantity}       ${item.name}\n`);
+            builder.addText(`${item.quantity}           ${item.name}\n`);
         });
 
         // Total Items
@@ -143,6 +142,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         console.log('Printer not connected');
     }
 };
+
 
 
 

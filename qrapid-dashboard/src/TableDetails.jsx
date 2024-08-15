@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { backendDb, db, auth } from './firebase-config';
-import { collection, query, where, orderBy, getDocs, writeBatch, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, writeBatch, doc, setDoc, deleteDoc, Timestamp } from 'firebase/firestore';
 import './TableDetails.css';
 import successSound from './assets/success.mp3';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -77,8 +77,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   //   const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
   //   const q = query(
   //     collection(backendDb, 'orders'),
- //     where('tableNo', '==', normalizedTableNumber),
- //     orderBy('createdAt', 'desc')
+  //     where('tableNo', '==', normalizedTableNumber),
+  //     orderBy('createdAt', 'desc')
   //   );
 
   //   const fetchOrders = async () => {
@@ -172,100 +172,100 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const handleGenerateKOT = async () => {
     try {
-        const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id) && order.status === 'KOT');
-        if (filteredOrders.length === 0 && currentOrder.length === 0) {
-            console.log('No orders to generate KOT');
-            return;
+      const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
+      if (filteredOrders.length === 0 && currentOrder.length === 0) {
+        console.log('No orders to generate KOT');
+        return;
+      }
+
+      if (currentOrder.length > 0) {
+        const now = new Date();
+        const istTime = Timestamp.fromDate(new Date(now.getTime() + 5.5 * 60 * 60 * 1000));
+
+        const newOrder = {
+          id: `temp-${Date.now()}`,
+          tableNo: tableNumber.slice(1),
+          items: currentOrder,
+          status: 'KOT',
+          createdAt: Timestamp.fromDate(now),  // Correctly using Firestore Timestamp
+          istTime,
+          name: 'Temporary Order',
+        };
+        await setDoc(doc(collection(backendDb, 'manual-orders'), newOrder.id), newOrder);
+        setTemporaryOrders(prev => [...prev, newOrder]);
+        filteredOrders.push(newOrder);
+        setOrders([...orders, newOrder]);
+        setCurrentOrder([]);
+        setKotTime(istTime.toDate().toLocaleTimeString('en-IN', {
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: 'Asia/Kolkata',
+        }));
+        console.log('Temporary order created:', newOrder);
+      }
+
+      // Populate KOT print section
+      populateKOTPrintSection(filteredOrders);
+
+      // Ensure the document exists before updating
+      filteredOrders.forEach(async (order) => {
+        const orderDoc = doc(backendDb, 'orders', order.id);
+        const docSnap = await getDocs(query(orderDoc));
+        if (docSnap.exists()) {
+          printKOT(order);
+          await updateOrderStatus([order], 'KOT');
+        } else {
+          console.log(`Document with ID ${order.id} does not exist.`);
         }
+      });
 
-        if (currentOrder.length > 0) {
-            const now = new Date();
-            const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000).toLocaleTimeString('en-IN', {
-                hour: '2-digit',
-                minute: '2-digit',
-                timeZone: 'Asia/Kolkata',
-            });
-
-            const newOrder = {
-                id: `temp-${Date.now()}`,
-                tableNo: tableNumber.slice(1),
-                items: currentOrder,
-                status: 'KOT',
-                createdAt: now,
-                istTime,
-                name: 'Temporary Order',
-            };
-            await setDoc(doc(collection(backendDb, 'manual-orders'), newOrder.id), newOrder);
-            setTemporaryOrders(prev => [...prev, newOrder]);
-            filteredOrders.push(newOrder);
-            setOrders([...orders, newOrder]);
-            setCurrentOrder([]);
-            setKotTime(istTime);
-            console.log('Temporary order created:', newOrder);
-        }
-
-        // Populate KOT print section
-        populateKOTPrintSection(filteredOrders);
-
-        // Ensure the document exists before updating
-        for (const order of filteredOrders) {
-            const orderDoc = doc(backendDb, 'orders', order.id);
-            const docSnap = await getDocs(query(orderDoc));
-            if (!docSnap.empty) {  // check if document exists
-                printKOT(order);
-                await updateOrderStatus([order], 'KOT');
-            } else {
-                console.log(`Document with ID ${order.id} does not exist.`);
-            }
-        }
-
-        updateTableColor(tableNumber, 'running-kot');
-        setOrders(prevOrders =>
-            prevOrders.map(order =>
-                filteredOrders.some(filteredOrder => filteredOrder.id === order.id)
-                    ? { ...order, status: 'KOT' }
-                    : order
-            )
-        );
-        console.log('KOT generated and printed successfully');
+      updateTableColor(tableNumber, 'running-kot');
+      setOrders(prevOrders =>
+        prevOrders.map(order =>
+          filteredOrders.some(filteredOrder => filteredOrder.id === order.id)
+            ? { ...order, status: 'KOT' }
+            : order
+        )
+      );
+      console.log('KOT generated and printed successfully');
     } catch (error) {
-        console.error('Error generating KOT:', error);
+      console.error('Error generating KOT:', error);
     }
-};
+  };
 
-const handleGenerateBill = async () => {
+  const handleGenerateBill = async () => {
     try {
-        const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id) && order.status === 'KOT');
-        if (filteredOrders.length === 0) {
-            console.log('No orders to generate Bill');
-            return;
+      const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
+      if (filteredOrders.length === 0) {
+        console.log('No orders to generate Bill');
+        return;
+      }
+
+      // Calculate total amount and set the state
+      const amount = calculateTotalAmount(filteredOrders);
+      setTotalAmount(amount);
+
+      // Populate Bill print section
+      populateBillPrintSection(filteredOrders, amount);
+
+      // Ensure the document exists before updating
+      filteredOrders.forEach(async (order) => {
+        const orderDoc = doc(backendDb, 'orders', order.id);
+        const docSnap = await getDocs(query(orderDoc));
+        if (docSnap.exists()) {
+          printBill(order);
+          await updateOrderStatus([order], 'billed');
+        } else {
+          console.log(`Document with ID ${order.id} does not exist.`);
         }
+      });
 
-        // Calculate total amount and set the state
-        const amount = calculateTotalAmount(filteredOrders);
-        setTotalAmount(amount);
-
-        // Populate Bill print section
-        populateBillPrintSection(filteredOrders, amount);
-
-        // Ensure the document exists before updating
-        for (const order of filteredOrders) {
-            const orderDoc = doc(backendDb, 'orders', order.id);
-            const docSnap = await getDocs(query(orderDoc));
-            if (!docSnap.empty) {  // check if document exists
-                printBill(order);
-                await updateOrderStatus([order], 'billed');
-            } else {
-                console.log(`Document with ID ${order.id} does not exist.`);
-            }
-        }
-
-        updateTableColor(tableNumber, 'green');
-        console.log('Bill generated and printed successfully');
+      updateTableColor(tableNumber, 'green');
+      console.log('Bill generated and printed successfully');
     } catch (error) {
-        console.error('Error generating Bill:', error);
+      console.error('Error generating Bill:', error);
     }
-};
+  };
 
   const populateKOTPrintSection = (filteredOrders) => {
     const kotContent = filteredOrders.map(order => (

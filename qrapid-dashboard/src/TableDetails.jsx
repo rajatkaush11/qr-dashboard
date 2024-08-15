@@ -100,19 +100,50 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const printKOT = (order) => {
     if (printer) {
-      const builder = new window.epson.ePOSBuilder();
-      builder.addTextAlign(builder.ALIGN_CENTER);
-      builder.addText(`KOT\n`);
-      builder.addText(`Table No: ${tableNumber}\n`);
-      order.items.forEach(item => {
-        builder.addText(`${item.quantity} x ${item.name}\n`);
-      });
-      builder.addCut(window.epson.ePOSBuilder.CUT_FEED);
-      printer.send(builder.toString());
+        const builder = new window.epson.ePOSBuilder();
+
+        // Header
+        builder.addTextAlign(builder.ALIGN_LEFT);
+        builder.addText(`Order No: ${order.id.slice(-3)}\n`);
+        builder.addText(`Dt:${new Date(order.createdAt.toDate()).toLocaleDateString('en-IN', {
+            day: '2-digit',
+            month: 'short',
+        })}   Time:${order.istTime.toDate().toLocaleTimeString('en-IN', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+        })}\n`);
+        
+        // Spacer
+        builder.addText(`\n`);
+
+        // Items
+        order.items.forEach(item => {
+            builder.addTextAlign(builder.ALIGN_LEFT);
+            builder.addText(`${item.quantity}       ${item.name}\n`);
+        });
+
+        // Total Items
+        builder.addTextAlign(builder.ALIGN_LEFT);
+        builder.addText(`\nTotal Items: ${order.items.reduce((total, item) => total + item.quantity, 0)}\n`);
+        
+        // Spacer
+        builder.addText(`\n`);
+        builder.addTextAlign(builder.ALIGN_CENTER);
+        builder.addText(`(${order.istTime.toDate().toLocaleTimeString('en-IN', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+        })})\n`);
+
+        // Final Cut
+        builder.addCut(window.epson.ePOSBuilder.CUT_FEED);
+        printer.send(builder.toString());
     } else {
-      console.log('Printer not connected');
+        console.log('Printer not connected');
     }
-  };
+};
+
 
   const printBill = (order) => {
     if (printer) {

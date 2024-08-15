@@ -204,6 +204,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         console.log('Temporary order created:', newOrder);
       }
 
+      // Populate KOT print section
+      populateKOTPrintSection(filteredOrders);
+
       // Print each order for KOT
       filteredOrders.forEach(order => printKOT(order));
       updateTableColor(tableNumber, 'running-kot');
@@ -233,6 +236,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       const amount = calculateTotalAmount(filteredOrders);
       setTotalAmount(amount);
 
+      // Populate Bill print section
+      populateBillPrintSection(filteredOrders, amount);
+
       // Print each order for Bill
       filteredOrders.forEach(order => printBill(order));
       await updateTableColor(tableNumber, 'green');
@@ -241,6 +247,30 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     } catch (error) {
       console.error('Error generating Bill:', error);
     }
+  };
+
+  const populateKOTPrintSection = (filteredOrders) => {
+    const kotContent = filteredOrders.map(order => (
+      `<h2>Order ${order.id}</h2>
+      <ul>
+        ${order.items.map(item => `<li>${item.quantity} x ${item.name}</li>`).join('')}
+      </ul>`
+    )).join('');
+    kotRef.current.innerHTML = `
+      <h1>KOT for Table ${tableNumber}</h1>
+      ${kotContent}
+    `;
+  };
+
+  const populateBillPrintSection = (filteredOrders, totalAmount) => {
+    const billContent = filteredOrders.map(order =>
+      order.items.map(item => `<li>${item.name} - ${item.price} x ${item.quantity}</li>`).join('')
+    ).join('');
+    billRef.current.innerHTML = `
+      <h1>Bill for Table ${tableNumber}</h1>
+      <ul>${billContent}</ul>
+      <h2>Total: $${totalAmount.toFixed(2)}</h2>
+    `;
   };
 
   const handleCompleteOrder = async () => {
@@ -400,12 +430,12 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           <ReactToPrint
             trigger={() => <button className="action-button generate-kot">Generate KOT</button>}
             content={() => kotRef.current}
-            onBeforeGetContent={handleGenerateKOT}
+            onBeforeGetContent={handleGenerateKOT} // Ensure KOT content is ready before print
           />
           <ReactToPrint
             trigger={() => <button className="action-button generate-bill">Generate Bill</button>}
             content={() => billRef.current}
-            onBeforeGetContent={handleGenerateBill}
+            onBeforeGetContent={handleGenerateBill} // Ensure Bill content is ready before print
           />
           <button onClick={handleCompleteOrder} className="action-button complete">Complete Order</button>
         </div>
@@ -433,35 +463,13 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       {/* Print-Ready KOT Section */}
       <div id="print-kot" ref={kotRef} style={{ display: 'none' }}>
         <h1>KOT for Table {tableNumber}</h1>
-        {/* Render the KOT details here */}
-        {orders.map((order) => (
-          <div key={order.id}>
-            <h2>Order {order.id}</h2>
-            <ul>
-              {order.items.map((item) => (
-                <li key={item.id}>
-                  {item.quantity} x {item.name}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+        {/* KOT content will be populated dynamically */}
       </div>
 
       {/* Print-Ready Bill Section */}
       <div id="print-bill" ref={billRef} style={{ display: 'none' }}>
         <h1>Bill for Table {tableNumber}</h1>
-        {/* Render the Bill details here */}
-        <ul>
-          {orders.map((order) =>
-            order.items.map((item) => (
-              <li key={item.id}>
-                {item.name} - {item.price} x {item.quantity}
-              </li>
-            ))
-          )}
-        </ul>
-        <h2>Total: ${totalAmount}</h2>
+        {/* Bill content will be populated dynamically */}
       </div>
     </div>
   );

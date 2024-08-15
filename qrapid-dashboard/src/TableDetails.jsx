@@ -17,7 +17,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [temporaryOrders, setTemporaryOrders] = useState([]);
   const [kotTime, setKotTime] = useState('');
 
-  // Fetch categories from Firestore
   useEffect(() => {
     const fetchCategories = async () => {
       const userId = auth.currentUser ? auth.currentUser.uid : null;
@@ -29,7 +28,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     fetchCategories();
   }, []);
 
-  // Fetch items based on selected category from Firestore
   useEffect(() => {
     const fetchItems = async () => {
       if (selectedCategory) {
@@ -43,7 +41,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     fetchItems();
   }, [selectedCategory]);
 
-  // Manage KOT timing and table color updates based on order status
   useEffect(() => {
     const kotOrders = [...orders, ...temporaryOrders].filter(order => order.status === 'KOT');
     if (kotOrders.length > 0) {
@@ -63,13 +60,11 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     }
   }, [orders, temporaryOrders, tableNumber, updateTableColor, kotTime]);
 
-  // Play sound effect when an item is added to the current order
   const playSound = () => {
     const audio = new Audio(successSound);
     audio.play().catch(error => console.error('Error playing sound:', error));
   };
 
-  // Add item to the current order or increase its quantity if it already exists
   const handleItemClick = (item) => {
     setCurrentOrder((prevOrder) => {
       const existingItem = prevOrder.find((orderItem) => orderItem.id === item.id);
@@ -83,7 +78,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     });
   };
 
-  // Increment the quantity of an item in the current order
   const handleIncrement = (itemId) => {
     setCurrentOrder((prevOrder) =>
       prevOrder.map((orderItem) =>
@@ -92,7 +86,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     );
   };
 
-  // Decrement the quantity of an item in the current order
   const handleDecrement = (itemId) => {
     setCurrentOrder((prevOrder) =>
       prevOrder
@@ -103,7 +96,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     );
   };
 
-  // Delete an item from the current order or delete a temporary order
   const handleDelete = async (itemId) => {
     const itemToDelete = currentOrder.find(orderItem => orderItem.id === itemId);
     if (itemToDelete) {
@@ -120,70 +112,66 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     }
   };
 
-  // Generate KOT and print it using the selected printer
-const handleGenerateKOT = async () => {
-  try {
-    const printerIp = localStorage.getItem('selectedPrinter');
-    const response = await fetch('/printKOT', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        tableNumber,
-        orderIds: orders.map(order => order.id),
-        printerIp
-      }),
-    });
+  const handleGenerateKOT = async () => {
+    try {
+      const printerIp = localStorage.getItem('selectedPrinter');
+      const response = await fetch('/printKOT', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          tableNumber,
+          orderIds: orders.map(order => order.id),
+          printerIp
+        }),
+      });
 
-    if (!response.ok) {
-      throw new Error(`Failed to generate KOT: ${response.statusText}`);
+      if (!response.ok) {
+        throw new Error(`Failed to generate KOT: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      if (result.success) {
+        console.log('KOT printed successfully');
+      } else {
+        console.log('Failed to print KOT:', result.message);
+      }
+    } catch (error) {
+      console.error('Error generating KOT:', error);
     }
+  };
 
-    const result = await response.json();
-    if (result.success) {
-      console.log('KOT printed successfully');
-    } else {
-      console.log('Failed to print KOT:', result.message);
+  const handleGenerateBill = async () => {
+    try {
+      const printerIp = localStorage.getItem('selectedPrinter');
+      const response = await fetch('/printBill', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          tableNumber,
+          orderIds: orders.map(order => order.id),
+          printerIp
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to generate bill: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      if (result.success) {
+        console.log('Bill printed successfully');
+      } else {
+        console.log('Failed to print bill:', result.message);
+      }
+    } catch (error) {
+      console.error('Error generating bill:', error);
     }
-  } catch (error) {
-    console.error('Error generating KOT:', error);
-  }
-};
+  };
 
-// Generate bill and print it using the selected printer
-const handleGenerateBill = async () => {
-  try {
-    const printerIp = localStorage.getItem('selectedPrinter');
-    const response = await fetch('/printBill', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        tableNumber,
-        orderIds: orders.map(order => order.id),
-        printerIp
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to generate bill: ${response.statusText}`);
-    }
-
-    const result = await response.json();
-    if (result.success) {
-      console.log('Bill printed successfully');
-    } else {
-      console.log('Failed to print bill:', result.message);
-    }
-  } catch (error) {
-    console.error('Error generating bill:', error);
-  }
-};
-
-
-  // Complete the order and update the status in Firestore
   const handleCompleteOrder = async () => {
     try {
       const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
@@ -212,7 +200,6 @@ const handleGenerateBill = async () => {
     }
   };
 
-  // Update the status of orders in Firestore
   const updateOrderStatus = async (orders, status) => {
     const batch = writeBatch(backendDb);
     orders.forEach(order => {

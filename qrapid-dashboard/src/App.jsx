@@ -22,14 +22,14 @@ function App() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        setUser(user); // Set user on successful authentication
+        setUser(user);
       } else {
-        setUser(null); // Nullify user on logout or failed authentication
+        setUser(null);
       }
-      setLoading(false); // Set loading to false once authentication state is checked
+      setLoading(false);
     });
 
-    return () => unsubscribe(); // Clean up the subscription
+    return () => unsubscribe();
   }, []);
 
   const handleNavClick = (page) => {
@@ -37,7 +37,7 @@ function App() {
   };
 
   if (loading) {
-    return <div>Loading...</div>; // Show loading indicator while checking authentication
+    return <div>Loading...</div>;
   }
 
   return (
@@ -45,7 +45,7 @@ function App() {
       <div className="app-container">
         {user && <Navbar activePage={activePage} onLinkClick={handleNavClick} />}
         <Routes>
-          <Route path="/login" element={user ? <Navigate to="/home" replace /> : <Login onLogin={() => setUser(true)} />} />
+          <Route path="/login" element={user ? <Navigate to="/home" replace /> : <Login />} />
           <Route path="/register" element={user ? <Navigate to="/home" replace /> : <Register />} />
           <Route path="/home" element={user ? <WelcomeHome /> : <Navigate to="/login" replace />} />
           <Route path="/menu" element={user ? <Menu /> : <Navigate to="/login" replace />} />
@@ -55,7 +55,7 @@ function App() {
           <Route path="/orders" element={user ? <Orders /> : <Navigate to="/login" replace />} />
           <Route path="/reports" element={user ? <Reports /> : <Navigate to="/login" replace />} />
           <Route path="/settings" element={user ? <Settings /> : <Navigate to="/login" replace />} />
-          <Route path="/" element={<Navigate to="/login" replace />} /> {/* Redirect to login if not authenticated */}
+          <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>
       </div>
     </Router>

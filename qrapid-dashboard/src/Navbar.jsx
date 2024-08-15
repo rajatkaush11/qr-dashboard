@@ -18,8 +18,6 @@ const Navbar = ({ activePage, onLinkClick }) => {
       navigate('/home');
     } else if (page === 'Table') {
       navigate('/table');
-    } else if (page === 'Settings') {
-      navigate('/settings');
     } else {
       navigate(`/${page.toLowerCase()}`);
     }
@@ -63,13 +61,6 @@ const Navbar = ({ activePage, onLinkClick }) => {
           className={activePage === 'Reports' ? 'active-link' : ''}
         >
           Reports
-        </a>
-        <a
-          href="#"
-          onClick={() => handleLinkClick('Settings')}
-          className={activePage === 'Settings' ? 'active-link' : ''}
-        >
-          Settings
         </a>
       </div>
       <div className="right-icons">

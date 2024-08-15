@@ -123,8 +123,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   }, [orders, temporaryOrders, tableNumber, updateTableColor, kotTime]);
 
   const printKOT = (order) => {
-    const selectedPrinter = localStorage.getItem('selectedPrinter'); // Retrieve selected printer
-    if (printer && selectedPrinter) {
+    if (printer) {
       const builder = new window.epson.ePOSBuilder();
       builder.addTextAlign(builder.ALIGN_CENTER);
       builder.addText(`KOT\n`);
@@ -134,15 +133,13 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       });
       builder.addCut(window.epson.ePOSBuilder.CUT_FEED);
       printer.send(builder.toString());
-      console.log(`Printing KOT to ${selectedPrinter}`);
     } else {
-      console.log('Printer not connected or selected printer not found');
+      console.log('Printer not connected');
     }
   };
 
   const printBill = (order) => {
-    const selectedPrinter = localStorage.getItem('selectedPrinter'); // Retrieve selected printer
-    if (printer && selectedPrinter) {
+    if (printer) {
       const builder = new window.epson.ePOSBuilder();
       builder.addTextAlign(builder.ALIGN_CENTER);
       builder.addText(`BILL\n`);
@@ -156,9 +153,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       builder.addText(`Total: ${total.toFixed(2)}\n`);
       builder.addCut(window.epson.ePOSBuilder.CUT_FEED);
       printer.send(builder.toString());
-      console.log(`Printing Bill to ${selectedPrinter}`);
     } else {
-      console.log('Printer not connected or selected printer not found');
+      console.log('Printer not connected');
     }
   };
 
@@ -169,7 +165,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         console.log('No orders to generate KOT');
         return;
       }
-
+  
       if (currentOrder.length > 0) {
         const now = new Date();
         const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000).toLocaleTimeString('en-IN', {
@@ -177,7 +173,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           minute: '2-digit',
           timeZone: 'Asia/Kolkata',
         });
-
+  
         const newOrder = {
           id: `temp-${Date.now()}`,
           tableNo: tableNumber.slice(1),
@@ -195,8 +191,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         setKotTime(istTime);
         console.log('Temporary order created:', newOrder);
       }
-
-      // Print each order for KOT using the selected printer
+  
+      // Print each order for KOT
       filteredOrders.forEach(order => printKOT(order));
       updateTableColor(tableNumber, 'running-kot');
       await updateOrderStatus(filteredOrders, 'KOT');
@@ -212,7 +208,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       console.error('Error generating KOT:', error);
     }
   };
-
+  
   const handleGenerateBill = async () => {
     try {
       const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
@@ -220,8 +216,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         console.log('No orders to generate Bill');
         return;
       }
-
-      // Print each order for Bill using the selected printer
+  
+      // Print each order for Bill
       filteredOrders.forEach(order => printBill(order));
       await updateTableColor(tableNumber, 'green');
       await updateOrderStatus(filteredOrders, 'billed');

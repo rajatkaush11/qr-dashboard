@@ -11,7 +11,6 @@ import ItemList from './ItemList';
 import Dashboard from './Dashboard';
 import Orders from './Orders';
 import Reports from './Reports';
-import Settings from './Setting';
 import './index.css';
 
 function App() {
@@ -54,7 +53,6 @@ function App() {
           <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" replace />} />
           <Route path="/orders" element={user ? <Orders /> : <Navigate to="/login" replace />} />
           <Route path="/reports" element={user ? <Reports /> : <Navigate to="/login" replace />} />
-          <Route path="/settings" element={user ? <Settings /> : <Navigate to="/login" replace />} />
           <Route path="/" element={<Navigate to="/login" replace />} /> {/* Redirect to login if not authenticated */}
         </Routes>
       </div>

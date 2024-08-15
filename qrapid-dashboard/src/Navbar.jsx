@@ -62,6 +62,13 @@ const Navbar = ({ activePage, onLinkClick }) => {
         >
           Reports
         </a>
+        <a
+          href="#"
+          onClick={() => handleLinkClick('Settings')}  // Add this line for Settings
+          className={activePage === 'Settings' ? 'active-link' : ''}  // Add this line to manage active state
+        >
+          Settings
+        </a>
       </div>
       <div className="right-icons">
         <FontAwesomeIcon icon={faSearch} onClick={handleSearchClick} className="icon" />

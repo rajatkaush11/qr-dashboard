@@ -1,21 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 
 const Settings = () => {
   const [printers, setPrinters] = useState([]);
   const [selectedPrinter, setSelectedPrinter] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Placeholder function to get the list of printers.
-    // Replace this with the actual method to fetch connected printers.
+    // Mock function to simulate fetching printers.
     const fetchPrinters = async () => {
       try {
-        // Simulate fetching printers; in real-world applications, this should be replaced with actual code
-        // to detect printers connected to the computer.
-        const response = await axios.get('/api/getPrinters');
-        setPrinters(response.data);
+        // Simulating a delay for fetching data
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Mock data representing printers
+        const mockPrinters = [
+          { ip: '192.168.1.101', name: 'Printer 1' },
+          { ip: '192.168.1.102', name: 'Printer 2' },
+          { ip: '192.168.1.103', name: 'Printer 3' },
+        ];
+        setPrinters(mockPrinters);
+        setLoading(false);
       } catch (error) {
         console.error('Error fetching printers:', error);
+        setError('Failed to load printers. Please try again.');
+        setLoading(false);
       }
     };
 
@@ -27,6 +35,14 @@ const Settings = () => {
     // Save the selected printer to localStorage or database
     localStorage.setItem('selectedPrinter', event.target.value);
   };
+
+  if (loading) {
+    return <div>Loading printers...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
 
   return (
     <div>

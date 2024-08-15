@@ -234,13 +234,13 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const populateKOTPrintSection = (filteredOrders) => {
     const kotContent = filteredOrders.map(order => {
         const formattedItems = order.items.map(item => 
-          `<div style="font-size: 14px; margin-bottom: 2px;">${item.quantity.toString().padEnd(3)} ${item.name}</div>`
+          `<div style="font-size: 18px; margin-bottom: 2px;">${item.quantity.toString().padEnd(3)} ${item.name}</div>`
         ).join('');
 
         return `
           <div style="margin-top: 0; padding: 0;">
             <strong style="font-size: 16px;">Table No: ${order.tableNo}</strong>
-            <span style="float: right; font-size: 14px;">
+            <span style="float: right; font-size: 18px;">
               ${new Date(order.createdAt.toDate()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
               ${new Date(order.createdAt.toDate()).toLocaleTimeString('en-IN', {
                   hour: '2-digit',
@@ -254,7 +254,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
             ${formattedItems}
           </div>
           <div style="margin-top: 2px; padding: 0;">
-            <strong style="font-size: 14px;">Total Items: ${order.items.reduce((total, item) => total + item.quantity, 0)}</strong>
+            <strong style="font-size: 18px;">Total Items: ${order.items.reduce((total, item) => total + item.quantity, 0)}</strong>
           </div>
           <hr style="border: 0; border-top: 1px solid #000; margin: 2px 0;" />
         `;

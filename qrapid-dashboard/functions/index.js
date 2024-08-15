@@ -7,9 +7,9 @@ escpos.Network = require('escpos-network');
 admin.initializeApp();
 const db = admin.firestore();
 
-async function sendToPrinter(content) {
+async function sendToPrinter(content, printerIp) {
   return new Promise((resolve, reject) => {
-    const device = new escpos.Network('192.168.29.12', 9100);
+    const device = new escpos.Network(printerIp, 9100);
     const printer = new escpos.Printer(device);
 
     device.open((error) => {
@@ -31,7 +31,7 @@ exports.printKOT = functions.https.onRequest((req, res) => {
       return res.status(405).send('Method Not Allowed');
     }
     try {
-      const { tableNumber, orderIds } = req.body;
+      const { tableNumber, orderIds, printerIp } = req.body;  // Receiving printer IP from the request
 
       const orders = await Promise.all(orderIds.map(async (orderId) => {
         const orderRef = db.collection('orders').doc(orderId);
@@ -51,7 +51,7 @@ exports.printKOT = functions.https.onRequest((req, res) => {
         kotContent += '\n';
       });
 
-      await sendToPrinter(kotContent);
+      await sendToPrinter(kotContent, printerIp);  // Sending content to the selected printer IP
 
       return res.status(200).send({ success: true, message: "KOT printed successfully" });
     } catch (error) {
@@ -67,7 +67,7 @@ exports.printBill = functions.https.onRequest((req, res) => {
       return res.status(405).send('Method Not Allowed');
     }
     try {
-      const { tableNumber, orderIds } = req.body;
+      const { tableNumber, orderIds, printerIp } = req.body;  // Receiving printer IP from the request
 
       const orders = await Promise.all(orderIds.map(async (orderId) => {
         const orderRef = db.collection('orders').doc(orderId);
@@ -89,7 +89,7 @@ exports.printBill = functions.https.onRequest((req, res) => {
       });
       billContent += `\nTotal Amount: ${totalAmount}\nThank you for dining with us!`;
 
-      await sendToPrinter(billContent);
+      await sendToPrinter(billContent, printerIp);  // Sending content to the selected printer IP
 
       return res.status(200).send({ success: true, message: "Bill printed successfully" });
     } catch (error) {

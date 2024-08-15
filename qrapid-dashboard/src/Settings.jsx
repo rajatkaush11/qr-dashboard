@@ -1,21 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import './Settings.css';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 
 const Settings = () => {
   const [printers, setPrinters] = useState([]);
-  const [selectedPrinter, setSelectedPrinter] = useState(localStorage.getItem('selectedPrinter') || '');
+  const [selectedPrinter, setSelectedPrinter] = useState('');
 
   useEffect(() => {
+    // Placeholder function to get the list of printers.
+    // Replace this with the actual method to fetch connected printers.
     const fetchPrinters = async () => {
       try {
-        // Mocking available printers - in a real environment, replace this with actual printer data fetching.
-        const availablePrinters = [
-          'Brother HL-L2350DW',
-          'HP OfficeJet 5255',
-          'Canon PIXMA TS9120',
-          'Epson EcoTank ET-2720'
-        ];  // Example printer names
-        setPrinters(availablePrinters);
+        // Simulate fetching printers; in real-world applications, this should be replaced with actual code
+        // to detect printers connected to the computer.
+        const response = await axios.get('/api/getPrinters');
+        setPrinters(response.data);
       } catch (error) {
         console.error('Error fetching printers:', error);
       }
@@ -26,20 +24,28 @@ const Settings = () => {
 
   const handlePrinterChange = (event) => {
     setSelectedPrinter(event.target.value);
+    // Save the selected printer to localStorage or database
     localStorage.setItem('selectedPrinter', event.target.value);
   };
 
   return (
-    <div className="settings-container">
-      <h2>Select Printer</h2>
-      <select value={selectedPrinter} onChange={handlePrinterChange}>
-        <option value="" disabled>Select your printer</option>
-        {printers.map((printer, index) => (
-          <option key={index} value={printer}>
-            {printer}
-          </option>
-        ))}
-      </select>
+    <div>
+      <h1>Settings</h1>
+      <div>
+        <label htmlFor="printer-select">Select Printer:</label>
+        <select
+          id="printer-select"
+          value={selectedPrinter}
+          onChange={handlePrinterChange}
+        >
+          <option value="">Select a printer</option>
+          {printers.map((printer) => (
+            <option key={printer.ip} value={printer.ip}>
+              {printer.name}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 };

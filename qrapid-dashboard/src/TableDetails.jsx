@@ -5,6 +5,7 @@ import './TableDetails.css';
 import successSound from './assets/success.mp3';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import Bill from './Bill'; // Import the Bill component
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [orders, setOrders] = useState([]);
@@ -16,7 +17,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [items, setItems] = useState([]);
   const [temporaryOrders, setTemporaryOrders] = useState([]);
   const [kotTime, setKotTime] = useState('');
-  const selectedPrinterIp = localStorage.getItem('selectedPrinterIp'); // Fetch printer IP from local storage
+  const [showBill, setShowBill] = useState(false); // State to control Bill display
+  const [showKOT, setShowKOT] = useState(false); // State to control KOT display
+  const [totalAmount, setTotalAmount] = useState(0); // State to store the total amount for the bill
 
   let printer = null;
 
@@ -68,6 +71,43 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     fetchItems();
   }, [selectedCategory]);
 
+  // The following commented-out code is preserved as per your request
+  // useEffect(() => {
+  //   const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
+  //   const q = query(
+  //     collection(backendDb, 'orders'),
+  //     where('tableNo', '==', normalizedTableNumber),
+  //     orderBy('createdAt', 'desc')
+  //   );
+
+  //   const fetchOrders = async () => {
+  //     const querySnapshot = await getDocs(q);
+  //     const ordersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  //     setOrders(ordersData);
+  //     setOrderFetched(true);
+  //   };
+
+  //   const fetchTemporaryOrders = async () => {
+  //     const tempOrdersRef = collection(backendDb, 'manual-orders');
+  //     const tempOrdersSnapshot = await getDocs(tempOrdersRef);
+  //     const tempOrdersData = tempOrdersSnapshot.docs
+  //       .map(doc => ({ id: doc.id, ...doc.data() }))
+  //       .filter(order => order.tableNo === normalizedTableNumber);
+  //     setTemporaryOrders(tempOrdersData);
+  //   };
+
+  //   const fetchCompletedOrderIds = async () => {
+  //     const q = query(collection(db, 'bills'));
+  //     const querySnapshot = await getDocs(q);
+  //     const ids = querySnapshot.docs.map(doc => doc.data().orderId);
+  //     setCompletedOrderIds(ids);
+  //   };
+
+  //   fetchOrders();
+  //   fetchTemporaryOrders();
+  //   fetchCompletedOrderIds();
+  // }, [tableNumber, updateTableColor, orderFetched]);
+
   useEffect(() => {
     const kotOrders = [...orders, ...temporaryOrders].filter(order => order.status === 'KOT');
     if (kotOrders.length > 0) {
@@ -86,6 +126,12 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       setKotTime('');
     }
   }, [orders, temporaryOrders, tableNumber, updateTableColor, kotTime]);
+
+  const calculateTotalAmount = (orders) => {
+    return orders.reduce((total, order) => {
+      return total + order.items.reduce((subTotal, item) => subTotal + (item.price * item.quantity), 0);
+    }, 0);
+  };
 
   const printKOT = (order) => {
     if (printer) {
@@ -130,7 +176,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         console.log('No orders to generate KOT');
         return;
       }
-  
+
       if (currentOrder.length > 0) {
         const now = new Date();
         const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000).toLocaleTimeString('en-IN', {
@@ -138,7 +184,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           minute: '2-digit',
           timeZone: 'Asia/Kolkata',
         });
-  
+
         const newOrder = {
           id: `temp-${Date.now()}`,
           tableNo: tableNumber.slice(1),
@@ -156,7 +202,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         setKotTime(istTime);
         console.log('Temporary order created:', newOrder);
       }
-  
+
       // Print each order for KOT
       filteredOrders.forEach(order => printKOT(order));
       updateTableColor(tableNumber, 'running-kot');
@@ -169,11 +215,13 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         )
       );
       console.log('KOT generated and printed successfully');
+
+      setShowKOT(true); // Show the KOT print dialog
     } catch (error) {
       console.error('Error generating KOT:', error);
     }
   };
-  
+
   const handleGenerateBill = async () => {
     try {
       const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
@@ -181,12 +229,18 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         console.log('No orders to generate Bill');
         return;
       }
-  
+
+      // Calculate total amount and set the state
+      const amount = calculateTotalAmount(filteredOrders);
+      setTotalAmount(amount);
+
       // Print each order for Bill
       filteredOrders.forEach(order => printBill(order));
       await updateTableColor(tableNumber, 'green');
       await updateOrderStatus(filteredOrders, 'billed');
       console.log('Bill generated and printed successfully');
+
+      setShowBill(true); // Show the Bill print dialog
     } catch (error) {
       console.error('Error generating Bill:', error);
     }
@@ -370,6 +424,19 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           </div>
         </div>
       </div>
+
+      {/* Conditionally render Bill component for printing */}
+      {showKOT && (
+        <div className="print-area">
+          <Bill tableNumber={tableNumber} orders={orders} isKOT={true} />
+        </div>
+      )}
+
+      {showBill && (
+        <div className="print-area">
+          <Bill tableNumber={tableNumber} orders={orders} totalAmount={totalAmount} isKOT={false} />
+        </div>
+      )}
     </div>
   );
 };

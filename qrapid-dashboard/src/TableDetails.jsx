@@ -22,6 +22,32 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const kotRef = useRef();
   const billRef = useRef();
 
+  let printer = null;
+
+  useEffect(() => {
+    const ePosDevice = new window.epson.ePOSDevice();
+    ePosDevice.connect('192.168.29.12', window.epson.ePOSDevice.DEVICE_TYPE_PRINTER, {
+      success: (device) => {
+        printer = device;
+        printer.onreceive = (response) => {
+          if (response.success) {
+            console.log('Print successful');
+          } else {
+            console.log('Print failed');
+          }
+        };
+      },
+      error: (error) => {
+        console.log('Failed to connect:', error);
+      }
+    });
+  }, []);
+
+  const playSound = () => {
+    const audio = new Audio(successSound);
+    audio.play().catch(error => console.error('Error playing sound:', error));
+  };
+
   useEffect(() => {
     const fetchCategories = async () => {
       const userId = auth.currentUser ? auth.currentUser.uid : null;
@@ -45,6 +71,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     };
     fetchItems();
   }, [selectedCategory]);
+
   // The following commented-out code is preserved as per your request
   // useEffect(() => {
   //   const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
@@ -107,6 +134,42 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     }, 0);
   };
 
+  const printKOT = (order) => {
+    if (printer) {
+      const builder = new window.epson.ePOSBuilder();
+      builder.addTextAlign(builder.ALIGN_CENTER);
+      builder.addText(`KOT\n`);
+      builder.addText(`Table No: ${tableNumber}\n`);
+      order.items.forEach(item => {
+        builder.addText(`${item.quantity} x ${item.name}\n`);
+      });
+      builder.addCut(window.epson.ePOSBuilder.CUT_FEED);
+      printer.send(builder.toString());
+    } else {
+      console.log('Printer not connected');
+    }
+  };
+
+  const printBill = (order) => {
+    if (printer) {
+      const builder = new window.epson.ePOSBuilder();
+      builder.addTextAlign(builder.ALIGN_CENTER);
+      builder.addText(`BILL\n`);
+      builder.addText(`Table No: ${tableNumber}\n`);
+      let total = 0;
+      order.items.forEach(item => {
+        builder.addText(`${item.quantity} x ${item.name} - ${item.price * item.quantity}\n`);
+        total += item.price * item.quantity;
+      });
+      builder.addText(`------------------------------\n`);
+      builder.addText(`Total: ${total.toFixed(2)}\n`);
+      builder.addCut(window.epson.ePOSBuilder.CUT_FEED);
+      printer.send(builder.toString());
+    } else {
+      console.log('Printer not connected');
+    }
+  };
+
   const handleGenerateKOT = async () => {
     try {
       const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
@@ -141,7 +204,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         console.log('Temporary order created:', newOrder);
       }
 
-      await updateTableColor(tableNumber, 'running-kot');
+      // Print each order for KOT
+      filteredOrders.forEach(order => printKOT(order));
+      updateTableColor(tableNumber, 'running-kot');
       await updateOrderStatus(filteredOrders, 'KOT');
       setOrders(prevOrders =>
         prevOrders.map(order =>
@@ -150,7 +215,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
             : order
         )
       );
-      console.log('KOT generated and ready to print.');
+      console.log('KOT generated and printed successfully');
     } catch (error) {
       console.error('Error generating KOT:', error);
     }
@@ -168,9 +233,11 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       const amount = calculateTotalAmount(filteredOrders);
       setTotalAmount(amount);
 
+      // Print each order for Bill
+      filteredOrders.forEach(order => printBill(order));
       await updateTableColor(tableNumber, 'green');
       await updateOrderStatus(filteredOrders, 'billed');
-      console.log('Bill generated and ready to print.');
+      console.log('Bill generated and printed successfully');
     } catch (error) {
       console.error('Error generating Bill:', error);
     }

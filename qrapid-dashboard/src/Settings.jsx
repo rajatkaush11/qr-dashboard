@@ -8,9 +8,13 @@ const Settings = () => {
   useEffect(() => {
     const fetchPrinters = async () => {
       try {
-        // Since web browsers cannot list printers directly, this is simulated.
-        // You would need a browser extension or a desktop application to access printers.
-        const availablePrinters = ['Printer1', 'Printer2', 'Printer3'];  // Example printer names
+        // Mocking available printers - in a real environment, replace this with actual printer data fetching.
+        const availablePrinters = [
+          'Brother HL-L2350DW',
+          'HP OfficeJet 5255',
+          'Canon PIXMA TS9120',
+          'Epson EcoTank ET-2720'
+        ];  // Example printer names
         setPrinters(availablePrinters);
       } catch (error) {
         console.error('Error fetching printers:', error);

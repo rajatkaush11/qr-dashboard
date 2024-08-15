@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { backendDb, db, auth } from './firebase-config';
 import { collection, query, where, orderBy, getDocs, writeBatch, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import './TableDetails.css';
 import successSound from './assets/success.mp3';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import ReactToPrint from 'react-to-print';
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [orders, setOrders] = useState([]);
@@ -18,31 +19,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [kotTime, setKotTime] = useState('');
   const [totalAmount, setTotalAmount] = useState(0); // State to store the total amount for the bill
 
-  let printer = null;
-
-  useEffect(() => {
-    const ePosDevice = new window.epson.ePOSDevice();
-    ePosDevice.connect('192.168.29.12', window.epson.ePOSDevice.DEVICE_TYPE_PRINTER, {
-      success: (device) => {
-        printer = device;
-        printer.onreceive = (response) => {
-          if (response.success) {
-            console.log('Print successful');
-          } else {
-            console.log('Print failed');
-          }
-        };
-      },
-      error: (error) => {
-        console.log('Failed to connect:', error);
-      }
-    });
-  }, []);
-
-  const playSound = () => {
-    const audio = new Audio(successSound);
-    audio.play().catch(error => console.error('Error playing sound:', error));
-  };
+  const kotRef = useRef();
+  const billRef = useRef();
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -67,7 +45,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     };
     fetchItems();
   }, [selectedCategory]);
-
   // The following commented-out code is preserved as per your request
   // useEffect(() => {
   //   const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
@@ -130,42 +107,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     }, 0);
   };
 
-  const printKOT = (order) => {
-    if (printer) {
-      const builder = new window.epson.ePOSBuilder();
-      builder.addTextAlign(builder.ALIGN_CENTER);
-      builder.addText(`KOT\n`);
-      builder.addText(`Table No: ${tableNumber}\n`);
-      order.items.forEach(item => {
-        builder.addText(`${item.quantity} x ${item.name}\n`);
-      });
-      builder.addCut(window.epson.ePOSBuilder.CUT_FEED);
-      printer.send(builder.toString());
-    } else {
-      console.log('Printer not connected');
-    }
-  };
-
-  const printBill = (order) => {
-    if (printer) {
-      const builder = new window.epson.ePOSBuilder();
-      builder.addTextAlign(builder.ALIGN_CENTER);
-      builder.addText(`BILL\n`);
-      builder.addText(`Table No: ${tableNumber}\n`);
-      let total = 0;
-      order.items.forEach(item => {
-        builder.addText(`${item.quantity} x ${item.name} - ${item.price * item.quantity}\n`);
-        total += item.price * item.quantity;
-      });
-      builder.addText(`------------------------------\n`);
-      builder.addText(`Total: ${total.toFixed(2)}\n`);
-      builder.addCut(window.epson.ePOSBuilder.CUT_FEED);
-      printer.send(builder.toString());
-    } else {
-      console.log('Printer not connected');
-    }
-  };
-
   const handleGenerateKOT = async () => {
     try {
       const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
@@ -200,9 +141,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         console.log('Temporary order created:', newOrder);
       }
 
-      // Print each order for KOT
-      filteredOrders.forEach(order => printKOT(order));
-      updateTableColor(tableNumber, 'running-kot');
+      await updateTableColor(tableNumber, 'running-kot');
       await updateOrderStatus(filteredOrders, 'KOT');
       setOrders(prevOrders =>
         prevOrders.map(order =>
@@ -211,12 +150,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
             : order
         )
       );
-      console.log('KOT generated and printed successfully');
-
-      // Show the KOT print area (you can now directly print from here)
-      document.getElementById('print-kot').style.display = 'block';
-      window.print();
-      document.getElementById('print-kot').style.display = 'none';
+      console.log('KOT generated and ready to print.');
     } catch (error) {
       console.error('Error generating KOT:', error);
     }
@@ -234,16 +168,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       const amount = calculateTotalAmount(filteredOrders);
       setTotalAmount(amount);
 
-      // Print each order for Bill
-      filteredOrders.forEach(order => printBill(order));
       await updateTableColor(tableNumber, 'green');
       await updateOrderStatus(filteredOrders, 'billed');
-      console.log('Bill generated and printed successfully');
-
-      // Show the Bill print area (you can now directly print from here)
-      document.getElementById('print-bill').style.display = 'block';
-      window.print();
-      document.getElementById('print-bill').style.display = 'none';
+      console.log('Bill generated and ready to print.');
     } catch (error) {
       console.error('Error generating Bill:', error);
     }
@@ -403,8 +330,16 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           )}
         </div>
         <div className="action-buttons">
-          <button onClick={handleGenerateKOT} className="action-button generate-kot">Generate KOT</button>
-          <button onClick={handleGenerateBill} className="action-button generate-bill">Generate Bill</button>
+          <ReactToPrint
+            trigger={() => <button className="action-button generate-kot">Generate KOT</button>}
+            content={() => kotRef.current}
+            onBeforeGetContent={handleGenerateKOT}
+          />
+          <ReactToPrint
+            trigger={() => <button className="action-button generate-bill">Generate Bill</button>}
+            content={() => billRef.current}
+            onBeforeGetContent={handleGenerateBill}
+          />
           <button onClick={handleCompleteOrder} className="action-button complete">Complete Order</button>
         </div>
       </div>
@@ -429,7 +364,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       </div>
 
       {/* Print-Ready KOT Section */}
-      <div id="print-kot" style={{ display: 'none' }}>
+      <div id="print-kot" ref={kotRef} style={{ display: 'none' }}>
         <h1>KOT for Table {tableNumber}</h1>
         {/* Render the KOT details here */}
         {orders.map((order) => (
@@ -447,7 +382,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       </div>
 
       {/* Print-Ready Bill Section */}
-      <div id="print-bill" style={{ display: 'none' }}>
+      <div id="print-bill" ref={billRef} style={{ display: 'none' }}>
         <h1>Bill for Table {tableNumber}</h1>
         {/* Render the Bill details here */}
         <ul>

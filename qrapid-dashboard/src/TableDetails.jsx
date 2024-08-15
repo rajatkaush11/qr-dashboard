@@ -77,8 +77,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   //   const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
   //   const q = query(
   //     collection(backendDb, 'orders'),
-  //     where('tableNo', '==', normalizedTableNumber),
-  //     orderBy('createdAt', 'desc')
+ //     where('tableNo', '==', normalizedTableNumber),
+ //     orderBy('createdAt', 'desc')
   //   );
 
   //   const fetchOrders = async () => {
@@ -207,10 +207,19 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       // Populate KOT print section
       populateKOTPrintSection(filteredOrders);
 
-      // Print each order for KOT
-      filteredOrders.forEach(order => printKOT(order));
+      // Ensure the document exists before updating
+      filteredOrders.forEach(async (order) => {
+        const orderDoc = doc(backendDb, 'orders', order.id);
+        const docSnap = await getDocs(query(orderDoc));
+        if (docSnap.exists()) {
+          printKOT(order);
+          await updateOrderStatus([order], 'KOT');
+        } else {
+          console.log(`Document with ID ${order.id} does not exist.`);
+        }
+      });
+
       updateTableColor(tableNumber, 'running-kot');
-      await updateOrderStatus(filteredOrders, 'KOT');
       setOrders(prevOrders =>
         prevOrders.map(order =>
           filteredOrders.some(filteredOrder => filteredOrder.id === order.id)
@@ -239,10 +248,19 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       // Populate Bill print section
       populateBillPrintSection(filteredOrders, amount);
 
-      // Print each order for Bill
-      filteredOrders.forEach(order => printBill(order));
-      await updateTableColor(tableNumber, 'green');
-      await updateOrderStatus(filteredOrders, 'billed');
+      // Ensure the document exists before updating
+      filteredOrders.forEach(async (order) => {
+        const orderDoc = doc(backendDb, 'orders', order.id);
+        const docSnap = await getDocs(query(orderDoc));
+        if (docSnap.exists()) {
+          printBill(order);
+          await updateOrderStatus([order], 'billed');
+        } else {
+          console.log(`Document with ID ${order.id} does not exist.`);
+        }
+      });
+
+      updateTableColor(tableNumber, 'green');
       console.log('Bill generated and printed successfully');
     } catch (error) {
       console.error('Error generating Bill:', error);

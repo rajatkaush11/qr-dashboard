@@ -72,43 +72,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     fetchItems();
   }, [selectedCategory]);
 
-  // The following commented-out code is preserved as per your request
-  // useEffect(() => {
-  //   const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
-  //   const q = query(
-  //     collection(backendDb, 'orders'),
-  //     where('tableNo', '==', normalizedTableNumber),
-  //     orderBy('createdAt', 'desc')
-  //   );
-
-  //   const fetchOrders = async () => {
-  //     const querySnapshot = await getDocs(q);
-  //     const ordersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  //     setOrders(ordersData);
-  //     setOrderFetched(true);
-  //   };
-
-  //   const fetchTemporaryOrders = async () => {
-  //     const tempOrdersRef = collection(backendDb, 'manual-orders');
-  //     const tempOrdersSnapshot = await getDocs(tempOrdersRef);
-  //     const tempOrdersData = tempOrdersSnapshot.docs
-  //       .map(doc => ({ id: doc.id, ...doc.data() }))
-  //       .filter(order => order.tableNo === normalizedTableNumber);
-  //     setTemporaryOrders(tempOrdersData);
-  //   };
-
-  //   const fetchCompletedOrderIds = async () => {
-  //     const q = query(collection(db, 'bills'));
-  //     const querySnapshot = await getDocs(q);
-  //     const ids = querySnapshot.docs.map(doc => doc.data().orderId);
-  //     setCompletedOrderIds(ids);
-  //   };
-
-  //   fetchOrders();
-  //   fetchTemporaryOrders();
-  //   fetchCompletedOrderIds();
-  // }, [tableNumber, updateTableColor, orderFetched]);
-
   useEffect(() => {
     const kotOrders = [...orders, ...temporaryOrders].filter(order => order.status === 'KOT');
     if (kotOrders.length > 0) {
@@ -208,7 +171,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       populateKOTPrintSection(filteredOrders);
 
       // Ensure the document exists before updating
-      filteredOrders.forEach(async (order) => {
+      for (const order of filteredOrders) {
         const orderDoc = doc(backendDb, 'orders', order.id);
         const docSnap = await getDocs(query(orderDoc));
         if (docSnap.exists()) {
@@ -217,7 +180,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         } else {
           console.log(`Document with ID ${order.id} does not exist.`);
         }
-      });
+      }
 
       updateTableColor(tableNumber, 'running-kot');
       setOrders(prevOrders =>
@@ -249,7 +212,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       populateBillPrintSection(filteredOrders, amount);
 
       // Ensure the document exists before updating
-      filteredOrders.forEach(async (order) => {
+      for (const order of filteredOrders) {
         const orderDoc = doc(backendDb, 'orders', order.id);
         const docSnap = await getDocs(query(orderDoc));
         if (docSnap.exists()) {
@@ -258,7 +221,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         } else {
           console.log(`Document with ID ${order.id} does not exist.`);
         }
-      });
+      }
 
       updateTableColor(tableNumber, 'green');
       console.log('Bill generated and printed successfully');

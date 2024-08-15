@@ -17,32 +17,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [temporaryOrders, setTemporaryOrders] = useState([]);
   const [kotTime, setKotTime] = useState('');
 
-  let printer = null;
-
-  useEffect(() => {
-    const ePosDevice = new window.epson.ePOSDevice();
-    ePosDevice.connect('192.168.29.12', window.epson.ePOSDevice.DEVICE_TYPE_PRINTER, {
-      success: (device) => {
-        printer = device;
-        printer.onreceive = (response) => {
-          if (response.success) {
-            console.log('Print successful');
-          } else {
-            console.log('Print failed');
-          }
-        };
-      },
-      error: (error) => {
-        console.log('Failed to connect:', error);
-      }
-    });
-  }, []);
-
-  const playSound = () => {
-    const audio = new Audio(successSound);
-    audio.play().catch(error => console.error('Error playing sound:', error));
-  };
-
+  // Fetch categories from Firestore
   useEffect(() => {
     const fetchCategories = async () => {
       const userId = auth.currentUser ? auth.currentUser.uid : null;
@@ -54,6 +29,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     fetchCategories();
   }, []);
 
+  // Fetch items based on selected category from Firestore
   useEffect(() => {
     const fetchItems = async () => {
       if (selectedCategory) {
@@ -67,6 +43,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     fetchItems();
   }, [selectedCategory]);
 
+  // Fetch orders, temporary orders, and completed order IDs from Firestore
   // useEffect(() => {
   //   const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
   //   const q = query(
@@ -103,6 +80,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   //   fetchCompletedOrderIds();
   // }, [tableNumber, updateTableColor, orderFetched]);
 
+  // Manage KOT timing and table color updates based on order status
   useEffect(() => {
     const kotOrders = [...orders, ...temporaryOrders].filter(order => order.status === 'KOT');
     if (kotOrders.length > 0) {
@@ -122,42 +100,64 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     }
   }, [orders, temporaryOrders, tableNumber, updateTableColor, kotTime]);
 
-  const printKOT = (order) => {
-    if (printer) {
-      const builder = new window.epson.ePOSBuilder();
-      builder.addTextAlign(builder.ALIGN_CENTER);
-      builder.addText(`KOT\n`);
-      builder.addText(`Table No: ${tableNumber}\n`);
-      order.items.forEach(item => {
-        builder.addText(`${item.quantity} x ${item.name}\n`);
-      });
-      builder.addCut(window.epson.ePOSBuilder.CUT_FEED);
-      printer.send(builder.toString());
+  // Play sound effect when an item is added to the current order
+  const playSound = () => {
+    const audio = new Audio(successSound);
+    audio.play().catch(error => console.error('Error playing sound:', error));
+  };
+
+  // Add item to the current order or increase its quantity if it already exists
+  const handleItemClick = (item) => {
+    setCurrentOrder((prevOrder) => {
+      const existingItem = prevOrder.find((orderItem) => orderItem.id === item.id);
+      if (existingItem) {
+        return prevOrder.map((orderItem) =>
+          orderItem.id === item.id ? { ...orderItem, quantity: orderItem.quantity + 1 } : orderItem
+        );
+      }
+      playSound();
+      return [...prevOrder, { ...item, quantity: 1 }];
+    });
+  };
+
+  // Increment the quantity of an item in the current order
+  const handleIncrement = (itemId) => {
+    setCurrentOrder((prevOrder) =>
+      prevOrder.map((orderItem) =>
+        orderItem.id === itemId ? { ...orderItem, quantity: orderItem.quantity + 1 } : orderItem
+      )
+    );
+  };
+
+  // Decrement the quantity of an item in the current order
+  const handleDecrement = (itemId) => {
+    setCurrentOrder((prevOrder) =>
+      prevOrder
+        .map((orderItem) =>
+          orderItem.id === itemId ? { ...orderItem, quantity: orderItem.quantity - 1 } : orderItem
+        )
+        .filter((orderItem) => orderItem.quantity > 0)
+    );
+  };
+
+  // Delete an item from the current order or delete a temporary order
+  const handleDelete = async (itemId) => {
+    const itemToDelete = currentOrder.find(orderItem => orderItem.id === itemId);
+    if (itemToDelete) {
+      const reason = prompt('Please provide a reason for deleting this item:');
+      if (reason) {
+        setCurrentOrder((prevOrder) => prevOrder.filter((orderItem) => orderItem.id !== itemId));
+      }
     } else {
-      console.log('Printer not connected');
+      const reason = prompt('Please provide a reason for deleting this order:');
+      if (reason) {
+        await deleteDoc(doc(collection(backendDb, 'manual-orders'), itemId));
+        setTemporaryOrders((prevOrders) => prevOrders.filter(order => order.id !== itemId));
+      }
     }
   };
 
-  const printBill = (order) => {
-    if (printer) {
-      const builder = new window.epson.ePOSBuilder();
-      builder.addTextAlign(builder.ALIGN_CENTER);
-      builder.addText(`BILL\n`);
-      builder.addText(`Table No: ${tableNumber}\n`);
-      let total = 0;
-      order.items.forEach(item => {
-        builder.addText(`${item.quantity} x ${item.name} - ${item.price * item.quantity}\n`);
-        total += item.price * item.quantity;
-      });
-      builder.addText(`------------------------------\n`);
-      builder.addText(`Total: ${total.toFixed(2)}\n`);
-      builder.addCut(window.epson.ePOSBuilder.CUT_FEED);
-      printer.send(builder.toString());
-    } else {
-      console.log('Printer not connected');
-    }
-  };
-
+  // Generate KOT and print it using the selected printer
   const handleGenerateKOT = async () => {
     try {
       const printerIp = localStorage.getItem('selectedPrinter');
@@ -172,10 +172,11 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           printerIp
         }),
       });
-  
+
       const result = await response.json();
       if (result.success) {
         console.log('KOT printed successfully');
+        handlePrintKOT(); // Call print function after generating KOT
       } else {
         console.log('Failed to print KOT');
       }
@@ -183,7 +184,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       console.error('Error generating KOT:', error);
     }
   };
-  
+
+  // Generate bill and print it using the selected printer
   const handleGenerateBill = async () => {
     try {
       const printerIp = localStorage.getItem('selectedPrinter');
@@ -198,10 +200,11 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           printerIp
         }),
       });
-  
+
       const result = await response.json();
       if (result.success) {
         console.log('Bill printed successfully');
+        handlePrintBill(); // Call print function after generating Bill
       } else {
         console.log('Failed to print bill');
       }
@@ -209,8 +212,18 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       console.error('Error generating bill:', error);
     }
   };
-  
 
+  // Trigger the print dialog for KOT
+  const handlePrintKOT = () => {
+    window.print(); // Opens the print dialog for the user to select a printer and print KOT
+  };
+
+  // Trigger the print dialog for Bill
+  const handlePrintBill = () => {
+    window.print(); // Opens the print dialog for the user to select a printer and print Bill
+  };
+
+  // Complete the order and update the status in Firestore
   const handleCompleteOrder = async () => {
     try {
       const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
@@ -239,6 +252,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     }
   };
 
+  // Update the status of orders in Firestore
   const updateOrderStatus = async (orders, status) => {
     const batch = writeBatch(backendDb);
     orders.forEach(order => {
@@ -247,53 +261,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     });
     await batch.commit();
     console.log(`Order status updated to ${status}`);
-  };
-
-  const handleItemClick = (item) => {
-    setCurrentOrder((prevOrder) => {
-      const existingItem = prevOrder.find((orderItem) => orderItem.id === item.id);
-      if (existingItem) {
-        return prevOrder.map((orderItem) =>
-          orderItem.id === item.id ? { ...orderItem, quantity: orderItem.quantity + 1 } : orderItem
-        );
-      }
-      playSound();
-      return [...prevOrder, { ...item, quantity: 1 }];
-    });
-  };
-
-  const handleIncrement = (itemId) => {
-    setCurrentOrder((prevOrder) =>
-      prevOrder.map((orderItem) =>
-        orderItem.id === itemId ? { ...orderItem, quantity: orderItem.quantity + 1 } : orderItem
-      )
-    );
-  };
-
-  const handleDecrement = (itemId) => {
-    setCurrentOrder((prevOrder) =>
-      prevOrder
-        .map((orderItem) =>
-          orderItem.id === itemId ? { ...orderItem, quantity: orderItem.quantity - 1 } : orderItem
-        )
-        .filter((orderItem) => orderItem.quantity > 0)
-    );
-  };
-
-  const handleDelete = async (itemId) => {
-    const itemToDelete = currentOrder.find(orderItem => orderItem.id === itemId);
-    if (itemToDelete) {
-      const reason = prompt('Please provide a reason for deleting this item:');
-      if (reason) {
-        setCurrentOrder((prevOrder) => prevOrder.filter((orderItem) => orderItem.id !== itemId));
-      }
-    } else {
-      const reason = prompt('Please provide a reason for deleting this order:');
-      if (reason) {
-        await deleteDoc(doc(collection(backendDb, 'manual-orders'), itemId));
-        setTemporaryOrders((prevOrders) => prevOrders.filter(order => order.id !== itemId));
-      }
-    }
   };
 
   return (
@@ -315,33 +282,33 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         <div className="table-title">Table {tableNumber}</div>
         <div className="kot-generated">
           <h3>KOT Generated <span>{kotTime}</span></h3>
-          {[...orders, ...temporaryOrders].filter(order => order.status === 'KOT').map((order, orderIndex) => (
-            <div className="order-item" key={orderIndex}>
-              <FontAwesomeIcon icon={faTrash} className="delete-button" onClick={() => handleDelete(order.id)} />
-              <p><strong>{order.name}</strong></p>
-              <p>{order.items.map(item => `${item.quantity} x ${item.name}`).join(', ')}</p>
-              <p><strong>{order.items.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2)}</strong></p>
-            </div>
-          ))}
+          <div className="print-area">
+            {[...orders, ...temporaryOrders].filter(order => order.status === 'KOT').map((order, orderIndex) => (
+              <div className="order-item" key={orderIndex}>
+                <FontAwesomeIcon icon={faTrash} className="delete-button" onClick={() => handleDelete(order.id)} />
+                <p><strong>{order.name}</strong></p>
+                <p>{order.items.map(item => `${item.quantity} x ${item.name}`).join(', ')}</p>
+                <p><strong>{order.items.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2)}</strong></p>
+              </div>
+            ))}
+          </div>
         </div>
         <div className="current-orders">
           <h3>Current Orders</h3>
           {orders.length === 0 ? (
             <p>No digital orders.</p>
           ) : (
-            orders
-              .filter(order => order.status !== 'completed' && order.status !== 'KOT')
-              .map((order, orderIndex) => (
-                <div className="order-item" key={orderIndex}>
-                  <p><strong>Name:</strong> {order.name}</p>
-                  <p><strong>Items:</strong></p>
-                  <ul>
-                    {order.items && order.items.map((item, index) => (
-                      <li key={index}>{item.name} - {item.price} x {item.quantity}</li>
-                    ))}
-                  </ul>
-                </div>
-              ))
+            orders.filter(order => order.status !== 'completed' && order.status !== 'KOT').map((order, orderIndex) => (
+              <div className="order-item" key={orderIndex}>
+                <p><strong>Name:</strong> {order.name}</p>
+                <p><strong>Items:</strong></p>
+                <ul>
+                  {order.items && order.items.map((item, index) => (
+                    <li key={index}>{item.name} - {item.price} x {item.quantity}</li>
+                  ))}
+                </ul>
+              </div>
+            ))
           )}
           {currentOrder.length === 0 ? (
             <p>No items in current order.</p>

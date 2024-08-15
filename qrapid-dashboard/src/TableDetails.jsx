@@ -260,6 +260,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       <h1>KOT for Table ${tableNumber}</h1>
       ${kotContent}
     `;
+    console.log("KOT content populated: ", kotRef.current.innerHTML);
   };
 
   const populateBillPrintSection = (filteredOrders, totalAmount) => {
@@ -271,6 +272,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       <ul>${billContent}</ul>
       <h2>Total: $${totalAmount.toFixed(2)}</h2>
     `;
+    console.log("Bill content populated: ", billRef.current.innerHTML);
   };
 
   const handleCompleteOrder = async () => {
@@ -430,12 +432,18 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           <ReactToPrint
             trigger={() => <button className="action-button generate-kot">Generate KOT</button>}
             content={() => kotRef.current}
-            onBeforeGetContent={handleGenerateKOT} // Ensure KOT content is ready before print
+            onBeforeGetContent={async () => {
+              await handleGenerateKOT();
+              await new Promise(resolve => setTimeout(resolve, 500)); // Add a small delay
+            }} // Ensure KOT content is ready before print
           />
           <ReactToPrint
             trigger={() => <button className="action-button generate-bill">Generate Bill</button>}
             content={() => billRef.current}
-            onBeforeGetContent={handleGenerateBill} // Ensure Bill content is ready before print
+            onBeforeGetContent={async () => {
+              await handleGenerateBill();
+              await new Promise(resolve => setTimeout(resolve, 500)); // Add a small delay
+            }} // Ensure Bill content is ready before print
           />
           <button onClick={handleCompleteOrder} className="action-button complete">Complete Order</button>
         </div>

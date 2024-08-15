@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './Settings.css';
+import './Setting.css';
 
 const Settings = () => {
   const [printers, setPrinters] = useState([]);

@@ -17,9 +17,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [items, setItems] = useState([]);
   const [temporaryOrders, setTemporaryOrders] = useState([]);
   const [kotTime, setKotTime] = useState('');
-  const [totalAmount, setTotalAmount] = useState(0); // State to store the total amount for the bill
-  const [kotPrintData, setKotPrintData] = useState(''); // State to store KOT print content
-  const [billPrintData, setBillPrintData] = useState(''); // State to store Bill print content
+  const [totalAmount, setTotalAmount] = useState(0); 
+  const [kotReady, setKotReady] = useState(false); // New state to track print readiness
 
   const kotRef = useRef();
   const billRef = useRef();
@@ -152,7 +151,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           tableNo: tableNumber.slice(1),
           items: currentOrder,
           status: 'KOT',
-          createdAt: Timestamp.fromDate(now),  // Correctly using Firestore Timestamp
+          createdAt: Timestamp.fromDate(now), 
           istTime,
           name: 'Temporary Order',
         };
@@ -169,12 +168,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         console.log('Temporary order created:', newOrder);
       }
 
-      // Populate KOT print section
-      const kotPrintSectionContent = populateKOTPrintSection(filteredOrders);
-      setKotPrintData(kotPrintSectionContent);
-      console.log('KOT content stored for print:', kotPrintSectionContent); // Debugging log
-
-      // Ensure the document exists before updating
+      populateKOTPrintSection(filteredOrders);
+      setKotReady(true); // Set KOT ready state for print
+      
       for (const order of filteredOrders) {
         const orderDoc = doc(backendDb, 'orders', order.id);
         const docSnap = await getDocs(query(orderDoc));
@@ -208,16 +204,10 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         return;
       }
 
-      // Calculate total amount and set the state
       const amount = calculateTotalAmount(filteredOrders);
       setTotalAmount(amount);
+      populateBillPrintSection(filteredOrders, amount);
 
-      // Populate Bill print section
-      const billPrintSectionContent = populateBillPrintSection(filteredOrders, amount);
-      setBillPrintData(billPrintSectionContent);
-      console.log('Bill content stored for print:', billPrintSectionContent); // Debugging log
-
-      // Ensure the document exists before updating
       for (const order of filteredOrders) {
         const orderDoc = doc(backendDb, 'orders', order.id);
         const docSnap = await getDocs(query(orderDoc));
@@ -243,25 +233,23 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         ${order.items.map(item => `<li>${item.quantity} x ${item.name}</li>`).join('')}
       </ul>`
     )).join('');
-    const kotHTMLContent = `
+    kotRef.current.innerHTML = `
       <h1>KOT for Table ${tableNumber}</h1>
       ${kotContent}
     `;
-    console.log("KOT content populated:", kotHTMLContent); // Debugging log
-    return kotHTMLContent;
+    console.log("KOT content populated: ", kotRef.current.innerHTML);
   };
 
   const populateBillPrintSection = (filteredOrders, totalAmount) => {
     const billContent = filteredOrders.map(order =>
       order.items.map(item => `<li>${item.name} - ${item.price} x ${item.quantity}</li>`).join('')
     ).join('');
-    const billHTMLContent = `
+    billRef.current.innerHTML = `
       <h1>Bill for Table ${tableNumber}</h1>
       <ul>${billContent}</ul>
       <h2>Total: $${totalAmount.toFixed(2)}</h2>
     `;
-    console.log("Bill content populated:", billHTMLContent); // Debugging log
-    return billHTMLContent;
+    console.log("Bill content populated: ", billRef.current.innerHTML);
   };
 
   const handleCompleteOrder = async () => {
@@ -423,11 +411,11 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
             content={() => kotRef.current}
             onBeforeGetContent={async () => {
               await handleGenerateKOT();
-              await new Promise(resolve => setTimeout(resolve, 500)); // Add a small delay
-              console.log('KOT content before print:', kotRef.current.innerHTML); // Debugging log
-            }} // Ensure KOT content is ready before print
+              await new Promise(resolve => setTimeout(resolve, 500)); 
+              console.log('KOT content before print:', kotRef.current.innerHTML); 
+            }} 
             onAfterPrint={() => {
-              console.log('KOT print completed.'); // Debugging log
+              console.log('KOT print completed.');
             }}
           />
           <ReactToPrint
@@ -435,11 +423,11 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
             content={() => billRef.current}
             onBeforeGetContent={async () => {
               await handleGenerateBill();
-              await new Promise(resolve => setTimeout(resolve, 500)); // Add a small delay
-              console.log('Bill content before print:', billRef.current.innerHTML); // Debugging log
-            }} // Ensure Bill content is ready before print
+              await new Promise(resolve => setTimeout(resolve, 500)); 
+              console.log('Bill content before print:', billRef.current.innerHTML); 
+            }} 
             onAfterPrint={() => {
-              console.log('Bill print completed.'); // Debugging log
+              console.log('Bill print completed.');
             }}
           />
           <button onClick={handleCompleteOrder} className="action-button complete">Complete Order</button>
@@ -466,17 +454,15 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       </div>
 
       {/* Print-Ready KOT Section */}
-      <div id="print-kot" ref={kotRef} style={{ display: 'none' }}>
-        {kotPrintData && (
-          <div dangerouslySetInnerHTML={{ __html: kotPrintData }} />
-        )}
+      <div id="print-kot" ref={kotRef} style={{ display: kotReady ? 'block' : 'none' }}>
+        <h1>KOT for Table {tableNumber}</h1>
+        {/* KOT content will be populated dynamically */}
       </div>
 
       {/* Print-Ready Bill Section */}
       <div id="print-bill" ref={billRef} style={{ display: 'none' }}>
-        {billPrintData && (
-          <div dangerouslySetInnerHTML={{ __html: billPrintData }} />
-        )}
+        <h1>Bill for Table {tableNumber}</h1>
+        {/* Bill content will be populated dynamically */}
       </div>
     </div>
   );

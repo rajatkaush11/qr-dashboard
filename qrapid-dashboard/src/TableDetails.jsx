@@ -104,7 +104,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
         // Header
         builder.addTextAlign(builder.ALIGN_LEFT);
-        builder.addText(`Order No: ${order.id.slice(-3)}\n`);
+        builder.addText(`Order No: ${order.id.slice(-3)}  Table No: ${order.tableNo}\n`);
         builder.addText(`Dt:${new Date(order.createdAt.toDate()).toLocaleDateString('en-IN', {
             day: '2-digit',
             month: 'short',
@@ -143,6 +143,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         console.log('Printer not connected');
     }
 };
+
 
 
   const printBill = (order) => {

@@ -204,9 +204,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         console.log('Temporary order created:', newOrder);
       }
 
-      // Update the KOT print section
-      updateKOTPrintSection(filteredOrders);
-
       // Print each order for KOT
       filteredOrders.forEach(order => printKOT(order));
       updateTableColor(tableNumber, 'running-kot');
@@ -236,9 +233,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       const amount = calculateTotalAmount(filteredOrders);
       setTotalAmount(amount);
 
-      // Update the Bill print section
-      updateBillPrintSection(filteredOrders, amount);
-
       // Print each order for Bill
       filteredOrders.forEach(order => printBill(order));
       await updateTableColor(tableNumber, 'green');
@@ -249,28 +243,32 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     }
   };
 
-  const updateKOTPrintSection = (filteredOrders) => {
-    const kotContent = filteredOrders.map(order => (
-      `<h2>Order ${order.id}</h2>
-      <ul>
-        ${order.items.map(item => `<li>${item.quantity} x ${item.name}</li>`).join('')}
-      </ul>`
-    )).join('');
-    kotRef.current.innerHTML = `
-      <h1>KOT for Table ${tableNumber}</h1>
-      ${kotContent}
-    `;
-  };
+  const handleCompleteOrder = async () => {
+    try {
+      const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
+      const batch = writeBatch(db);
+      filteredOrders.forEach(order => {
+        const billRef = doc(collection(db, 'bills'));
+        batch.set(billRef, { orderId: order.id, ...order });
+      });
+      await batch.commit();
+      await updateOrderStatus(filteredOrders, 'completed');
+      setCompletedOrderIds([...completedOrderIds, ...filteredOrders.map(order => order.id)]);
+      setOrders(prevOrders => prevOrders.filter(order => !filteredOrders.map(o => o.id).includes(order.id)));
+      await updateTableColor(tableNumber, 'blank');
+      setOrderFetched(false);
 
-  const updateBillPrintSection = (filteredOrders, totalAmount) => {
-    const billContent = filteredOrders.map(order =>
-      order.items.map(item => `<li>${item.name} - ${item.price} x ${item.quantity}</li>`).join('')
-    ).join('');
-    billRef.current.innerHTML = `
-      <h1>Bill for Table ${tableNumber}</h1>
-      <ul>${billContent}</ul>
-      <h2>Total: $${totalAmount.toFixed(2)}</h2>
-    `;
+      const tempOrderIds = filteredOrders.filter(order => order.id.startsWith('temp-')).map(order => order.id);
+      const batchDelete = writeBatch(backendDb);
+      tempOrderIds.forEach(id => {
+        batchDelete.delete(doc(backendDb, 'manual-orders', id));
+      });
+      await batchDelete.commit();
+      setTemporaryOrders(prev => prev.filter(order => !tempOrderIds.includes(order.id)));
+      console.log('Order completed successfully');
+    } catch (error) {
+      console.error('Error completing order:', error);
+    }
   };
 
   const updateOrderStatus = async (orders, status) => {
@@ -402,12 +400,12 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           <ReactToPrint
             trigger={() => <button className="action-button generate-kot">Generate KOT</button>}
             content={() => kotRef.current}
-            onBeforeGetContent={handleGenerateKOT} // Ensure KOT content is ready before print
+            onBeforeGetContent={handleGenerateKOT}
           />
           <ReactToPrint
             trigger={() => <button className="action-button generate-bill">Generate Bill</button>}
             content={() => billRef.current}
-            onBeforeGetContent={handleGenerateBill} // Ensure Bill content is ready before print
+            onBeforeGetContent={handleGenerateBill}
           />
           <button onClick={handleCompleteOrder} className="action-button complete">Complete Order</button>
         </div>
@@ -435,13 +433,35 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       {/* Print-Ready KOT Section */}
       <div id="print-kot" ref={kotRef} style={{ display: 'none' }}>
         <h1>KOT for Table {tableNumber}</h1>
-        {/* KOT content will be dynamically updated */}
+        {/* Render the KOT details here */}
+        {orders.map((order) => (
+          <div key={order.id}>
+            <h2>Order {order.id}</h2>
+            <ul>
+              {order.items.map((item) => (
+                <li key={item.id}>
+                  {item.quantity} x {item.name}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </div>
 
       {/* Print-Ready Bill Section */}
       <div id="print-bill" ref={billRef} style={{ display: 'none' }}>
         <h1>Bill for Table {tableNumber}</h1>
-        {/* Bill content will be dynamically updated */}
+        {/* Render the Bill details here */}
+        <ul>
+          {orders.map((order) =>
+            order.items.map((item) => (
+              <li key={item.id}>
+                {item.name} - {item.price} x {item.quantity}
+              </li>
+            ))
+          )}
+        </ul>
+        <h2>Total: ${totalAmount}</h2>
       </div>
     </div>
   );

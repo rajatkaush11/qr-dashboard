@@ -170,78 +170,104 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     }
   };
 
-  const handleGenerateKOT = async () => {
-    try {
-      const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
-      if (filteredOrders.length === 0 && currentOrder.length === 0) {
-        console.log('No orders to generate KOT');
-        return;
-      }
-
-      if (currentOrder.length > 0) {
-        const now = new Date();
-        const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000).toLocaleTimeString('en-IN', {
-          hour: '2-digit',
-          minute: '2-digit',
-          timeZone: 'Asia/Kolkata',
-        });
-
-        const newOrder = {
-          id: `temp-${Date.now()}`,
-          tableNo: tableNumber.slice(1),
-          items: currentOrder,
-          status: 'KOT',
-          createdAt: now,
-          istTime,
-          name: 'Temporary Order',
-        };
-        await setDoc(doc(collection(backendDb, 'manual-orders'), newOrder.id), newOrder);
-        setTemporaryOrders(prev => [...prev, newOrder]);
-        filteredOrders.push(newOrder);
-        setOrders([...orders, newOrder]);
-        setCurrentOrder([]);
-        setKotTime(istTime);
-        console.log('Temporary order created:', newOrder);
-      }
-
-      // Print each order for KOT
-      filteredOrders.forEach(order => printKOT(order));
-      updateTableColor(tableNumber, 'running-kot');
-      await updateOrderStatus(filteredOrders, 'KOT');
-      setOrders(prevOrders =>
-        prevOrders.map(order =>
-          filteredOrders.some(filteredOrder => filteredOrder.id === order.id)
-            ? { ...order, status: 'KOT' }
-            : order
-        )
-      );
-      console.log('KOT generated and printed successfully');
-    } catch (error) {
-      console.error('Error generating KOT:', error);
-    }
+  const handleGenerateKOT = async () => {  
+    try {  
+      const filteredOrders = orders.filter(order =>!completedOrderIds.includes(order.id));  
+      if (filteredOrders.length === 0 && currentOrder.length === 0) {  
+      console.log('No orders to generate KOT');  
+      return;  
+   }  
+    
+     if (currentOrder.length > 0) {  
+      const now = new Date();  
+      const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000).toLocaleTimeString('en-IN', {  
+        hour: '2-digit',  
+        minute: '2-digit',  
+        timeZone: 'Asia/Kolkata',  
+        });  
+    
+      const newOrder = {  
+        id: `temp-${Date.now()}`,  
+        tableNo: tableNumber.slice(1),  
+        items: currentOrder,  
+        status: 'KOT',  
+        createdAt: now,  
+        istTime,  
+        name: 'Temporary Order',  
+      };  
+      await setDoc(doc(collection(backendDb, 'anual-orders'), newOrder.id), newOrder);  
+      setTemporaryOrders(prev => [...prev, newOrder]);  
+      filteredOrders.push(newOrder);  
+      setOrders([...orders, newOrder]);  
+      setCurrentOrder([]);  
+      setKotTime(istTime);  
+      console.log('Temporary order created:', newOrder);  
+    }  
+    
+      // Generate KOT content  
+    const kotContent = `KOT for Table ${tableNumber}\n`;  
+      filteredOrders.forEach((order) => {  
+      kotContent += `Order ${order.id}\n`;  
+      order.items.forEach((item) => {  
+        kotContent += `${item.quantity} x ${item.name}\n`;  
+      });  
+      kotContent += `\n`;  
+    });  
+    
+     // Update kotRef with the generated content  
+     kotRef.current.innerHTML = kotContent;  
+    
+     // Print each order for KOT  
+     filteredOrders.forEach((order) => printKOT(order));  
+     updateTableColor(tableNumber, 'running-kot');  
+     await updateOrderStatus(filteredOrders, 'KOT');  
+     setOrders((prevOrders) =>  
+      prevOrders.map((order) =>  
+        filteredOrders.some((filteredOrder) => filteredOrder.id === order.id)  
+        ? {...order, status: 'KOT' }  
+         : order  
+      )  
+     );  
+     console.log('KOT generated and printed successfully');  
+    } catch (error) {  
+     console.error('Error generating KOT:', error);  
+    }  
+  };  
+    
+  const handleGenerateBill = async () => {  
+    try {  
+      const filteredOrders = orders.filter(order =>!completedOrderIds.includes(order.id));  
+      if (filteredOrders.length === 0) {  
+      console.log('No orders to generate Bill');
+      return;  
+      }  
+    
+      // Calculate total amount and set the state  
+      const amount = calculateTotalAmount(filteredOrders);  
+      setTotalAmount(amount);  
+    
+      // Generate Bill content  
+      const billContent = `Bill for Table ${tableNumber}\n`;  
+      filteredOrders.forEach((order) => {  
+      order.items.forEach((item) => {  
+      billContent += `${item.name} - ${item.price} x ${item.quantity}\n`;  
+      });  
+      });  
+      billContent += `Total: ${amount.toFixed(2)}\n`;  
+    
+      // Update billRef with the generated content  
+      billRef.current.innerHTML = billContent;  
+    
+      // Print each order for Bill  
+      filteredOrders.forEach((order) => printBill(order));  
+      await updateTableColor(tableNumber, 'green');  
+      await updateOrderStatus(filteredOrders, 'billed');  
+      console.log('Bill generated and printed successfully');  
+    } catch (error) {  
+      console.error('Error generating Bill:', error);  
+    }  
   };
-
-  const handleGenerateBill = async () => {
-    try {
-      const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
-      if (filteredOrders.length === 0) {
-        console.log('No orders to generate Bill');
-        return;
-      }
-
-      // Calculate total amount and set the state
-      const amount = calculateTotalAmount(filteredOrders);
-      setTotalAmount(amount);
-
-      // Print each order for Bill
-      filteredOrders.forEach(order => printBill(order));
-      await updateTableColor(tableNumber, 'green');
-      await updateOrderStatus(filteredOrders, 'billed');
-      console.log('Bill generated and printed successfully');
-    } catch (error) {
-      console.error('Error generating Bill:', error);
-    }
-  };
+  
 
   const handleCompleteOrder = async () => {
     try {

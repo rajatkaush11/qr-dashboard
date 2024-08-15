@@ -7,9 +7,9 @@ escpos.Network = require('escpos-network');
 admin.initializeApp();
 const db = admin.firestore();
 
-async function sendToPrinter(content, printerIp) {
+async function sendToPrinter(content) {
   return new Promise((resolve, reject) => {
-    const device = new escpos.Network(printerIp, 9100);
+    const device = new escpos.Network('192.168.29.12', 9100);
     const printer = new escpos.Printer(device);
 
     device.open((error) => {
@@ -28,10 +28,10 @@ async function sendToPrinter(content, printerIp) {
 exports.printKOT = functions.https.onRequest((req, res) => {
   cors(req, res, async () => {
     if (req.method !== 'POST') {
-      return res.status(405).json({ success: false, message: 'Method Not Allowed' });
+      return res.status(405).send('Method Not Allowed');
     }
     try {
-      const { tableNumber, orderIds, printerIp } = req.body;
+      const { tableNumber, orderIds } = req.body;
 
       const orders = await Promise.all(orderIds.map(async (orderId) => {
         const orderRef = db.collection('orders').doc(orderId);
@@ -51,12 +51,12 @@ exports.printKOT = functions.https.onRequest((req, res) => {
         kotContent += '\n';
       });
 
-      await sendToPrinter(kotContent, printerIp);
+      await sendToPrinter(kotContent);
 
-      return res.status(200).json({ success: true, message: "KOT printed successfully" });
+      return res.status(200).send({ success: true, message: "KOT printed successfully" });
     } catch (error) {
       console.error('Error printing KOT:', error);
-      return res.status(500).json({ success: false, message: error.message });
+      return res.status(500).send({ success: false, message: error.message });
     }
   });
 });
@@ -64,10 +64,10 @@ exports.printKOT = functions.https.onRequest((req, res) => {
 exports.printBill = functions.https.onRequest((req, res) => {
   cors(req, res, async () => {
     if (req.method !== 'POST') {
-      return res.status(405).json({ success: false, message: 'Method Not Allowed' });
+      return res.status(405).send('Method Not Allowed');
     }
     try {
-      const { tableNumber, orderIds, printerIp } = req.body;
+      const { tableNumber, orderIds } = req.body;
 
       const orders = await Promise.all(orderIds.map(async (orderId) => {
         const orderRef = db.collection('orders').doc(orderId);
@@ -89,12 +89,12 @@ exports.printBill = functions.https.onRequest((req, res) => {
       });
       billContent += `\nTotal Amount: ${totalAmount}\nThank you for dining with us!`;
 
-      await sendToPrinter(billContent, printerIp);
+      await sendToPrinter(billContent);
 
-      return res.status(200).json({ success: true, message: "Bill printed successfully" });
+      return res.status(200).send({ success: true, message: "Bill printed successfully" });
     } catch (error) {
       console.error('Error printing bill:', error);
-      return res.status(500).json({ success: false, message: error.message });
+      return res.status(500).send({ success: false, message: error.message });
     }
   });
 });

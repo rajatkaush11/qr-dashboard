@@ -62,13 +62,6 @@ const Navbar = ({ activePage, onLinkClick }) => {
         >
           Reports
         </a>
-        <a
-          href="#"
-          onClick={() => handleLinkClick('Settings')}
-          className={activePage === 'Settings' ? 'active-link' : ''}
-        >
-           Settings
-        </a>
       </div>
       <div className="right-icons">
         <FontAwesomeIcon icon={faSearch} onClick={handleSearchClick} className="icon" />

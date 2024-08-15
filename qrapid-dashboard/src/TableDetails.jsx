@@ -170,131 +170,107 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     }
   };
 
-  const handleGenerateKOT = async () => {  
-    try {  
-      const filteredOrders = orders.filter(order =>!completedOrderIds.includes(order.id));  
-      if (filteredOrders.length === 0 && currentOrder.length === 0) {  
-      console.log('No orders to generate KOT');  
-      return;  
-   }  
-    
-     if (currentOrder.length > 0) {  
-      const now = new Date();  
-      const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000).toLocaleTimeString('en-IN', {  
-        hour: '2-digit',  
-        minute: '2-digit',  
-        timeZone: 'Asia/Kolkata',  
-        });  
-    
-      const newOrder = {  
-        id: `temp-${Date.now()}`,  
-        tableNo: tableNumber.slice(1),  
-        items: currentOrder,  
-        status: 'KOT',  
-        createdAt: now,  
-        istTime,  
-        name: 'Temporary Order',  
-      };  
-      await setDoc(doc(collection(backendDb, 'anual-orders'), newOrder.id), newOrder);  
-      setTemporaryOrders(prev => [...prev, newOrder]);  
-      filteredOrders.push(newOrder);  
-      setOrders([...orders, newOrder]);  
-      setCurrentOrder([]);  
-      setKotTime(istTime);  
-      console.log('Temporary order created:', newOrder);  
-    }  
-    
-      // Generate KOT content  
-    const kotContent = `KOT for Table ${tableNumber}\n`;  
-      filteredOrders.forEach((order) => {  
-      kotContent += `Order ${order.id}\n`;  
-      order.items.forEach((item) => {  
-        kotContent += `${item.quantity} x ${item.name}\n`;  
-      });  
-      kotContent += `\n`;  
-    });  
-    
-     // Update kotRef with the generated content  
-     kotRef.current.innerHTML = kotContent;  
-    
-     // Print each order for KOT  
-     filteredOrders.forEach((order) => printKOT(order));  
-     updateTableColor(tableNumber, 'running-kot');  
-     await updateOrderStatus(filteredOrders, 'KOT');  
-     setOrders((prevOrders) =>  
-      prevOrders.map((order) =>  
-        filteredOrders.some((filteredOrder) => filteredOrder.id === order.id)  
-        ? {...order, status: 'KOT' }  
-         : order  
-      )  
-     );  
-     console.log('KOT generated and printed successfully');  
-    } catch (error) {  
-     console.error('Error generating KOT:', error);  
-    }  
-  };  
-    
-  const handleGenerateBill = async () => {  
-    try {  
-      const filteredOrders = orders.filter(order =>!completedOrderIds.includes(order.id));  
-      if (filteredOrders.length === 0) {  
-      console.log('No orders to generate Bill');
-      return;  
-      }  
-    
-      // Calculate total amount and set the state  
-      const amount = calculateTotalAmount(filteredOrders);  
-      setTotalAmount(amount);  
-    
-      // Generate Bill content  
-      const billContent = `Bill for Table ${tableNumber}\n`;  
-      filteredOrders.forEach((order) => {  
-      order.items.forEach((item) => {  
-      billContent += `${item.name} - ${item.price} x ${item.quantity}\n`;  
-      });  
-      });  
-      billContent += `Total: ${amount.toFixed(2)}\n`;  
-    
-      // Update billRef with the generated content  
-      billRef.current.innerHTML = billContent;  
-    
-      // Print each order for Bill  
-      filteredOrders.forEach((order) => printBill(order));  
-      await updateTableColor(tableNumber, 'green');  
-      await updateOrderStatus(filteredOrders, 'billed');  
-      console.log('Bill generated and printed successfully');  
-    } catch (error) {  
-      console.error('Error generating Bill:', error);  
-    }  
-  };
-  
-
-  const handleCompleteOrder = async () => {
+  const handleGenerateKOT = async () => {
     try {
       const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
-      const batch = writeBatch(db);
-      filteredOrders.forEach(order => {
-        const billRef = doc(collection(db, 'bills'));
-        batch.set(billRef, { orderId: order.id, ...order });
-      });
-      await batch.commit();
-      await updateOrderStatus(filteredOrders, 'completed');
-      setCompletedOrderIds([...completedOrderIds, ...filteredOrders.map(order => order.id)]);
-      setOrders(prevOrders => prevOrders.filter(order => !filteredOrders.map(o => o.id).includes(order.id)));
-      await updateTableColor(tableNumber, 'blank');
-      setOrderFetched(false);
+      if (filteredOrders.length === 0 && currentOrder.length === 0) {
+        console.log('No orders to generate KOT');
+        return;
+      }
 
-      const tempOrderIds = filteredOrders.filter(order => order.id.startsWith('temp-')).map(order => order.id);
-      const batchDelete = writeBatch(backendDb);
-      tempOrderIds.forEach(id => {
-        batchDelete.delete(doc(backendDb, 'manual-orders', id));
-      });
-      await batchDelete.commit();
-      setTemporaryOrders(prev => prev.filter(order => !tempOrderIds.includes(order.id)));
-      console.log('Order completed successfully');
+      if (currentOrder.length > 0) {
+        const now = new Date();
+        const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000).toLocaleTimeString('en-IN', {
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: 'Asia/Kolkata',
+        });
+
+        const newOrder = {
+          id: `temp-${Date.now()}`,
+          tableNo: tableNumber.slice(1),
+          items: currentOrder,
+          status: 'KOT',
+          createdAt: now,
+          istTime,
+          name: 'Temporary Order',
+        };
+        await setDoc(doc(collection(backendDb, 'manual-orders'), newOrder.id), newOrder);
+        setTemporaryOrders(prev => [...prev, newOrder]);
+        filteredOrders.push(newOrder);
+        setOrders([...orders, newOrder]);
+        setCurrentOrder([]);
+        setKotTime(istTime);
+        console.log('Temporary order created:', newOrder);
+      }
+
+      // Update the KOT print section
+      updateKOTPrintSection(filteredOrders);
+
+      // Print each order for KOT
+      filteredOrders.forEach(order => printKOT(order));
+      updateTableColor(tableNumber, 'running-kot');
+      await updateOrderStatus(filteredOrders, 'KOT');
+      setOrders(prevOrders =>
+        prevOrders.map(order =>
+          filteredOrders.some(filteredOrder => filteredOrder.id === order.id)
+            ? { ...order, status: 'KOT' }
+            : order
+        )
+      );
+      console.log('KOT generated and printed successfully');
     } catch (error) {
-      console.error('Error completing order:', error);
+      console.error('Error generating KOT:', error);
     }
+  };
+
+  const handleGenerateBill = async () => {
+    try {
+      const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
+      if (filteredOrders.length === 0) {
+        console.log('No orders to generate Bill');
+        return;
+      }
+
+      // Calculate total amount and set the state
+      const amount = calculateTotalAmount(filteredOrders);
+      setTotalAmount(amount);
+
+      // Update the Bill print section
+      updateBillPrintSection(filteredOrders, amount);
+
+      // Print each order for Bill
+      filteredOrders.forEach(order => printBill(order));
+      await updateTableColor(tableNumber, 'green');
+      await updateOrderStatus(filteredOrders, 'billed');
+      console.log('Bill generated and printed successfully');
+    } catch (error) {
+      console.error('Error generating Bill:', error);
+    }
+  };
+
+  const updateKOTPrintSection = (filteredOrders) => {
+    const kotContent = filteredOrders.map(order => (
+      `<h2>Order ${order.id}</h2>
+      <ul>
+        ${order.items.map(item => `<li>${item.quantity} x ${item.name}</li>`).join('')}
+      </ul>`
+    )).join('');
+    kotRef.current.innerHTML = `
+      <h1>KOT for Table ${tableNumber}</h1>
+      ${kotContent}
+    `;
+  };
+
+  const updateBillPrintSection = (filteredOrders, totalAmount) => {
+    const billContent = filteredOrders.map(order =>
+      order.items.map(item => `<li>${item.name} - ${item.price} x ${item.quantity}</li>`).join('')
+    ).join('');
+    billRef.current.innerHTML = `
+      <h1>Bill for Table ${tableNumber}</h1>
+      <ul>${billContent}</ul>
+      <h2>Total: $${totalAmount.toFixed(2)}</h2>
+    `;
   };
 
   const updateOrderStatus = async (orders, status) => {
@@ -426,12 +402,12 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           <ReactToPrint
             trigger={() => <button className="action-button generate-kot">Generate KOT</button>}
             content={() => kotRef.current}
-            onBeforeGetContent={handleGenerateKOT}
+            onBeforeGetContent={handleGenerateKOT} // Ensure KOT content is ready before print
           />
           <ReactToPrint
             trigger={() => <button className="action-button generate-bill">Generate Bill</button>}
             content={() => billRef.current}
-            onBeforeGetContent={handleGenerateBill}
+            onBeforeGetContent={handleGenerateBill} // Ensure Bill content is ready before print
           />
           <button onClick={handleCompleteOrder} className="action-button complete">Complete Order</button>
         </div>
@@ -459,35 +435,13 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       {/* Print-Ready KOT Section */}
       <div id="print-kot" ref={kotRef} style={{ display: 'none' }}>
         <h1>KOT for Table {tableNumber}</h1>
-        {/* Render the KOT details here */}
-        {orders.map((order) => (
-          <div key={order.id}>
-            <h2>Order {order.id}</h2>
-            <ul>
-              {order.items.map((item) => (
-                <li key={item.id}>
-                  {item.quantity} x {item.name}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+        {/* KOT content will be dynamically updated */}
       </div>
 
       {/* Print-Ready Bill Section */}
       <div id="print-bill" ref={billRef} style={{ display: 'none' }}>
         <h1>Bill for Table {tableNumber}</h1>
-        {/* Render the Bill details here */}
-        <ul>
-          {orders.map((order) =>
-            order.items.map((item) => (
-              <li key={item.id}>
-                {item.name} - {item.price} x {item.quantity}
-              </li>
-            ))
-          )}
-        </ul>
-        <h2>Total: ${totalAmount}</h2>
+        {/* Bill content will be dynamically updated */}
       </div>
     </div>
   );

@@ -121,66 +121,67 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   // Generate KOT and print it using the selected printer
-  const handleGenerateKOT = async () => {
-    try {
-      const printerIp = localStorage.getItem('selectedPrinter');
-      const response = await fetch('/printKOT', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          tableNumber,
-          orderIds: orders.map(order => order.id),
-          printerIp
-        }),
-      });
+const handleGenerateKOT = async () => {
+  try {
+    const printerIp = localStorage.getItem('selectedPrinter');
+    const response = await fetch('/printKOT', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        tableNumber,
+        orderIds: orders.map(order => order.id),
+        printerIp
+      }),
+    });
 
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const result = await response.json();
-      if (result.success) {
-        console.log('KOT printed successfully');
-      } else {
-        console.log('Failed to print KOT');
-      }
-    } catch (error) {
-      console.error('Error generating KOT:', error);
+    if (!response.ok) {
+      throw new Error(`Failed to generate KOT: ${response.statusText}`);
     }
-  };
 
-  // Generate bill and print it using the selected printer
-  const handleGenerateBill = async () => {
-    try {
-      const printerIp = localStorage.getItem('selectedPrinter');
-      const response = await fetch('/printBill', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          tableNumber,
-          orderIds: orders.map(order => order.id),
-          printerIp
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const result = await response.json();
-      if (result.success) {
-        console.log('Bill printed successfully');
-      } else {
-        console.log('Failed to print bill');
-      }
-    } catch (error) {
-      console.error('Error generating bill:', error);
+    const result = await response.json();
+    if (result.success) {
+      console.log('KOT printed successfully');
+    } else {
+      console.log('Failed to print KOT:', result.message);
     }
-  };
+  } catch (error) {
+    console.error('Error generating KOT:', error);
+  }
+};
+
+// Generate bill and print it using the selected printer
+const handleGenerateBill = async () => {
+  try {
+    const printerIp = localStorage.getItem('selectedPrinter');
+    const response = await fetch('/printBill', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        tableNumber,
+        orderIds: orders.map(order => order.id),
+        printerIp
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to generate bill: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    if (result.success) {
+      console.log('Bill printed successfully');
+    } else {
+      console.log('Failed to print bill:', result.message);
+    }
+  } catch (error) {
+    console.error('Error generating bill:', error);
+  }
+};
+
 
   // Complete the order and update the status in Firestore
   const handleCompleteOrder = async () => {

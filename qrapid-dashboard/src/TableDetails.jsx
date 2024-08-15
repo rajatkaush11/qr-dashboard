@@ -415,7 +415,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
             content={() => kotRef.current}
             onBeforeGetContent={async () => {
               await handleGenerateKOT();
-              await new Promise(resolve => setTimeout(resolve, 500)); // Add a small delay
+              await new Promise(resolve => setTimeout(resolve, 1000)); // Add a small delay
               console.log('KOT content before print:', kotRef.current.innerHTML); // Debugging log
             }} // Ensure KOT content is ready before print
             onAfterPrint={() => {
@@ -427,7 +427,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
             content={() => billRef.current}
             onBeforeGetContent={async () => {
               await handleGenerateBill();
-              await new Promise(resolve => setTimeout(resolve, 500)); // Add a small delay
+              await new Promise(resolve => setTimeout(resolve, 1000)); // Add a small delay
               console.log('Bill content before print:', billRef.current.innerHTML); // Debugging log
             }} // Ensure Bill content is ready before print
             onAfterPrint={() => {

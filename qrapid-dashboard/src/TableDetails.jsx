@@ -234,15 +234,15 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const populateKOTPrintSection = (filteredOrders) => {
     const kotContent = filteredOrders.map(order => {
         const formattedItems = order.items.map(item => 
-          `<div>${item.quantity.toString().padEnd(15)}${item.name}</div>`
+          `<div>${item.quantity.toString().padEnd(5)}${item.name}</div>`
         ).join('');
         
         return `
           <div>
             <strong>Table No: ${order.tableNo}</strong>
             <span style="float: right;">
-              Dt: ${new Date(order.createdAt.toDate()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-              Time: ${order.istTime.toDate().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
+              ${new Date(order.createdAt.toDate()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+              ${order.istTime.toDate().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
             </span>
           </div>
           <div>
@@ -256,13 +256,14 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     }).join('');
     
     kotRef.current.innerHTML = `
-      <div style="font-family: monospace; white-space: pre;">
+      <div style="font-family: monospace; white-space: pre; font-size: 12px;">
         ${kotContent}
       </div>
     `;
 
     console.log("KOT content populated: ", kotRef.current.innerHTML);
 };
+
 
 
   const populateBillPrintSection = (filteredOrders, totalAmount) => {

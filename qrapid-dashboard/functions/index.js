@@ -31,7 +31,7 @@ exports.printKOT = functions.https.onRequest((req, res) => {
       return res.status(405).send('Method Not Allowed');
     }
     try {
-      const { tableNumber, orderIds, printerIp } = req.body;  // Receiving printer IP from the request
+      const { tableNumber, orderIds, printerIp } = req.body;
 
       const orders = await Promise.all(orderIds.map(async (orderId) => {
         const orderRef = db.collection('orders').doc(orderId);
@@ -67,7 +67,7 @@ exports.printBill = functions.https.onRequest((req, res) => {
       return res.status(405).send('Method Not Allowed');
     }
     try {
-      const { tableNumber, orderIds, printerIp } = req.body;  // Receiving printer IP from the request
+      const { tableNumber, orderIds, printerIp } = req.body;
 
       const orders = await Promise.all(orderIds.map(async (orderId) => {
         const orderRef = db.collection('orders').doc(orderId);

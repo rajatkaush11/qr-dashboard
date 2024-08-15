@@ -8,8 +8,9 @@ const Settings = () => {
   useEffect(() => {
     const fetchPrinters = async () => {
       try {
-        const response = await window.navigator.usb.getDevices(); // This is a placeholder for actual printer fetching logic.
-        const availablePrinters = response.map(device => device.productName);
+        // Since web browsers cannot list printers directly, this is simulated.
+        // You would need a browser extension or a desktop application to access printers.
+        const availablePrinters = ['Printer1', 'Printer2', 'Printer3'];  // Example printer names
         setPrinters(availablePrinters);
       } catch (error) {
         console.error('Error fetching printers:', error);

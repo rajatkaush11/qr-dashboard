@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { backendDb, db, auth } from './firebase-config';
-import { collection, query, where, orderBy, getDocs, writeBatch, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, writeBatch, doc, deleteDoc } from 'firebase/firestore';
 import './TableDetails.css';
 import successSound from './assets/success.mp3';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -42,43 +42,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     };
     fetchItems();
   }, [selectedCategory]);
-
-  // Fetch orders, temporary orders, and completed order IDs from Firestore
-  // useEffect(() => {
-  //   const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
-  //   const q = query(
-  //     collection(backendDb, 'orders'),
-  //     where('tableNo', '==', normalizedTableNumber),
-  //     orderBy('createdAt', 'desc')
-  //   );
-
-  //   const fetchOrders = async () => {
-  //     const querySnapshot = await getDocs(q);
-  //     const ordersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  //     setOrders(ordersData);
-  //     setOrderFetched(true);
-  //   };
-
-  //   const fetchTemporaryOrders = async () => {
-  //     const tempOrdersRef = collection(backendDb, 'manual-orders');
-  //     const tempOrdersSnapshot = await getDocs(tempOrdersRef);
-  //     const tempOrdersData = tempOrdersSnapshot.docs
-  //       .map(doc => ({ id: doc.id, ...doc.data() }))
-  //       .filter(order => order.tableNo === normalizedTableNumber);
-  //     setTemporaryOrders(tempOrdersData);
-  //   };
-
-  //   const fetchCompletedOrderIds = async () => {
-  //     const q = query(collection(db, 'bills'));
-  //     const querySnapshot = await getDocs(q);
-  //     const ids = querySnapshot.docs.map(doc => doc.data().orderId);
-  //     setCompletedOrderIds(ids);
-  //   };
-
-  //   fetchOrders();
-  //   fetchTemporaryOrders();
-  //   fetchCompletedOrderIds();
-  // }, [tableNumber, updateTableColor, orderFetched]);
 
   // Manage KOT timing and table color updates based on order status
   useEffect(() => {
@@ -173,10 +136,13 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         }),
       });
 
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
       const result = await response.json();
       if (result.success) {
         console.log('KOT printed successfully');
-        handlePrintKOT(); // Call print function after generating KOT
       } else {
         console.log('Failed to print KOT');
       }
@@ -201,26 +167,19 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         }),
       });
 
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
       const result = await response.json();
       if (result.success) {
         console.log('Bill printed successfully');
-        handlePrintBill(); // Call print function after generating Bill
       } else {
         console.log('Failed to print bill');
       }
     } catch (error) {
       console.error('Error generating bill:', error);
     }
-  };
-
-  // Trigger the print dialog for KOT
-  const handlePrintKOT = () => {
-    window.print(); // Opens the print dialog for the user to select a printer and print KOT
-  };
-
-  // Trigger the print dialog for Bill
-  const handlePrintBill = () => {
-    window.print(); // Opens the print dialog for the user to select a printer and print Bill
   };
 
   // Complete the order and update the status in Firestore

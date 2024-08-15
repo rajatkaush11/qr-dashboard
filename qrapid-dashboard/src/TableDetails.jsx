@@ -5,7 +5,6 @@ import './TableDetails.css';
 import successSound from './assets/success.mp3';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
-import Bill from './Bill'; // Import the Bill component
 
 const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [orders, setOrders] = useState([]);
@@ -17,8 +16,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [items, setItems] = useState([]);
   const [temporaryOrders, setTemporaryOrders] = useState([]);
   const [kotTime, setKotTime] = useState('');
-  const [showBill, setShowBill] = useState(false); // State to control Bill display
-  const [showKOT, setShowKOT] = useState(false); // State to control KOT display
   const [totalAmount, setTotalAmount] = useState(0); // State to store the total amount for the bill
 
   let printer = null;
@@ -216,7 +213,10 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       );
       console.log('KOT generated and printed successfully');
 
-      setShowKOT(true); // Show the KOT print dialog
+      // Show the KOT print area (you can now directly print from here)
+      document.getElementById('print-kot').style.display = 'block';
+      window.print();
+      document.getElementById('print-kot').style.display = 'none';
     } catch (error) {
       console.error('Error generating KOT:', error);
     }
@@ -240,7 +240,10 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       await updateOrderStatus(filteredOrders, 'billed');
       console.log('Bill generated and printed successfully');
 
-      setShowBill(true); // Show the Bill print dialog
+      // Show the Bill print area (you can now directly print from here)
+      document.getElementById('print-bill').style.display = 'block';
+      window.print();
+      document.getElementById('print-bill').style.display = 'none';
     } catch (error) {
       console.error('Error generating Bill:', error);
     }
@@ -425,18 +428,39 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         </div>
       </div>
 
-      {/* Conditionally render Bill component for printing */}
-      {showKOT && (
-        <div className="print-area">
-          <Bill tableNumber={tableNumber} orders={orders} isKOT={true} />
-        </div>
-      )}
+      {/* Print-Ready KOT Section */}
+      <div id="print-kot" style={{ display: 'none' }}>
+        <h1>KOT for Table {tableNumber}</h1>
+        {/* Render the KOT details here */}
+        {orders.map((order) => (
+          <div key={order.id}>
+            <h2>Order {order.id}</h2>
+            <ul>
+              {order.items.map((item) => (
+                <li key={item.id}>
+                  {item.quantity} x {item.name}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
 
-      {showBill && (
-        <div className="print-area">
-          <Bill tableNumber={tableNumber} orders={orders} totalAmount={totalAmount} isKOT={false} />
-        </div>
-      )}
+      {/* Print-Ready Bill Section */}
+      <div id="print-bill" style={{ display: 'none' }}>
+        <h1>Bill for Table {tableNumber}</h1>
+        {/* Render the Bill details here */}
+        <ul>
+          {orders.map((order) =>
+            order.items.map((item) => (
+              <li key={item.id}>
+                {item.name} - {item.price} x {item.quantity}
+              </li>
+            ))
+          )}
+        </ul>
+        <h2>Total: ${totalAmount}</h2>
+      </div>
     </div>
   );
 };

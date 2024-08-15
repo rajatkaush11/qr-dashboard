@@ -1,0 +1,20 @@
+.settings-container {
+  padding: 20px;
+  background-color: #f4f4f4;
+  border-radius: 8px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.settings-container h2 {
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+}
+
+.settings-container select {
+  width: 100%;
+  padding: 10px;
+  font-size: 1rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}

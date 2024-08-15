@@ -11,6 +11,7 @@ import ItemList from './ItemList';
 import Dashboard from './Dashboard';
 import Orders from './Orders';
 import Reports from './Reports';
+import Settings from './Settings'; // Import Settings component
 import './index.css';
 
 function App() {
@@ -21,14 +22,14 @@ function App() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        setUser(user); // Set user on successful authentication
+        setUser(user);
       } else {
-        setUser(null); // Nullify user on logout or failed authentication
+        setUser(null);
       }
-      setLoading(false); // Set loading to false once authentication state is checked
+      setLoading(false);
     });
 
-    return () => unsubscribe(); // Clean up the subscription
+    return () => unsubscribe();
   }, []);
 
   const handleNavClick = (page) => {
@@ -36,7 +37,7 @@ function App() {
   };
 
   if (loading) {
-    return <div>Loading...</div>; // Show loading indicator while checking authentication
+    return <div>Loading...</div>;
   }
 
   return (
@@ -53,7 +54,8 @@ function App() {
           <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" replace />} />
           <Route path="/orders" element={user ? <Orders /> : <Navigate to="/login" replace />} />
           <Route path="/reports" element={user ? <Reports /> : <Navigate to="/login" replace />} />
-          <Route path="/" element={<Navigate to="/login" replace />} /> {/* Redirect to login if not authenticated */}
+          <Route path="/settings" element={user ? <Settings /> : <Navigate to="/login" replace />} /> {/* Add Settings route */}
+          <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>
       </div>
     </Router>

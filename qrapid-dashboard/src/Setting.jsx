@@ -6,9 +6,11 @@ const Settings = () => {
   const [selectedPrinter, setSelectedPrinter] = useState('');
 
   useEffect(() => {
-    // Fetch the available printers from the server or local machine
-    // This is a placeholder example, replace with actual fetching logic
-    setPrinters(['Printer1', 'Printer2', 'Printer3']);
+    // Fetch the list of printers from the backend service
+    fetch('http://localhost:5001/your-project-id/us-central1/api/printers')
+      .then(response => response.json())
+      .then(data => setPrinters(data))
+      .catch(error => console.error('Error fetching printers:', error));
   }, []);
 
   const handlePrinterChange = (event) => {
@@ -16,7 +18,8 @@ const Settings = () => {
   };
 
   const handleSave = () => {
-    // Save the selected printer setting, maybe store it in local storage or send to backend
+    // Save selected printer to local storage or send to backend if needed
+    localStorage.setItem('selectedPrinter', selectedPrinter);
     console.log(`Selected Printer: ${selectedPrinter}`);
   };
 

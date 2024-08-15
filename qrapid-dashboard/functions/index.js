@@ -1,100 +1,27 @@
 const functions = require('firebase-functions');
-const admin = require('firebase-admin');
-const cors = require('cors')({ origin: true });
-const escpos = require('escpos');
-escpos.Network = require('escpos-network');
+const express = require('express');
+const cors = require('cors');
 
-admin.initializeApp();
-const db = admin.firestore();
+const app = express();
 
-async function sendToPrinter(content) {
-  return new Promise((resolve, reject) => {
-    const device = new escpos.Network('192.168.29.12', 9100);
-    const printer = new escpos.Printer(device);
+app.use(cors({ origin: true }));
+app.use(express.json());
 
-    device.open((error) => {
-      if (error) {
-        return reject(error);
-      }
-
-      printer
-        .text(content)
-        .cut()
-        .close(() => resolve());
-    });
-  });
-}
-
-exports.printKOT = functions.https.onRequest((req, res) => {
-  cors(req, res, async () => {
-    if (req.method !== 'POST') {
-      return res.status(405).send('Method Not Allowed');
-    }
-    try {
-      const { tableNumber, orderIds } = req.body;
-
-      const orders = await Promise.all(orderIds.map(async (orderId) => {
-        const orderRef = db.collection('orders').doc(orderId);
-        const orderDoc = await orderRef.get();
-        if (!orderDoc.exists) {
-          throw new Error(`Order ${orderId} not found`);
-        }
-        return orderDoc.data();
-      }));
-
-      let kotContent = `Table No: ${tableNumber}\n\n`;
-      orders.forEach(order => {
-        kotContent += `Order ID: ${order.id}\nItems:\n`;
-        order.items.forEach(item => {
-          kotContent += `${item.name} x ${item.quantity}\n`;
-        });
-        kotContent += '\n';
-      });
-
-      await sendToPrinter(kotContent);
-
-      return res.status(200).send({ success: true, message: "KOT printed successfully" });
-    } catch (error) {
-      console.error('Error printing KOT:', error);
-      return res.status(500).send({ success: false, message: error.message });
-    }
-  });
+// Endpoint to get the list of printers
+app.get('/printers', (req, res) => {
+  const printers = ['POS-58', 'POS-80', 'Microsoft Print to PDF', 'Save as PDF'];
+  res.json(printers);
 });
 
-exports.printBill = functions.https.onRequest((req, res) => {
-  cors(req, res, async () => {
-    if (req.method !== 'POST') {
-      return res.status(405).send('Method Not Allowed');
-    }
-    try {
-      const { tableNumber, orderIds } = req.body;
+// Endpoint to handle print jobs
+app.post('/print', (req, res) => {
+  const { printerName, data } = req.body;
 
-      const orders = await Promise.all(orderIds.map(async (orderId) => {
-        const orderRef = db.collection('orders').doc(orderId);
-        const orderDoc = await orderRef.get();
-        if (!orderDoc.exists) {
-          throw new Error(`Order ${orderId} not found`);
-        }
-        return orderDoc.data();
-      }));
+  // Mock print job
+  console.log(`Printing to ${printerName}...`);
+  console.log('Data to print:', data);
 
-      let billContent = `Bill for Table No: ${tableNumber}\n\nItems:\n`;
-      let totalAmount = 0;
-      orders.forEach(order => {
-        order.items.forEach(item => {
-          const itemTotal = item.price * item.quantity;
-          totalAmount += itemTotal;
-          billContent += `${item.name} - ${item.price} x ${item.quantity} = ${itemTotal}\n`;
-        });
-      });
-      billContent += `\nTotal Amount: ${totalAmount}\nThank you for dining with us!`;
-
-      await sendToPrinter(billContent);
-
-      return res.status(200).send({ success: true, message: "Bill printed successfully" });
-    } catch (error) {
-      console.error('Error printing bill:', error);
-      return res.status(500).send({ success: false, message: error.message });
-    }
-  });
+  res.status(200).send(`Print job sent to ${printerName}`);
 });
+
+exports.api = functions.https.onRequest(app);

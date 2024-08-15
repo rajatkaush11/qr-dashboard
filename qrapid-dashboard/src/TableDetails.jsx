@@ -236,11 +236,11 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         const formattedItems = order.items.map(item => 
           `<div>${item.quantity.toString().padEnd(3)}${item.name}</div>`
         ).join('');
-        
+
         return `
-          <div>
-            <strong>Table No: ${order.tableNo}</strong>
-            <span style="float: right;">
+          <div style="margin-top: 0;">
+            <strong style="font-size: 16px;">Table No: ${order.tableNo}</strong>
+            <span style="float: right; font-size: 14px;">
               ${new Date(order.createdAt.toDate()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
               ${new Date(order.createdAt.toDate()).toLocaleTimeString('en-IN', {
                   hour: '2-digit',
@@ -250,24 +250,25 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
               })}
             </span>
           </div>
-          <div>
+          <div style="margin-top: 5px;">
             ${formattedItems}
           </div>
-          <div>
+          <div style="margin-top: 5px;">
             <strong>Total Items: ${order.items.reduce((total, item) => total + item.quantity, 0)}</strong>
           </div>
-          <hr />
+          <hr style="border: 0; border-top: 1px solid #000; margin: 5px 0;" />
         `;
     }).join('');
     
     kotRef.current.innerHTML = `
-      <div style="font-family: monospace; white-space: pre; font-size: 16px; margin: 0;">
+      <div style="font-family: monospace; white-space: pre; font-size: 16px; line-height: 1.2;">
         ${kotContent}
       </div>
     `;
 
     console.log("KOT content populated: ", kotRef.current.innerHTML);
 };
+
 
 
 

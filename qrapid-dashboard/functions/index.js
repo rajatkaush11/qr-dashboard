@@ -52,7 +52,6 @@ exports.printKOT = functions.https.onRequest((req, res) => {
       });
 
       await sendToPrinter(kotContent, printerIp);
-
       return res.status(200).send({ success: true, message: "KOT printed successfully" });
     } catch (error) {
       console.error('Error printing KOT:', error);

@@ -416,7 +416,11 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
             onBeforeGetContent={async () => {
               await handleGenerateKOT();
               await new Promise(resolve => setTimeout(resolve, 500)); // Add a small delay
+              console.log('KOT content before print:', kotRef.current.innerHTML); // Debugging log
             }} // Ensure KOT content is ready before print
+            onAfterPrint={() => {
+              console.log('KOT print completed.'); // Debugging log
+            }}
           />
           <ReactToPrint
             trigger={() => <button className="action-button generate-bill">Generate Bill</button>}
@@ -424,7 +428,11 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
             onBeforeGetContent={async () => {
               await handleGenerateBill();
               await new Promise(resolve => setTimeout(resolve, 500)); // Add a small delay
+              console.log('Bill content before print:', billRef.current.innerHTML); // Debugging log
             }} // Ensure Bill content is ready before print
+            onAfterPrint={() => {
+              console.log('Bill print completed.'); // Debugging log
+            }}
           />
           <button onClick={handleCompleteOrder} className="action-button complete">Complete Order</button>
         </div>

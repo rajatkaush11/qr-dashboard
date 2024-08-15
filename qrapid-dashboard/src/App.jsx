@@ -11,7 +11,7 @@ import ItemList from './ItemList';
 import Dashboard from './Dashboard';
 import Orders from './Orders';
 import Reports from './Reports';
-import Settings from './Settings';
+import Settings from './Setting';
 import './index.css';
 
 function App() {

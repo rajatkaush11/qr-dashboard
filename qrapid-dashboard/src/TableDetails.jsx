@@ -234,11 +234,11 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const populateKOTPrintSection = (filteredOrders) => {
     const kotContent = filteredOrders.map(order => {
         const formattedItems = order.items.map(item => 
-          `<div>${item.quantity.toString().padEnd(3)}${item.name}</div>`
+          `<div style="font-size: 14px; margin-bottom: 2px;">${item.quantity.toString().padEnd(3)} ${item.name}</div>`
         ).join('');
 
         return `
-          <div style="margin-top: 0;">
+          <div style="margin-top: 0; padding: 0;">
             <strong style="font-size: 16px;">Table No: ${order.tableNo}</strong>
             <span style="float: right; font-size: 14px;">
               ${new Date(order.createdAt.toDate()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
@@ -250,27 +250,24 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
               })}
             </span>
           </div>
-          <div style="margin-top: 5px;">
+          <div style="margin-top: 2px; padding: 0;">
             ${formattedItems}
           </div>
-          <div style="margin-top: 5px;">
-            <strong>Total Items: ${order.items.reduce((total, item) => total + item.quantity, 0)}</strong>
+          <div style="margin-top: 2px; padding: 0;">
+            <strong style="font-size: 14px;">Total Items: ${order.items.reduce((total, item) => total + item.quantity, 0)}</strong>
           </div>
-          <hr style="border: 0; border-top: 1px solid #000; margin: 5px 0;" />
+          <hr style="border: 0; border-top: 1px solid #000; margin: 2px 0;" />
         `;
     }).join('');
     
     kotRef.current.innerHTML = `
-      <div style="font-family: monospace; white-space: pre; font-size: 16px; line-height: 1.2;">
+      <div style="font-family: monospace; white-space: pre; font-size: 14px; line-height: 1.1; margin: 0; padding: 0;">
         ${kotContent}
       </div>
     `;
 
     console.log("KOT content populated: ", kotRef.current.innerHTML);
 };
-
-
-
 
 
   const populateBillPrintSection = (filteredOrders, totalAmount) => {

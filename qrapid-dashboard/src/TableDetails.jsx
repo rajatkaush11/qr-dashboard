@@ -108,11 +108,12 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     fetchTemporaryOrders();
     fetchCompletedOrderIds();
   }, [tableNumber, updateTableColor, orderFetched]);
-  
+
   useEffect(() => {
-    const kotOrders = [...orders, ...temporaryOrders].filter(order => order.status === 'KOT');
+    const allOrders = [...orders, ...temporaryOrders];
+    const kotOrders = allOrders.filter(order => order.status === 'KOT');
     if (kotOrders.length > 0) {
-      updateTableColor(tableNumber, 'running-kot');
+      updateTableColor(tableNumber, 'orange');
       if (!kotTime) {
         const now = new Date();
         const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000).toLocaleTimeString('en-IN', {
@@ -122,6 +123,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         });
         setKotTime(istTime);
       }
+    } else if (allOrders.length > 0 && allOrders.every(order => order.status === 'billed')) {
+      updateTableColor(tableNumber, 'green');
     } else {
       updateTableColor(tableNumber, 'blank');
       setKotTime('');
@@ -189,7 +192,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const handleGenerateKOT = async () => {
     try {
-      const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
+      const filteredOrders = [...orders, ...temporaryOrders].filter(order => !completedOrderIds.includes(order.id));
       if (filteredOrders.length === 0 && currentOrder.length === 0) {
         console.log('No orders to generate KOT');
         return;
@@ -229,7 +232,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         await updateOrderStatus([order], 'KOT');
       }
 
-      updateTableColor(tableNumber, 'running-kot');
+      updateTableColor(tableNumber, 'orange');
       setOrders(prevOrders =>
         prevOrders.map(order =>
           filteredOrders.some(filteredOrder => filteredOrder.id === order.id)
@@ -245,7 +248,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const handleGenerateBill = async () => {
     try {
-      const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
+      const filteredOrders = [...orders, ...temporaryOrders].filter(order => !completedOrderIds.includes(order.id));
       if (filteredOrders.length === 0) {
         console.log('No orders to generate Bill');
         return;
@@ -303,7 +306,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     `;
 
     console.log("KOT content populated: ", kotRef.current.innerHTML);
-};
+  };
 
 
   const populateBillPrintSection = (filteredOrders, totalAmount) => {
@@ -320,7 +323,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const handleCompleteOrder = async () => {
     try {
-      const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
+      const filteredOrders = [...orders, ...temporaryOrders].filter(order => !completedOrderIds.includes(order.id));
       const batch = writeBatch(db);
       filteredOrders.forEach(order => {
         const billRef = doc(collection(db, 'bills'));

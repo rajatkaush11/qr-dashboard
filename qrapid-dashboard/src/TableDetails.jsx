@@ -491,11 +491,13 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
             trigger={() => <button className="action-button generate-bill">Generate Bill</button>}
             content={() => billRef.current}
             onBeforeGetContent={async () => {
+              billRef.current.style.display = 'block';
               await handleGenerateBill();
               await new Promise(resolve => setTimeout(resolve, 500));
               console.log('Bill content before print:', billRef.current.innerHTML);
             }}
             onAfterPrint={() => {
+              billRef.current.style.display = 'none';
               console.log('Bill print completed.');
             }}
           />
@@ -522,16 +524,14 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         </div>
       </div>
 
-      {/* Print-Ready KOT Section */}
-      <div id="print-kot" ref={kotRef} style={{ display: kotReady ? 'block' : 'none', fontFamily: 'monospace', whiteSpace: 'pre' }}>
-        {/* KOT content will be populated dynamically */}
-      </div>
-
-      {/* Print-Ready Bill Section */}
-      <div id="print-bill" ref={billRef} style={{ display: 'none', fontFamily: 'monospace', whiteSpace: 'pre' }}>
-        {/* Bill content will be populated dynamically */}
-      </div>
+      <div id="print-kot" ref={kotRef} style={{ display: 'none', fontFamily: 'monospace', whiteSpace: 'pre' }}>
+    {/* KOT content will be populated dynamically */}
     </div>
+    
+    <div id="print-bill" ref={billRef} style={{ display: 'none', fontFamily: 'monospace', whiteSpace: 'pre' }}>
+    {/* Bill content will be populated dynamically */}
+    </div>
+</div>
   );
 };
 

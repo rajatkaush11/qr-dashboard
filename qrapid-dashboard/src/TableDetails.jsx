@@ -523,14 +523,23 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       </div>
 
       {/* Print-Ready KOT Section */}
-      <div id="print-kot" ref={kotRef} style={{ display: kotReady ? 'block' : 'none', fontFamily: 'monospace', whiteSpace: 'pre' }}>
-        {/* KOT content will be populated dynamically */}
-      </div>
+<div
+  id="print-kot"
+  ref={kotRef}
+  style={{ display: 'none', fontFamily: 'monospace', whiteSpace: 'pre' }}
+>
+  {/* KOT content will be populated dynamically */}
+</div>
 
-      {/* Print-Ready Bill Section */}
-      <div id="print-bill" ref={billRef} style={{ display: 'none', fontFamily: 'monospace', whiteSpace: 'pre' }}>
-        {/* Bill content will be populated dynamically */}
-      </div>
+{/* Print-Ready Bill Section */}
+<div
+  id="print-bill"
+  ref={billRef}
+  style={{ display: 'none', fontFamily: 'monospace', whiteSpace: 'pre' }}
+>
+  {/* Bill content will be populated dynamically */}
+</div>
+
     </div>
   );
 };

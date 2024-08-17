@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { backendDb, db, auth } from './firebase-config';
-import { collection, getDocs, writeBatch, doc, setDoc, deleteDoc, Timestamp, query, where, orderBy } from 'firebase/firestore';
+import { collection, writeBatch, doc, setDoc, deleteDoc, Timestamp, query, where, orderBy, onSnapshot } from 'firebase/firestore';
 import './TableDetails.css';
 import successSound from './assets/success.mp3';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -11,7 +11,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [orders, setOrders] = useState([]);
   const [currentOrder, setCurrentOrder] = useState([]);
   const [completedOrderIds, setCompletedOrderIds] = useState([]);
-  const [orderFetched, setOrderFetched] = useState(false);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [items, setItems] = useState([]);
@@ -50,27 +49,29 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      const userId = auth.currentUser ? auth.currentUser.uid : null;
-      const categoriesRef = collection(db, 'restaurants', userId, 'categories');
-      const querySnapshot = await getDocs(categoriesRef);
+    const userId = auth.currentUser ? auth.currentUser.uid : null;
+    const categoriesRef = collection(db, 'restaurants', userId, 'categories');
+    
+    const unsubscribe = onSnapshot(categoriesRef, (querySnapshot) => {
       const categoriesData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
       setCategories(categoriesData);
-    };
-    fetchCategories();
+    });
+
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
-    const fetchItems = async () => {
-      if (selectedCategory) {
-        const userId = auth.currentUser ? auth.currentUser.uid : null;
-        const itemsRef = collection(db, 'restaurants', userId, 'categories', selectedCategory.id, 'items');
-        const querySnapshot = await getDocs(itemsRef);
+    if (selectedCategory) {
+      const userId = auth.currentUser ? auth.currentUser.uid : null;
+      const itemsRef = collection(db, 'restaurants', userId, 'categories', selectedCategory.id, 'items');
+      
+      const unsubscribe = onSnapshot(itemsRef, (querySnapshot) => {
         const itemsData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
         setItems(itemsData);
-      }
-    };
-    fetchItems();
+      });
+
+      return () => unsubscribe();
+    }
   }, [selectedCategory]);
 
   useEffect(() => {
@@ -81,33 +82,31 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       orderBy('createdAt', 'desc')
     );
 
-    const fetchOrders = async () => {
-      const querySnapshot = await getDocs(q);
+    const unsubscribeOrders = onSnapshot(q, (querySnapshot) => {
       const ordersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setOrders(ordersData);
-      setOrderFetched(true);
-    };
+    });
 
-    const fetchTemporaryOrders = async () => {
-      const tempOrdersRef = collection(backendDb, 'manual-orders');
-      const tempOrdersSnapshot = await getDocs(tempOrdersRef);
-      const tempOrdersData = tempOrdersSnapshot.docs
+    const tempOrdersRef = collection(backendDb, 'manual-orders');
+    const unsubscribeTemporaryOrders = onSnapshot(tempOrdersRef, (querySnapshot) => {
+      const tempOrdersData = querySnapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
         .filter(order => order.tableNo === normalizedTableNumber);
       setTemporaryOrders(tempOrdersData);
-    };
+    });
 
-    const fetchCompletedOrderIds = async () => {
-      const q = query(collection(db, 'bills'));
-      const querySnapshot = await getDocs(q);
+    const billsRef = collection(db, 'bills');
+    const unsubscribeCompletedOrderIds = onSnapshot(billsRef, (querySnapshot) => {
       const ids = querySnapshot.docs.map(doc => doc.data().orderId);
       setCompletedOrderIds(ids);
-    };
+    });
 
-    fetchOrders();
-    fetchTemporaryOrders();
-    fetchCompletedOrderIds();
-  }, [tableNumber, updateTableColor, orderFetched]);
+    return () => {
+      unsubscribeOrders();
+      unsubscribeTemporaryOrders();
+      unsubscribeCompletedOrderIds();
+    };
+  }, [tableNumber, updateTableColor]);
 
   useEffect(() => {
     const allOrders = [...orders, ...temporaryOrders];
@@ -331,7 +330,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       setCompletedOrderIds([...completedOrderIds, ...filteredOrders.map(order => order.id)]);
       setOrders(prevOrders => prevOrders.filter(order => !filteredOrders.map(o => o.id).includes(order.id)));
       await updateTableColor(tableNumber, 'blank');
-      setOrderFetched(false);
 
       const tempOrderIds = filteredOrders.filter(order => order.id.startsWith('temp-')).map(order => order.id);
       const batchDelete = writeBatch(backendDb);
@@ -402,7 +400,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       }
     }
   };
-  
+
   return (
     <div className="table-details">
       <div className="right-content">

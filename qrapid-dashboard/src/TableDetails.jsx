@@ -304,10 +304,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         ${kotContent}
       </div>
     `;
-
-    console.log("KOT content populated: ", kotRef.current.innerHTML);
   };
-
 
   const populateBillPrintSection = (filteredOrders, totalAmount) => {
     const billContent = filteredOrders.map(order =>
@@ -405,7 +402,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       }
     }
   };
-
+  
   return (
     <div className="table-details">
       <div className="right-content">
@@ -482,8 +479,10 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
               await handleGenerateKOT();
               await new Promise(resolve => setTimeout(resolve, 500));
               console.log('KOT content before print:', kotRef.current.innerHTML);
+              kotRef.current.style.display = 'block'; // Ensure kotRef content is available for printing
             }}
             onAfterPrint={() => {
+              kotRef.current.style.display = 'none'; // Hide after printing
               console.log('KOT print completed.');
             }}
           />
@@ -494,8 +493,10 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
               await handleGenerateBill();
               await new Promise(resolve => setTimeout(resolve, 500));
               console.log('Bill content before print:', billRef.current.innerHTML);
+              billRef.current.style.display = 'block'; // Ensure billRef content is available for printing
             }}
             onAfterPrint={() => {
+              billRef.current.style.display = 'none'; // Hide after printing
               console.log('Bill print completed.');
             }}
           />
@@ -523,7 +524,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       </div>
 
       {/* Print-Ready KOT Section */}
-      <div id="print-kot" ref={kotRef} style={{ display: kotReady ? 'block' : 'none', fontFamily: 'monospace', whiteSpace: 'pre' }}>
+      <div id="print-kot" ref={kotRef} style={{ display: 'none', fontFamily: 'monospace', whiteSpace: 'pre' }}>
         {/* KOT content will be populated dynamically */}
       </div>
 

@@ -475,30 +475,40 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           )}
         </div>
         <div className="action-buttons">
-          <ReactToPrint
-            trigger={() => <button className="action-button generate-kot">Generate KOT</button>}
-            content={() => kotRef.current}
-            onBeforeGetContent={async () => {
-              await handleGenerateKOT();
-              await new Promise(resolve => setTimeout(resolve, 500));
-              console.log('KOT content before print:', kotRef.current.innerHTML);
-            }}
-            onAfterPrint={() => {
-              console.log('KOT print completed.');
-            }}
-          />
-          <ReactToPrint
-            trigger={() => <button className="action-button generate-bill">Generate Bill</button>}
-            content={() => billRef.current}
-            onBeforeGetContent={async () => {
-              await handleGenerateBill();
-              await new Promise(resolve => setTimeout(resolve, 500));
-              console.log('Bill content before print:', billRef.current.innerHTML);
-            }}
-            onAfterPrint={() => {
-              console.log('Bill print completed.');
-            }}
-          />
+        <ReactToPrint
+        trigger={() => <button className="action-button generate-kot">Generate KOT</button>}
+        content={() => kotRef.current}
+        onBeforeGetContent={async () => {
+        // Show the KOT section
+        kotRef.current.style.display = 'block';
+        await handleGenerateKOT();
+        await new Promise(resolve => setTimeout(resolve, 500));
+        console.log('KOT content before print:', kotRef.current.innerHTML);
+    }}
+      onAfterPrint={() => {
+        // Hide the KOT section after print
+        kotRef.current.style.display = 'none';
+        console.log('KOT print completed.');
+    }}
+    />
+
+    <ReactToPrint
+        trigger={() => <button className="action-button generate-bill">Generate Bill</button>}
+        content={() => billRef.current}
+        onBeforeGetContent={async () => {
+        // Show the Bill section
+        billRef.current.style.display = 'block';
+        await handleGenerateBill();
+        await new Promise(resolve => setTimeout(resolve, 500));
+        console.log('Bill content before print:', billRef.current.innerHTML);
+    }}
+      onAfterPrint={() => {
+        // Hide the Bill section after print
+        billRef.current.style.display = 'none';
+        console.log('Bill print completed.');
+    }}
+  />
+
           <button onClick={handleCompleteOrder} className="action-button complete">Complete Order</button>
         </div>
       </div>
@@ -525,11 +535,10 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       <div id="print-kot" ref={kotRef} style={{ display: 'none', fontFamily: 'monospace', whiteSpace: 'pre' }}>
     {/* KOT content will be populated dynamically */}
     </div>
-    
+
     <div id="print-bill" ref={billRef} style={{ display: 'none', fontFamily: 'monospace', whiteSpace: 'pre' }}>
     {/* Bill content will be populated dynamically */}
     </div>
-
   </div>
   );
 };

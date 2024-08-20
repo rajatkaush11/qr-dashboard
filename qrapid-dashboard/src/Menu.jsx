@@ -202,6 +202,7 @@ const Menu = () => {
             <img src={category.image} alt={category.name} />
             <div className="menu-item-details">
               <h2>{category.name}</h2>
+              <p>{category.restaurantName}</p> {/* Display the restaurant name */}
               <div className="menu-item-actions">
                 <button onClick={(e) => { e.stopPropagation(); setEditingCategory(category); setShowCategoryInput(true); }} className="edit-category-btn">
                   Edit

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth, storage } from './firebase-config';
+import { auth, db, storage } from './firebase-config';
+import { doc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import './Register.css';
 import { useNavigate } from 'react-router-dom';
@@ -15,14 +16,14 @@ const Register = () => {
   const [restaurantImage, setRestaurantImage] = useState(null);
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
-  const apiBaseUrl = import.meta.env.VITE_BACKEND_API; // Base URL from environment variable
+  const apiBaseUrl = import.meta.env.VITE_BACKEND_API; // Use the environment variable for the base URL
 
   const handleRegister = async (e) => {
     e.preventDefault();
     console.log('Starting registration process...');
 
     try {
-      // Create user with email and password in Firebase
+      // Create user with email and password
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       console.log('User created with UID:', user.uid);
@@ -38,34 +39,38 @@ const Register = () => {
         console.log('Image uploaded to Firebase Storage with URL:', imageUrl);
       }
 
-      // Save restaurant details in MongoDB
+      // Save additional data in Firestore
+      await setDoc(doc(db, "restaurants", user.uid), {
+        restaurantName,
+        address,
+        description,
+        timing,
+        email: user.email, // Use the email from userCredential
+        imageUrl // Save the image URL, even if it's an empty string
+      });
+      console.log('Restaurant details saved in Firestore');
+
+      // Save additional data in MongoDB
       const response = await fetch(`${apiBaseUrl}/restaurant`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          uid: user.uid, // Include UID
+          uid: user.uid,
           restaurantName,
           address,
           description,
           timing,
-          email: user.email, // Include email
-          password, // Include password (consider hashing on the backend)
-          imageUrl, // Include image URL in the request body
-        }),
+          email: user.email,
+          imageUrl // Include image URL in the request body, even if it's an empty string
+        })
       });
 
-      // Check if response is successful
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Failed to save data in MongoDB:', errorData);
         throw new Error('Failed to save data in MongoDB');
       }
-
-      console.log('Restaurant details saved in MongoDB successfully');
-      const responseData = await response.json();
-      console.debug('MongoDB response:', responseData); // Debug log added
+      console.log('Restaurant details saved in MongoDB');
 
       // Display alert and redirect after successful registration
       alert('Registered successfully!');

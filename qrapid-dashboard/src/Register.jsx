@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth, storage } from './firebase-config'; // Import only what's needed
+import { auth, storage } from './firebase-config'; 
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import './Register.css';
 import { useNavigate } from 'react-router-dom';
@@ -15,23 +15,20 @@ const Register = () => {
   const [restaurantImage, setRestaurantImage] = useState(null);
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
-  const apiBaseUrl = import.meta.env.VITE_BACKEND_API; // Use the environment variable for the base URL
+  const apiBaseUrl = import.meta.env.VITE_BACKEND_API; 
 
   const handleRegister = async (e) => {
     e.preventDefault();
     console.log('Starting registration process...');
 
     try {
-      // Create user with email and password in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       console.log('User created with UID:', user.uid);
 
-      let imageUrl = ''; // Default to an empty string if no image is uploaded
+      let imageUrl = ''; 
 
-      // Check if an image is selected
       if (restaurantImage) {
-        // Upload restaurant image to Firebase Storage
         const imageRef = ref(storage, `restaurantImages/${user.uid}`);
         await uploadBytes(imageRef, restaurantImage);
         imageUrl = await getDownloadURL(imageRef);
@@ -51,7 +48,7 @@ const Register = () => {
           description,
           timing,
           email: user.email,
-          imageUrl // Include image URL in the request body, even if it's an empty string
+          imageUrl
         })
       });
 
@@ -60,9 +57,8 @@ const Register = () => {
       }
       console.log('Restaurant details saved in MongoDB');
 
-      // Display alert and redirect after successful registration
       alert('Registered successfully!');
-      navigate('/login'); // Redirect to login page
+      navigate('/login'); 
     } catch (error) {
       console.error("Registration error:", error);
       setMessage(error.message || 'Registration failed');

@@ -39,26 +39,31 @@ const Register = () => {
       }
 
       // Save restaurant details in MongoDB
-      const response = await fetch(`${apiBaseUrl}/restaurant`, {  // No /api/ included
+      const response = await fetch(`${apiBaseUrl}/restaurant`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          uid: user.uid,
+          uid: user.uid, // Include UID
           restaurantName,
           address,
           description,
           timing,
-          email: user.email,
-          imageUrl // Include image URL in the request body, even if it's an empty string
+          email: user.email, // Include email
+          password, // Include password (consider hashing on the backend)
+          imageUrl // Include image URL in the request body
         })
       });
 
+      // Check if response is successful
       if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Failed to save data in MongoDB:', errorData);
         throw new Error('Failed to save data in MongoDB');
       }
-      console.log('Restaurant details saved in MongoDB');
+
+      console.log('Restaurant details saved in MongoDB successfully');
 
       // Display alert and redirect after successful registration
       alert('Registered successfully!');

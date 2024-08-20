@@ -48,7 +48,7 @@ const Menu = () => {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            uid: userId,
+            uid: userId, // Pass the restaurant UID to the backend
             name: newCategory.name,
             image: newCategory.image
           })
@@ -77,7 +77,7 @@ const Menu = () => {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            uid: userId,
+            uid: userId, // Pass the restaurant UID to the backend
             name: newCategory.name,
             image: newCategory.image
           })
@@ -113,7 +113,7 @@ const Menu = () => {
           throw new Error('Failed to delete category in MongoDB');
         }
 
-        setCategories(categories.filter(category => category.id !== categoryId));
+        setCategories(categories.filter(category => category._id !== categoryId));
         showNotification("Category deleted successfully");
       } catch (error) {
         console.error('Error deleting category:', error);
@@ -133,6 +133,19 @@ const Menu = () => {
   const handleAddCategoryClick = () => {
     setShowCategoryInput(true);
     setEditingCategory(null); // Ensure we are not in editing mode
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setNewCategory({ ...newCategory, image: reader.result });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleInputChange = (e) => {
+    setNewCategory({ ...newCategory, name: e.target.value });
   };
 
   return (
@@ -179,7 +192,7 @@ const Menu = () => {
             <div className="menu-item-details">
               <h2>{category.name}</h2>
               <div className="menu-item-actions">
-                <button onClick={(e) => { e.stopPropagation(); handleEditCategory(category); }} className="edit-category-btn">
+                <button onClick={(e) => { e.stopPropagation(); setEditingCategory(category); setShowCategoryInput(true); }} className="edit-category-btn">
                   Edit
                 </button>
                 <button onClick={(e) => { e.stopPropagation(); handleDeleteCategory(category._id); }} className="delete-category-btn">

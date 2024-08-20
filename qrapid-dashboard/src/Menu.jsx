@@ -30,13 +30,15 @@ const Menu = () => {
             },
           });
 
-          if (!response.ok) {
-            throw new Error('Failed to fetch bestTimeToken');
-          }
+          const data = await response.json(); // Parse JSON response
 
-          const data = await response.json();
-          console.log("Fetched bestTimeToken:", data.bestTimeToken); // Debug log
-          setBestTimeToken(data.bestTimeToken); // Set the bestTimeToken from the response
+          console.log("Backend response data:", data); // Debug log
+          if (data.bestTimeToken) {
+            console.log("Fetched bestTimeToken:", data.bestTimeToken); // Debug log
+            setBestTimeToken(data.bestTimeToken); // Set the bestTimeToken from the response
+          } else {
+            console.error('bestTimeToken not found in the response');
+          }
         }
       } catch (error) {
         console.error('Error fetching bestTimeToken:', error);

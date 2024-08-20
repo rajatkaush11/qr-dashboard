@@ -9,40 +9,40 @@ const Menu = () => {
   const [newCategory, setNewCategory] = useState({ name: '', image: '' });
   const [editingCategory, setEditingCategory] = useState(null);
   const [notification, setNotification] = useState(null);
-  const userId = auth.currentUser ? auth.currentUser.uid : null; // Get current user's UID
   const apiBaseUrl = import.meta.env.VITE_BACKEND_API; // Use the environment variable for the base URL
   const navigate = useNavigate();
 
+  // Fetch categories for the authenticated restaurant
   useEffect(() => {
-    if (userId) {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(`${apiBaseUrl}/categories/${auth.currentUser.uid}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${auth.currentUser?.accessToken}` // Include the token
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch categories');
+        }
+
+        const categoriesData = await response.json();
+        setCategories(categoriesData);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        setNotification('Failed to fetch categories');
+      }
+    };
+
+    if (auth.currentUser?.uid) {
       fetchCategories();
     }
-  }, [userId]);
-
-  const fetchCategories = async () => {
-    try {
-      const response = await fetch(`${apiBaseUrl}/categories/${userId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${auth.currentUser?.accessToken}` // Include the token
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch categories');
-      }
-
-      const categoriesData = await response.json();
-      setCategories(categoriesData);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-      setNotification('Failed to fetch categories');
-    }
-  };
+  }, []);
 
   const handleAddCategory = async () => {
-    if (newCategory.name && userId) {
+    if (newCategory.name) {
       try {
         const response = await fetch(`${apiBaseUrl}/category`, {
           method: 'POST',
@@ -51,9 +51,8 @@ const Menu = () => {
             'Authorization': `Bearer ${auth.currentUser?.accessToken}` // Include the token
           },
           body: JSON.stringify({
-            uid: userId, // Pass the restaurant UID to the backend
             name: newCategory.name,
-            image: newCategory.image
+            image: newCategory.image,
           })
         });
 
@@ -61,9 +60,10 @@ const Menu = () => {
           throw new Error('Failed to save category in MongoDB');
         }
 
+        const addedCategory = await response.json(); // Parse the added category
+        setCategories(prevCategories => [...prevCategories, addedCategory]); // Update the state with the new category
         setNewCategory({ name: '', image: '' });
         setShowCategoryInput(false);
-        fetchCategories(); // Re-fetch categories to update UI
         showNotification("Category added successfully");
       } catch (error) {
         console.error('Error adding category:', error);
@@ -73,7 +73,7 @@ const Menu = () => {
   };
 
   const handleUpdateCategory = async () => {
-    if (newCategory.name && editingCategory && userId) {
+    if (newCategory.name && editingCategory) {
       try {
         const response = await fetch(`${apiBaseUrl}/category/${editingCategory._id}`, {
           method: 'PUT',
@@ -82,9 +82,8 @@ const Menu = () => {
             'Authorization': `Bearer ${auth.currentUser?.accessToken}` // Include the token
           },
           body: JSON.stringify({
-            uid: userId, // Pass the restaurant UID to the backend
             name: newCategory.name,
-            image: newCategory.image
+            image: newCategory.image,
           })
         });
 
@@ -92,7 +91,12 @@ const Menu = () => {
           throw new Error('Failed to update category in MongoDB');
         }
 
-        fetchCategories(); // Re-fetch categories to update the state and UI
+        const updatedCategory = await response.json(); // Parse the updated category
+        setCategories(prevCategories =>
+          prevCategories.map(category =>
+            category._id === updatedCategory._id ? updatedCategory : category
+          )
+        );
         setNewCategory({ name: '', image: '' });
         setEditingCategory(null);
         setShowCategoryInput(false);
@@ -113,17 +117,16 @@ const Menu = () => {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${auth.currentUser?.accessToken}` // Include the token
-          },
-          body: JSON.stringify({
-            uid: userId // Pass the restaurant UID to the backend
-          })
+          }
         });
 
         if (!response.ok) {
           throw new Error('Failed to delete category in MongoDB');
         }
 
-        setCategories(categories.filter(category => category._id !== categoryId));
+        setCategories(prevCategories =>
+          prevCategories.filter(category => category._id !== categoryId)
+        );
         showNotification("Category deleted successfully");
       } catch (error) {
         console.error('Error deleting category:', error);

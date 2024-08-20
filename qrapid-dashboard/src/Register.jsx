@@ -42,7 +42,7 @@ const Register = () => {
       const response = await fetch(`${apiBaseUrl}/restaurant`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           uid: user.uid, // Include UID
@@ -52,8 +52,8 @@ const Register = () => {
           timing,
           email: user.email, // Include email
           password, // Include password (consider hashing on the backend)
-          imageUrl // Include image URL in the request body
-        })
+          imageUrl, // Include image URL in the request body
+        }),
       });
 
       // Check if response is successful
@@ -64,7 +64,8 @@ const Register = () => {
       }
 
       console.log('Restaurant details saved in MongoDB successfully');
-      console.debug('MongoDB response:', await response.json()); // Debug log added
+      const responseData = await response.json();
+      console.debug('MongoDB response:', responseData); // Debug log added
 
       // Display alert and redirect after successful registration
       alert('Registered successfully!');

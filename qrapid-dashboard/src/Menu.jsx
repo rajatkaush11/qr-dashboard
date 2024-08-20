@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { auth } from './firebase-config'; // Only keep auth for getting the UID
+import { auth } from './firebase-config'; 
 import { useNavigate } from 'react-router-dom';
 import './Menu.css';
 
 const Menu = () => {
   const [categories, setCategories] = useState([]);
   const [showCategoryInput, setShowCategoryInput] = useState(false);
-  const [newCategory, setNewCategory] = useState({ name: '', image: '' });
+  const [newCategory, setNewCategory] = useState({ name: '', image: '', token: '' });
   const [editingCategory, setEditingCategory] = useState(null);
   const [notification, setNotification] = useState(null);
-  const userId = auth.currentUser ? auth.currentUser.uid : null; // Get current user's UID
-  const apiBaseUrl = import.meta.env.VITE_BACKEND_API; // Use the environment variable for the base URL
+  const userId = auth.currentUser ? auth.currentUser.uid : null;
+  const apiBaseUrl = import.meta.env.VITE_BACKEND_API;
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -41,7 +41,7 @@ const Menu = () => {
   };
 
   const handleAddCategory = async () => {
-    if (newCategory.name && userId) {
+    if (newCategory.name && newCategory.token && userId) {
       try {
         const response = await fetch(`${apiBaseUrl}/category`, {
           method: 'POST',
@@ -49,9 +49,10 @@ const Menu = () => {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            uid: userId, // Pass the restaurant UID to the backend
+            uid: userId,
             name: newCategory.name,
-            image: newCategory.image
+            image: newCategory.image,
+            token: newCategory.token 
           })
         });
 
@@ -59,9 +60,9 @@ const Menu = () => {
           throw new Error('Failed to save category in MongoDB');
         }
 
-        setNewCategory({ name: '', image: '' });
+        setNewCategory({ name: '', image: '', token: '' });
         setShowCategoryInput(false);
-        fetchCategories(); // Re-fetch categories to update UI
+        fetchCategories(); 
         showNotification("Category added successfully");
       } catch (error) {
         console.error('Error adding category:', error);
@@ -71,17 +72,18 @@ const Menu = () => {
   };
 
   const handleUpdateCategory = async () => {
-    if (newCategory.name && editingCategory && userId) {
+    if (newCategory.name && newCategory.token && editingCategory && userId) {
       try {
-        const response = await fetch(`${apiBaseUrl}/category/${editingCategory.id}`, {
+        const response = await fetch(`${apiBaseUrl}/category/${editingCategory._id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            uid: userId, // Pass the restaurant UID to the backend
+            uid: userId,
             name: newCategory.name,
-            image: newCategory.image
+            image: newCategory.image,
+            token: newCategory.token 
           })
         });
 
@@ -89,8 +91,8 @@ const Menu = () => {
           throw new Error('Failed to update category in MongoDB');
         }
 
-        fetchCategories(); // Re-fetch categories to update the state and UI
-        setNewCategory({ name: '', image: '' });
+        fetchCategories(); 
+        setNewCategory({ name: '', image: '', token: '' });
         setEditingCategory(null);
         setShowCategoryInput(false);
         showNotification("Category updated successfully");
@@ -103,13 +105,17 @@ const Menu = () => {
 
   const handleDeleteCategory = async (categoryId) => {
     const confirmed = window.confirm('Are you sure you want to delete this category?');
-    if (confirmed) {
+    if (confirmed && newCategory.token) {
       try {
         const response = await fetch(`${apiBaseUrl}/category/${categoryId}`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json'
-          }
+          },
+          body: JSON.stringify({
+            uid: userId,
+            token: newCategory.token 
+          })
         });
 
         if (!response.ok) {
@@ -136,7 +142,7 @@ const Menu = () => {
 
   const handleAddCategoryClick = () => {
     setShowCategoryInput(true);
-    setEditingCategory(null); // Ensure we are not in editing mode
+    setEditingCategory(null);
   };
 
   const handleFileChange = (e) => {
@@ -150,6 +156,10 @@ const Menu = () => {
 
   const handleInputChange = (e) => {
     setNewCategory({ ...newCategory, name: e.target.value });
+  };
+
+  const handleTokenInputChange = (e) => {
+    setNewCategory({ ...newCategory, token: e.target.value });
   };
 
   return (
@@ -174,6 +184,14 @@ const Menu = () => {
             placeholder="Name of the Category"
             value={newCategory.name}
             onChange={handleInputChange}
+            className="new-category-input"
+          />
+          <input
+            type="text"
+            name="token"
+            placeholder="Enter token"
+            value={newCategory.token}
+            onChange={handleTokenInputChange}
             className="new-category-input"
           />
           <button

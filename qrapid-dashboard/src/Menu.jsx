@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { auth } from './firebase-config'; 
+import { auth } from './firebase-config';
 import { useNavigate } from 'react-router-dom';
 import './Menu.css';
 
@@ -9,7 +9,7 @@ const Menu = () => {
   const [newCategory, setNewCategory] = useState({ name: '', image: '' });
   const [editingCategory, setEditingCategory] = useState(null);
   const [notification, setNotification] = useState(null);
-  const apiBaseUrl = import.meta.env.VITE_BACKEND_API; // Use the environment variable for the base URL
+  const apiBaseUrl = import.meta.env.VITE_BACKEND_API;
   const navigate = useNavigate();
 
   // Fetch categories for the authenticated restaurant
@@ -20,8 +20,8 @@ const Menu = () => {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${auth.currentUser?.accessToken}` // Include the token
-          }
+            'Authorization': `Bearer ${auth.currentUser?.accessToken}`,
+          },
         });
 
         if (!response.ok) {
@@ -39,7 +39,7 @@ const Menu = () => {
     if (auth.currentUser?.uid) {
       fetchCategories();
     }
-  }, []);
+  }, [apiBaseUrl]);
 
   const handleAddCategory = async () => {
     if (newCategory.name) {
@@ -48,23 +48,23 @@ const Menu = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${auth.currentUser?.accessToken}` // Include the token
+            'Authorization': `Bearer ${auth.currentUser?.accessToken}`,
           },
           body: JSON.stringify({
             name: newCategory.name,
             image: newCategory.image,
-          })
+          }),
         });
 
         if (!response.ok) {
           throw new Error('Failed to save category in MongoDB');
         }
 
-        const addedCategory = await response.json(); // Parse the added category
-        setCategories(prevCategories => [...prevCategories, addedCategory]); // Update the state with the new category
+        const addedCategory = await response.json();
+        setCategories((prevCategories) => [...prevCategories, addedCategory]);
         setNewCategory({ name: '', image: '' });
         setShowCategoryInput(false);
-        showNotification("Category added successfully");
+        showNotification('Category added successfully');
       } catch (error) {
         console.error('Error adding category:', error);
         showNotification('Failed to add category');
@@ -79,28 +79,28 @@ const Menu = () => {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${auth.currentUser?.accessToken}` // Include the token
+            'Authorization': `Bearer ${auth.currentUser?.accessToken}`,
           },
           body: JSON.stringify({
             name: newCategory.name,
             image: newCategory.image,
-          })
+          }),
         });
 
         if (!response.ok) {
           throw new Error('Failed to update category in MongoDB');
         }
 
-        const updatedCategory = await response.json(); // Parse the updated category
-        setCategories(prevCategories =>
-          prevCategories.map(category =>
+        const updatedCategory = await response.json();
+        setCategories((prevCategories) =>
+          prevCategories.map((category) =>
             category._id === updatedCategory._id ? updatedCategory : category
           )
         );
         setNewCategory({ name: '', image: '' });
         setEditingCategory(null);
         setShowCategoryInput(false);
-        showNotification("Category updated successfully");
+        showNotification('Category updated successfully');
       } catch (error) {
         console.error('Error updating category:', error);
         showNotification('Failed to update category');
@@ -116,18 +116,18 @@ const Menu = () => {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${auth.currentUser?.accessToken}` // Include the token
-          }
+            'Authorization': `Bearer ${auth.currentUser?.accessToken}`,
+          },
         });
 
         if (!response.ok) {
           throw new Error('Failed to delete category in MongoDB');
         }
 
-        setCategories(prevCategories =>
-          prevCategories.filter(category => category._id !== categoryId)
+        setCategories((prevCategories) =>
+          prevCategories.filter((category) => category._id !== categoryId)
         );
-        showNotification("Category deleted successfully");
+        showNotification('Category deleted successfully');
       } catch (error) {
         console.error('Error deleting category:', error);
         showNotification('Failed to delete category');
@@ -146,7 +146,7 @@ const Menu = () => {
 
   const handleAddCategoryClick = () => {
     setShowCategoryInput(true);
-    setEditingCategory(null); // Ensure we are not in editing mode
+    setEditingCategory(null);
   };
 
   const handleFileChange = (e) => {
@@ -194,11 +194,7 @@ const Menu = () => {
           </button>
         </div>
       )}
-      {notification && (
-        <div className="notification">
-          {notification}
-        </div>
-      )}
+      {notification && <div className="notification">{notification}</div>}
       <div className="menu-items">
         {categories.map((category, index) => (
           <div className="menu-item" key={index} onClick={() => handleCategoryClick(category._id)}>
@@ -207,10 +203,23 @@ const Menu = () => {
               <h2>{category.name}</h2>
               <p>{category.restaurantName}</p> {/* Display the restaurant name */}
               <div className="menu-item-actions">
-                <button onClick={(e) => { e.stopPropagation(); setEditingCategory(category); setShowCategoryInput(true); }} className="edit-category-btn">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditingCategory(category);
+                    setShowCategoryInput(true);
+                  }}
+                  className="edit-category-btn"
+                >
                   Edit
                 </button>
-                <button onClick={(e) => { e.stopPropagation(); handleDeleteCategory(category._id); }} className="delete-category-btn">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteCategory(category._id);
+                  }}
+                  className="delete-category-btn"
+                >
                   Delete
                 </button>
               </div>

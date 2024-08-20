@@ -6,11 +6,11 @@ import './Menu.css';
 const Menu = () => {
   const [categories, setCategories] = useState([]);
   const [showCategoryInput, setShowCategoryInput] = useState(false);
-  const [newCategory, setNewCategory] = useState({ name: '', image: '', token: '' });
+  const [newCategory, setNewCategory] = useState({ name: '', image: '' });
   const [editingCategory, setEditingCategory] = useState(null);
   const [notification, setNotification] = useState(null);
-  const userId = auth.currentUser ? auth.currentUser.uid : null;
-  const apiBaseUrl = import.meta.env.VITE_BACKEND_API;
+  const userId = auth.currentUser ? auth.currentUser.uid : null; // Get current user's UID
+  const apiBaseUrl = import.meta.env.VITE_BACKEND_API; // Use the environment variable for the base URL
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -41,7 +41,7 @@ const Menu = () => {
   };
 
   const handleAddCategory = async () => {
-    if (newCategory.name && newCategory.token && userId) {
+    if (newCategory.name && userId) {
       try {
         const response = await fetch(`${apiBaseUrl}/category`, {
           method: 'POST',
@@ -49,10 +49,9 @@ const Menu = () => {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            uid: userId,
+            uid: userId, // Pass the restaurant UID to the backend
             name: newCategory.name,
-            image: newCategory.image,
-            token: newCategory.token 
+            image: newCategory.image
           })
         });
 
@@ -60,9 +59,9 @@ const Menu = () => {
           throw new Error('Failed to save category in MongoDB');
         }
 
-        setNewCategory({ name: '', image: '', token: '' });
+        setNewCategory({ name: '', image: '' });
         setShowCategoryInput(false);
-        fetchCategories(); 
+        fetchCategories(); // Re-fetch categories to update UI
         showNotification("Category added successfully");
       } catch (error) {
         console.error('Error adding category:', error);
@@ -72,7 +71,7 @@ const Menu = () => {
   };
 
   const handleUpdateCategory = async () => {
-    if (newCategory.name && newCategory.token && editingCategory && userId) {
+    if (newCategory.name && editingCategory && userId) {
       try {
         const response = await fetch(`${apiBaseUrl}/category/${editingCategory._id}`, {
           method: 'PUT',
@@ -80,10 +79,9 @@ const Menu = () => {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            uid: userId,
+            uid: userId, // Pass the restaurant UID to the backend
             name: newCategory.name,
-            image: newCategory.image,
-            token: newCategory.token 
+            image: newCategory.image
           })
         });
 
@@ -91,8 +89,8 @@ const Menu = () => {
           throw new Error('Failed to update category in MongoDB');
         }
 
-        fetchCategories(); 
-        setNewCategory({ name: '', image: '', token: '' });
+        fetchCategories(); // Re-fetch categories to update the state and UI
+        setNewCategory({ name: '', image: '' });
         setEditingCategory(null);
         setShowCategoryInput(false);
         showNotification("Category updated successfully");
@@ -105,7 +103,7 @@ const Menu = () => {
 
   const handleDeleteCategory = async (categoryId) => {
     const confirmed = window.confirm('Are you sure you want to delete this category?');
-    if (confirmed && newCategory.token) {
+    if (confirmed) {
       try {
         const response = await fetch(`${apiBaseUrl}/category/${categoryId}`, {
           method: 'DELETE',
@@ -113,8 +111,7 @@ const Menu = () => {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            uid: userId,
-            token: newCategory.token 
+            uid: userId // Pass the restaurant UID to the backend
           })
         });
 
@@ -142,7 +139,7 @@ const Menu = () => {
 
   const handleAddCategoryClick = () => {
     setShowCategoryInput(true);
-    setEditingCategory(null);
+    setEditingCategory(null); // Ensure we are not in editing mode
   };
 
   const handleFileChange = (e) => {
@@ -156,10 +153,6 @@ const Menu = () => {
 
   const handleInputChange = (e) => {
     setNewCategory({ ...newCategory, name: e.target.value });
-  };
-
-  const handleTokenInputChange = (e) => {
-    setNewCategory({ ...newCategory, token: e.target.value });
   };
 
   return (
@@ -184,14 +177,6 @@ const Menu = () => {
             placeholder="Name of the Category"
             value={newCategory.name}
             onChange={handleInputChange}
-            className="new-category-input"
-          />
-          <input
-            type="text"
-            name="token"
-            placeholder="Enter token"
-            value={newCategory.token}
-            onChange={handleTokenInputChange}
             className="new-category-input"
           />
           <button

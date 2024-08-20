@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { auth } from './firebase-config';
+import { auth } from './firebase-config'; 
 import { useNavigate } from 'react-router-dom';
 import './Menu.css';
 
@@ -9,18 +9,52 @@ const Menu = () => {
   const [newCategory, setNewCategory] = useState({ name: '', image: '' });
   const [editingCategory, setEditingCategory] = useState(null);
   const [notification, setNotification] = useState(null);
+  const [bestTimeToken, setBestTimeToken] = useState(null); // State to hold the bestTimeToken
   const apiBaseUrl = import.meta.env.VITE_BACKEND_API;
   const navigate = useNavigate();
 
-  // Fetch categories for the authenticated restaurant
+  // Fetch the bestTimeToken after user login
+  useEffect(() => {
+    const fetchBestTimeToken = async () => {
+      try {
+        const uid = auth.currentUser?.uid;
+
+        if (uid) {
+          const response = await fetch(`${apiBaseUrl}/restaurant/${uid}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${auth.currentUser?.accessToken}`, // Using Firebase token here to get bestTimeToken
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to fetch bestTimeToken');
+          }
+
+          const data = await response.json();
+          setBestTimeToken(data.bestTimeToken); // Set the bestTimeToken from the response
+        }
+      } catch (error) {
+        console.error('Error fetching bestTimeToken:', error);
+        setNotification('Failed to fetch bestTimeToken');
+      }
+    };
+
+    fetchBestTimeToken();
+  }, [apiBaseUrl]);
+
+  // Fetch categories after bestTimeToken is set
   useEffect(() => {
     const fetchCategories = async () => {
+      if (!bestTimeToken) return; // Wait until bestTimeToken is available
+
       try {
-        const response = await fetch(`${apiBaseUrl}/categories/${auth.currentUser.uid}`, {
+        const response = await fetch(`${apiBaseUrl}/categories/${auth.currentUser?.uid}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${auth.currentUser?.accessToken}`,
+            'Authorization': `Bearer ${bestTimeToken}`, // Use bestTimeToken here
           },
         });
 
@@ -36,26 +70,21 @@ const Menu = () => {
       }
     };
 
-    if (auth.currentUser?.uid) {
+    if (auth.currentUser?.uid && bestTimeToken) {
       fetchCategories();
     }
-  }, [apiBaseUrl]);
+  }, [apiBaseUrl, bestTimeToken]);
 
   const handleAddCategory = async () => {
-    if (newCategory.name) {
-      const token = auth.currentUser?.accessToken;
-      const uid = auth.currentUser?.uid;
-
-      // Log the token and uid
-      console.log("Token:", token);
-      console.log("UID:", uid);
+    if (newCategory.name && bestTimeToken) {
+      console.log("Using bestTimeToken:", bestTimeToken);
 
       try {
         const response = await fetch(`${apiBaseUrl}/category`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`, // Include the token
+            'Authorization': `Bearer ${bestTimeToken}`, // Use bestTimeToken here
           },
           body: JSON.stringify({
             name: newCategory.name,
@@ -80,20 +109,15 @@ const Menu = () => {
   };
 
   const handleUpdateCategory = async () => {
-    if (newCategory.name && editingCategory) {
-      const token = auth.currentUser?.accessToken;
-      const uid = auth.currentUser?.uid;
-
-      // Log the token and uid
-      console.log("Token:", token);
-      console.log("UID:", uid);
+    if (newCategory.name && editingCategory && bestTimeToken) {
+      console.log("Using bestTimeToken:", bestTimeToken);
 
       try {
         const response = await fetch(`${apiBaseUrl}/category/${editingCategory._id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`, // Include the token
+            'Authorization': `Bearer ${bestTimeToken}`, // Use bestTimeToken here
           },
           body: JSON.stringify({
             name: newCategory.name,
@@ -124,20 +148,15 @@ const Menu = () => {
 
   const handleDeleteCategory = async (categoryId) => {
     const confirmed = window.confirm('Are you sure you want to delete this category?');
-    if (confirmed) {
-      const token = auth.currentUser?.accessToken;
-      const uid = auth.currentUser?.uid;
-
-      // Log the token and uid
-      console.log("Token:", token);
-      console.log("UID:", uid);
+    if (confirmed && bestTimeToken) {
+      console.log("Using bestTimeToken:", bestTimeToken);
 
       try {
         const response = await fetch(`${apiBaseUrl}/category/${categoryId}`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`, // Include the token
+            'Authorization': `Bearer ${bestTimeToken}`, // Use bestTimeToken here
           },
         });
 

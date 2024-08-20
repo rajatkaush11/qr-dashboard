@@ -43,12 +43,19 @@ const Menu = () => {
 
   const handleAddCategory = async () => {
     if (newCategory.name) {
+      const token = auth.currentUser?.accessToken;
+      const uid = auth.currentUser?.uid;
+
+      // Log the token and uid
+      console.log("Token:", token);
+      console.log("UID:", uid);
+
       try {
         const response = await fetch(`${apiBaseUrl}/category`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${auth.currentUser?.accessToken}`,
+            'Authorization': `Bearer ${token}`, // Include the token
           },
           body: JSON.stringify({
             name: newCategory.name,
@@ -74,12 +81,19 @@ const Menu = () => {
 
   const handleUpdateCategory = async () => {
     if (newCategory.name && editingCategory) {
+      const token = auth.currentUser?.accessToken;
+      const uid = auth.currentUser?.uid;
+
+      // Log the token and uid
+      console.log("Token:", token);
+      console.log("UID:", uid);
+
       try {
         const response = await fetch(`${apiBaseUrl}/category/${editingCategory._id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${auth.currentUser?.accessToken}`,
+            'Authorization': `Bearer ${token}`, // Include the token
           },
           body: JSON.stringify({
             name: newCategory.name,
@@ -111,12 +125,19 @@ const Menu = () => {
   const handleDeleteCategory = async (categoryId) => {
     const confirmed = window.confirm('Are you sure you want to delete this category?');
     if (confirmed) {
+      const token = auth.currentUser?.accessToken;
+      const uid = auth.currentUser?.uid;
+
+      // Log the token and uid
+      console.log("Token:", token);
+      console.log("UID:", uid);
+
       try {
         const response = await fetch(`${apiBaseUrl}/category/${categoryId}`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${auth.currentUser?.accessToken}`,
+            'Authorization': `Bearer ${token}`, // Include the token
           },
         });
 

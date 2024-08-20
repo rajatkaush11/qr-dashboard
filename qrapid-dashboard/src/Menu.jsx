@@ -36,6 +36,7 @@ const Menu = () => {
       setCategories(categoriesData);
     } catch (error) {
       console.error('Error fetching categories:', error);
+      setNotification('Failed to fetch categories');
     }
   };
 
@@ -64,6 +65,7 @@ const Menu = () => {
         showNotification("Category added successfully");
       } catch (error) {
         console.error('Error adding category:', error);
+        showNotification('Failed to add category');
       }
     }
   };
@@ -94,6 +96,7 @@ const Menu = () => {
         showNotification("Category updated successfully");
       } catch (error) {
         console.error('Error updating category:', error);
+        showNotification('Failed to update category');
       }
     }
   };
@@ -117,6 +120,7 @@ const Menu = () => {
         showNotification("Category deleted successfully");
       } catch (error) {
         console.error('Error deleting category:', error);
+        showNotification('Failed to delete category');
       }
     }
   };

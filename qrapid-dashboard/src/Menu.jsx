@@ -24,7 +24,8 @@ const Menu = () => {
       const response = await fetch(`${apiBaseUrl}/categories/${userId}`, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${auth.currentUser?.accessToken}` // Include the token
         }
       });
 
@@ -46,7 +47,8 @@ const Menu = () => {
         const response = await fetch(`${apiBaseUrl}/category`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${auth.currentUser?.accessToken}` // Include the token
           },
           body: JSON.stringify({
             uid: userId, // Pass the restaurant UID to the backend
@@ -76,7 +78,8 @@ const Menu = () => {
         const response = await fetch(`${apiBaseUrl}/category/${editingCategory._id}`, {
           method: 'PUT',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${auth.currentUser?.accessToken}` // Include the token
           },
           body: JSON.stringify({
             uid: userId, // Pass the restaurant UID to the backend
@@ -108,7 +111,8 @@ const Menu = () => {
         const response = await fetch(`${apiBaseUrl}/category/${categoryId}`, {
           method: 'DELETE',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${auth.currentUser?.accessToken}` // Include the token
           },
           body: JSON.stringify({
             uid: userId // Pass the restaurant UID to the backend

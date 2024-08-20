@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { collection, addDoc, getDocs, doc, deleteDoc, setDoc } from 'firebase/firestore';
+import { db, auth } from './firebase-config';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import './ItemList.css';
 
@@ -22,11 +24,18 @@ const ItemList = () => {
     fetchItems();
   }, [categoryId]);
 
-  // Fetch items from MongoDB
   const fetchItems = async () => {
     console.log(`Fetching items for category ID: ${categoryId}`);
     try {
-      const response = await fetch(`${apiBaseUrl}/items/${categoryId}`, {
+      const user = auth.currentUser;
+      if (user) {
+        const itemsRef = collection(db, 'restaurants', user.uid, 'categories', categoryId, 'items');
+        const querySnapshot = await getDocs(itemsRef);
+        const itemsData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+        setItems(itemsData);
+      }
+
+      const response = await fetch(`${apiBaseUrl}/api/items/${categoryId}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -75,29 +84,36 @@ const ItemList = () => {
     }
   };
 
-  // Add new item to MongoDB
   const handleAddItem = async () => {
     if (newItem.name && (!showVariations || newItem.variations.length > 0)) {
       try {
-        const response = await fetch(`${apiBaseUrl}/items`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          },
-          body: JSON.stringify({ ...newItem, categoryId }),
-        });
+        const user = auth.currentUser;
+        if (user) {
+          const itemsRef = collection(db, 'restaurants', user.uid, 'categories', categoryId, 'items');
+          const docRef = await addDoc(itemsRef, newItem);
 
-        if (!response.ok) {
-          throw new Error('Failed to save item in MongoDB');
+          const response = await fetch(`${apiBaseUrl}/api/items`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+            body: JSON.stringify({ ...newItem, categoryId }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to save item in MongoDB');
+          }
+
+          const addedItem = await response.json();
+          setItems([...items, { ...addedItem, id: docRef.id }]);
+          setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '', variations: [] });
+          setShowVariations(false);
+          fetchItems(); // Re-fetch items to update UI
+          showNotification("Item added successfully");
+        } else {
+          console.error('User not authenticated');
         }
-
-        const addedItem = await response.json();
-        setItems([...items, addedItem]);
-        setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '', variations: [] });
-        setShowVariations(false);
-        fetchItems(); // Re-fetch items to update UI
-        showNotification("Item added successfully");
       } catch (error) {
         console.error('Error adding item:', error);
         showNotification(error.message);
@@ -107,7 +123,6 @@ const ItemList = () => {
     }
   };
 
-  // Edit item in MongoDB
   const handleEditItem = (item) => {
     setEditingItem(item);
     setNewItem({ name: item.name, price: item.price, description: item.description, image: item.image, weight: item.weight, unit: item.unit, variations: item.variations || [] });
@@ -118,26 +133,34 @@ const ItemList = () => {
   const handleUpdateItem = async () => {
     if (newItem.name && editingItem && (!showVariations || newItem.variations.length > 0)) {
       try {
-        const response = await fetch(`${apiBaseUrl}/items/${editingItem._id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          },
-          body: JSON.stringify({ ...newItem, categoryId }),
-        });
+        const user = auth.currentUser;
+        if (user) {
+          const itemDocRef = doc(db, 'restaurants', user.uid, 'categories', categoryId, 'items', editingItem.id);
+          await setDoc(itemDocRef, newItem);
 
-        if (!response.ok) {
-          throw new Error('Failed to update item in MongoDB');
+          const response = await fetch(`${apiBaseUrl}/api/items/${editingItem.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+            body: JSON.stringify({ ...newItem, categoryId }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to update item in MongoDB');
+          }
+
+          const updatedItems = items.map(item => (item.id === editingItem.id ? { ...newItem, id: editingItem.id } : item));
+          setItems(updatedItems);
+          setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '', variations: [] });
+          setEditingItem(null);
+          setShowVariations(false);
+          fetchItems(); // Re-fetch items to update UI
+          showNotification("Item updated successfully");
+        } else {
+          console.error('User not authenticated');
         }
-
-        const updatedItems = items.map(item => (item._id === editingItem._id ? { ...newItem, _id: editingItem._id } : item));
-        setItems(updatedItems);
-        setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '', variations: [] });
-        setEditingItem(null);
-        setShowVariations(false);
-        fetchItems(); // Re-fetch items to update UI
-        showNotification("Item updated successfully");
       } catch (error) {
         console.error('Error updating item:', error);
         showNotification(error.message);
@@ -147,25 +170,32 @@ const ItemList = () => {
     }
   };
 
-  // Delete item from MongoDB
   const handleDeleteItem = async () => {
     if (itemToDelete) {
       try {
-        const response = await fetch(`${apiBaseUrl}/items/${itemToDelete._id}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
+        const user = auth.currentUser;
+        if (user) {
+          const itemDocRef = doc(db, 'restaurants', user.uid, 'categories', categoryId, 'items', itemToDelete.id);
+          await deleteDoc(itemDocRef);
 
-        if (!response.ok) {
-          throw new Error('Failed to delete item in MongoDB');
+          const response = await fetch(`${apiBaseUrl}/api/items/${itemToDelete._id}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to delete item in MongoDB');
+          }
+
+          setItems(items.filter(item => item.id !== itemToDelete.id));
+          setShowDeleteConfirmation(false);
+          setItemToDelete(null);
+          showNotification("Item deleted successfully");
+        } else {
+          console.error('User not authenticated');
         }
-
-        setItems(items.filter(item => item._id !== itemToDelete._id));
-        setShowDeleteConfirmation(false);
-        setItemToDelete(null);
-        showNotification("Item deleted successfully");
       } catch (error) {
         console.error('Error deleting item:', error);
         showNotification(error.message);
@@ -255,7 +285,7 @@ const ItemList = () => {
           {(provided) => (
             <div className="item-list" {...provided.droppableProps} ref={provided.innerRef}>
               {items.map((item, index) => (
-                <Draggable key={item._id} draggableId={item._id} index={index}>
+                <Draggable key={item.id} draggableId={item.id} index={index}>
                   {(provided) => (
                     <div
                       className="item"
@@ -269,14 +299,14 @@ const ItemList = () => {
                         <p>Price: {item.price}</p>
                         <p>
                           Description: 
-                          {expandedDescriptions[item._id] ? (
+                          {expandedDescriptions[item.id] ? (
                             <>
-                              {item.description} <span onClick={() => toggleDescription(item._id)} className="toggle-description">Show less</span>
+                              {item.description} <span onClick={() => toggleDescription(item.id)} className="toggle-description">Show less</span>
                             </>
                           ) : (
                             <>
                               {item.description.length > 100 ? `${item.description.slice(0, 100)}...` : item.description} 
-                              {item.description.length > 100 && <span onClick={() => toggleDescription(item._id)} className="toggle-description">Read more</span>}
+                              {item.description.length > 100 && <span onClick={() => toggleDescription(item.id)} className="toggle-description">Read more</span>}
                             </>
                           )}
                         </p>

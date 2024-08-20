@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth, db, storage } from './firebase-config';
-import { doc, setDoc } from 'firebase/firestore';
+import { auth, storage } from './firebase-config';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import './Register.css';
 import { useNavigate } from 'react-router-dom';
@@ -16,14 +15,14 @@ const Register = () => {
   const [restaurantImage, setRestaurantImage] = useState(null);
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
-  const apiBaseUrl = import.meta.env.VITE_BACKEND_API; // Use the environment variable for the base URL
+  const apiBaseUrl = import.meta.env.VITE_BACKEND_API; // Base URL from environment variable
 
   const handleRegister = async (e) => {
     e.preventDefault();
     console.log('Starting registration process...');
 
     try {
-      // Create user with email and password
+      // Create user with email and password in Firebase
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       console.log('User created with UID:', user.uid);
@@ -39,19 +38,8 @@ const Register = () => {
         console.log('Image uploaded to Firebase Storage with URL:', imageUrl);
       }
 
-      // Save additional data in Firestore
-      await setDoc(doc(db, "restaurants", user.uid), {
-        restaurantName,
-        address,
-        description,
-        timing,
-        email: user.email, // Use the email from userCredential
-        imageUrl // Save the image URL, even if it's an empty string
-      });
-      console.log('Restaurant details saved in Firestore');
-
-      // Save additional data in MongoDB
-      const response = await fetch(`${apiBaseUrl}/api/restaurant`, {
+      // Save restaurant details in MongoDB
+      const response = await fetch(`${apiBaseUrl}/restaurant`, {  // No /api/ included
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

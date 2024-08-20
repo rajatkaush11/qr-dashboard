@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, doc, addDoc, setDoc, getDocs, deleteDoc } from 'firebase/firestore';
-import { auth, db } from './firebase-config';
+import { auth } from './firebase-config'; // Only keep auth for getting the UID
 import { useNavigate } from 'react-router-dom';
 import './Menu.css';
 
@@ -22,46 +21,28 @@ const Menu = () => {
 
   const fetchCategories = async () => {
     try {
-      const categoriesRef = collection(db, 'restaurants', userId, 'categories');
-      const querySnapshot = await getDocs(categoriesRef);
-      const categoriesData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+      const response = await fetch(`${apiBaseUrl}/categories/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch categories');
+      }
+
+      const categoriesData = await response.json();
       setCategories(categoriesData);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
   };
 
-  const handleAddCategoryClick = () => {
-    setShowCategoryInput(true);
-    setEditingCategory(null); // Ensure we are not in editing mode
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewCategory({ ...newCategory, [name]: value });
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setNewCategory({ ...newCategory, image: reader.result });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleAddCategory = async () => {
     if (newCategory.name && userId) {
       try {
-        // Save category in Firestore
-        const categoriesRef = collection(db, 'restaurants', userId, 'categories');
-        const docRef = await addDoc(categoriesRef, newCategory);
-        setCategories([...categories, { ...newCategory, id: docRef.id }]);
-
-        // Save category in MongoDB
-        const response = await fetch(`${apiBaseUrl}/api/category`, {
+        const response = await fetch(`${apiBaseUrl}/category`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -87,21 +68,10 @@ const Menu = () => {
     }
   };
 
-  const handleEditCategory = (category) => {
-    setEditingCategory(category);
-    setNewCategory({ name: category.name, image: category.image });
-    setShowCategoryInput(true);
-  };
-
   const handleUpdateCategory = async () => {
     if (newCategory.name && editingCategory && userId) {
       try {
-        // Update category in Firestore
-        const categoryDocRef = doc(db, 'restaurants', userId, 'categories', editingCategory.id);
-        await setDoc(categoryDocRef, newCategory);
-
-        // Update category in MongoDB
-        const response = await fetch(`${apiBaseUrl}/api/category/${editingCategory.id}`, {
+        const response = await fetch(`${apiBaseUrl}/category/${editingCategory.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
@@ -118,7 +88,6 @@ const Menu = () => {
         }
 
         fetchCategories(); // Re-fetch categories to update the state and UI
-
         setNewCategory({ name: '', image: '' });
         setEditingCategory(null);
         setShowCategoryInput(false);
@@ -133,12 +102,7 @@ const Menu = () => {
     const confirmed = window.confirm('Are you sure you want to delete this category?');
     if (confirmed) {
       try {
-        // Delete category from Firestore
-        const categoryDocRef = doc(db, 'restaurants', userId, 'categories', categoryId);
-        await deleteDoc(categoryDocRef);
-
-        // Delete category from MongoDB
-        const response = await fetch(`${apiBaseUrl}/api/category/${categoryId}`, {
+        const response = await fetch(`${apiBaseUrl}/category/${categoryId}`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json'
@@ -164,6 +128,11 @@ const Menu = () => {
   const showNotification = (message) => {
     setNotification(message);
     setTimeout(() => setNotification(null), 3000);
+  };
+
+  const handleAddCategoryClick = () => {
+    setShowCategoryInput(true);
+    setEditingCategory(null); // Ensure we are not in editing mode
   };
 
   return (
@@ -205,7 +174,7 @@ const Menu = () => {
       )}
       <div className="menu-items">
         {categories.map((category, index) => (
-          <div className="menu-item" key={index} onClick={() => handleCategoryClick(category.id)}>
+          <div className="menu-item" key={index} onClick={() => handleCategoryClick(category._id)}>
             <img src={category.image} alt={category.name} />
             <div className="menu-item-details">
               <h2>{category.name}</h2>
@@ -213,7 +182,7 @@ const Menu = () => {
                 <button onClick={(e) => { e.stopPropagation(); handleEditCategory(category); }} className="edit-category-btn">
                   Edit
                 </button>
-                <button onClick={(e) => { e.stopPropagation(); handleDeleteCategory(category.id); }} className="delete-category-btn">
+                <button onClick={(e) => { e.stopPropagation(); handleDeleteCategory(category._id); }} className="delete-category-btn">
                   Delete
                 </button>
               </div>

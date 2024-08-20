@@ -130,6 +130,11 @@ const Menu = () => {
     setTimeout(() => setNotification(null), 3000);
   };
 
+  const handleAddCategoryClick = () => {
+    setShowCategoryInput(true);
+    setEditingCategory(null); // Ensure we are not in editing mode
+  };
+
   return (
     <div className="menu-container">
       <div className="menu-header">

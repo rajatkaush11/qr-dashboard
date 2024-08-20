@@ -64,6 +64,7 @@ const Register = () => {
       }
 
       console.log('Restaurant details saved in MongoDB successfully');
+      console.debug('MongoDB response:', await response.json()); // Debug log added
 
       // Display alert and redirect after successful registration
       alert('Registered successfully!');

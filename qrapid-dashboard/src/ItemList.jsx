@@ -13,13 +13,13 @@ const ItemList = () => {
   const [showVariations, setShowVariations] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
-  const [bestTimeToken, setBestTimeToken] = useState(null); // <-- Add this line to store the token
+  const [bestTimeToken, setBestTimeToken] = useState(null);
   const apiBaseUrl = import.meta.env.VITE_BACKEND_API;
   const formRef = useRef(null);
 
   useEffect(() => {
     // Fetch the token when the component mounts
-    const token = localStorage.getItem('bestTimeToken'); // Assuming it's stored in localStorage
+    const token = localStorage.getItem('bestTimeToken');
     setBestTimeToken(token);
 
     if (token) {

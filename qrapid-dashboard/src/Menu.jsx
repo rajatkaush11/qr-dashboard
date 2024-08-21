@@ -9,33 +9,31 @@ const Menu = () => {
   const [newCategory, setNewCategory] = useState({ name: '', image: '' });
   const [editingCategory, setEditingCategory] = useState(null);
   const [notification, setNotification] = useState(null);
-  const [bestTimeToken, setBestTimeToken] = useState(null); // State to hold the bestTimeToken
+  const [bestTimeToken, setBestTimeToken] = useState(null);
   const apiBaseUrl = import.meta.env.VITE_BACKEND_API;
   const navigate = useNavigate();
 
-  // Fetch the bestTimeToken after user login
   useEffect(() => {
     const fetchBestTimeToken = async () => {
       try {
         const uid = auth.currentUser?.uid;
 
         if (uid) {
-          console.log("Fetching bestTimeToken for UID:", uid); // Debug log
+          console.log("Fetching bestTimeToken for UID:", uid);
 
           const response = await fetch(`${apiBaseUrl}/restaurant/${uid}`, {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${auth.currentUser?.accessToken}`, // Using Firebase token here to get bestTimeToken
+              'Authorization': `Bearer ${auth.currentUser?.accessToken}`,
             },
           });
 
-          const data = await response.json(); // Parse JSON response
-
-          console.log("Backend response data:", data); // Debug log
+          const data = await response.json();
+          console.log("Backend response data:", data);
           if (data.bestTimeToken) {
-            console.log("Fetched bestTimeToken:", data.bestTimeToken); // Debug log
-            setBestTimeToken(data.bestTimeToken); // Set the bestTimeToken from the response
+            console.log("Fetched bestTimeToken:", data.bestTimeToken);
+            setBestTimeToken(data.bestTimeToken);
           } else {
             console.error('bestTimeToken not found in the response');
           }
@@ -49,32 +47,30 @@ const Menu = () => {
     fetchBestTimeToken();
   }, [apiBaseUrl]);
 
-  // Fetch categories after bestTimeToken is set
   useEffect(() => {
     const fetchCategories = async () => {
       if (!bestTimeToken) return;
-  
+
       try {
-          const response = await fetch(`${apiBaseUrl}/categories/${auth.currentUser?.uid}`, {
-              method: 'GET',
-              headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${bestTimeToken}`,
-              },
-          });
-  
-          if (response.ok) {
-              const categoriesData = await response.json();
-              setCategories(categoriesData);
-          } else {
-              throw new Error('Failed to fetch categories');
-          }
+        const response = await fetch(`${apiBaseUrl}/categories/${auth.currentUser?.uid}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${bestTimeToken}`,
+          },
+        });
+
+        if (response.ok) {
+          const categoriesData = await response.json();
+          setCategories(categoriesData);
+        } else {
+          throw new Error('Failed to fetch categories');
+        }
       } catch (error) {
-          console.error('Error fetching categories:', error);
-          setNotification('Failed to fetch categories');
+        console.error('Error fetching categories:', error);
+        setNotification('Failed to fetch categories');
       }
-  };
-  
+    };
 
     if (auth.currentUser?.uid && bestTimeToken) {
       fetchCategories();
@@ -83,15 +79,15 @@ const Menu = () => {
 
   const handleAddCategory = async () => {
     if (newCategory.name && bestTimeToken) {
-      console.log("Preparing to add category:", newCategory); // Debug log
-      console.log("Using bestTimeToken:", bestTimeToken); // Debug log
+      console.log("Preparing to add category:", newCategory);
+      console.log("Using bestTimeToken:", bestTimeToken);
 
       try {
         const response = await fetch(`${apiBaseUrl}/category`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${bestTimeToken}`, // Use bestTimeToken here
+            'Authorization': `Bearer ${bestTimeToken}`,
           },
           body: JSON.stringify({
             name: newCategory.name,
@@ -99,14 +95,14 @@ const Menu = () => {
           }),
         });
 
-        console.log("Add category response status:", response.status); // Debug log
+        console.log("Add category response status:", response.status);
 
         if (!response.ok) {
           throw new Error('Failed to save category in MongoDB');
         }
 
         const addedCategory = await response.json();
-        console.log("Category added successfully:", addedCategory); // Debug log
+        console.log("Category added successfully:", addedCategory);
         setCategories((prevCategories) => [...prevCategories, addedCategory]);
         setNewCategory({ name: '', image: '' });
         setShowCategoryInput(false);
@@ -116,21 +112,21 @@ const Menu = () => {
         showNotification('Failed to add category');
       }
     } else {
-      console.log("Category name or bestTimeToken is missing."); // Debug log
+      console.log("Category name or bestTimeToken is missing.");
     }
   };
 
   const handleUpdateCategory = async () => {
     if (newCategory.name && editingCategory && bestTimeToken) {
-      console.log("Preparing to update category:", newCategory); // Debug log
-      console.log("Using bestTimeToken:", bestTimeToken); // Debug log
+      console.log("Preparing to update category:", newCategory);
+      console.log("Using bestTimeToken:", bestTimeToken);
 
       try {
         const response = await fetch(`${apiBaseUrl}/category/${editingCategory._id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${bestTimeToken}`, // Use bestTimeToken here
+            'Authorization': `Bearer ${bestTimeToken}`,
           },
           body: JSON.stringify({
             name: newCategory.name,
@@ -138,14 +134,14 @@ const Menu = () => {
           }),
         });
 
-        console.log("Update category response status:", response.status); // Debug log
+        console.log("Update category response status:", response.status);
 
         if (!response.ok) {
           throw new Error('Failed to update category in MongoDB');
         }
 
         const updatedCategory = await response.json();
-        console.log("Category updated successfully:", updatedCategory); // Debug log
+        console.log("Category updated successfully:", updatedCategory);
         setCategories((prevCategories) =>
           prevCategories.map((category) =>
             category._id === updatedCategory._id ? updatedCategory : category
@@ -160,31 +156,31 @@ const Menu = () => {
         showNotification('Failed to update category');
       }
     } else {
-      console.log("Category name, editingCategory, or bestTimeToken is missing."); // Debug log
+      console.log("Category name, editingCategory, or bestTimeToken is missing.");
     }
   };
 
   const handleDeleteCategory = async (categoryId) => {
     if (bestTimeToken) {
-      console.log("Preparing to delete category with ID:", categoryId); // Debug log
-      console.log("Using bestTimeToken:", bestTimeToken); // Debug log
+      console.log("Preparing to delete category with ID:", categoryId);
+      console.log("Using bestTimeToken:", bestTimeToken);
   
       try {
         const response = await fetch(`${apiBaseUrl}/category/${categoryId}`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${bestTimeToken}`, // Use bestTimeToken here
+            'Authorization': `Bearer ${bestTimeToken}`,
           },
         });
   
-        console.log("Delete category response status:", response.status); // Debug log
+        console.log("Delete category response status:", response.status);
   
         if (!response.ok) {
           throw new Error('Failed to delete category in MongoDB');
         }
   
-        console.log("Category deleted successfully"); // Debug log
+        console.log("Category deleted successfully");
         setCategories((prevCategories) =>
           prevCategories.filter((category) => category._id !== categoryId)
         );
@@ -194,10 +190,9 @@ const Menu = () => {
         showNotification('Failed to delete category');
       }
     } else {
-      console.log("Category ID or bestTimeToken is missing, or delete was not confirmed."); // Debug log
+      console.log("Category ID or bestTimeToken is missing, or delete was not confirmed.");
     }
   };
-  
 
   const handleCategoryClick = (categoryId) => {
     navigate(`/category/${categoryId}/items`);

@@ -17,11 +17,16 @@ const ItemList = () => {
   const apiBaseUrl = import.meta.env.VITE_BACKEND_API;
   const formRef = useRef(null);
 
-  // Fetch bestTimeToken and items when the component mounts or categoryId changes
   useEffect(() => {
     const fetchTokenAndItems = async () => {
       try {
-        const uid = 'user-uid'; // Replace with actual UID retrieval logic
+        // Replace this with your logic to get the user's UID
+        const uid = auth.currentUser?.uid; 
+
+        if (!uid) {
+          throw new Error('User UID not found. Ensure the user is authenticated.');
+        }
+
         const response = await fetch(`${apiBaseUrl}/restaurant/${uid}`, {
           method: 'GET',
           headers: {
@@ -30,22 +35,21 @@ const ItemList = () => {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to fetch bestTimeToken');
+          throw new Error(`Failed to fetch bestTimeToken: ${response.statusText}`);
         }
 
         const { bestTimeToken } = await response.json();
-        console.log(`Fetched bestTimeToken: ${bestTimeToken}`); // Debug log
+        console.log(`Fetched bestTimeToken: ${bestTimeToken}`);
 
         if (bestTimeToken) {
           setBestTimeToken(bestTimeToken);
-          localStorage.setItem('bestTimeToken', bestTimeToken); // Store token for later use
+          localStorage.setItem('bestTimeToken', bestTimeToken);
           await fetchItems(bestTimeToken);
         } else {
-          console.warn('bestTimeToken is missing from the response.');
-          showNotification('Failed to retrieve token.');
+          throw new Error('bestTimeToken is missing from the response.');
         }
       } catch (error) {
-        console.error('Error fetching bestTimeToken:', error);
+        console.error('Error fetching bestTimeToken:', error.message);
         showNotification('Failed to retrieve token.');
       }
     };
@@ -53,9 +57,8 @@ const ItemList = () => {
     fetchTokenAndItems();
   }, [categoryId]);
 
-  // Fetch items based on the token and category ID
   const fetchItems = async (token) => {
-    console.log('Fetching items with token:', token); // Debugging token
+    console.log('Fetching items with token:', token);
     try {
       const response = await fetch(`${apiBaseUrl}/items/${categoryId}`, {
         method: 'GET',
@@ -72,27 +75,24 @@ const ItemList = () => {
       }
 
       const data = await response.json();
-      console.log('Fetched items:', data); // Debugging fetched items
+      console.log('Fetched items:', data);
       setItems(data);
     } catch (error) {
-      console.error('Error fetching items:', error);
+      console.error('Error fetching items:', error.message);
       showNotification(error.message);
     }
   };
 
-  // Handle input changes for item form fields
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewItem({ ...newItem, [name]: value });
   };
 
-  // Handle input changes for variation fields
   const handleVariationChange = (e) => {
     const { name, value } = e.target;
     setNewVariation({ ...newVariation, [name]: value });
   };
 
-  // Add a new variation to the item
   const handleAddVariation = () => {
     if (newVariation.name && newVariation.price && newVariation.weight && newVariation.unit) {
       setNewItem(prevState => ({
@@ -103,7 +103,6 @@ const ItemList = () => {
     }
   };
 
-  // Handle file selection and convert it to base64
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -115,9 +114,8 @@ const ItemList = () => {
     }
   };
 
-  // Add a new item
   const handleAddItem = async () => {
-    console.log('Attempting to add item:', newItem); // Debugging new item data
+    console.log('Attempting to add item:', newItem);
     if (!bestTimeToken) {
       showNotification('No token available, unable to add item.');
       return;
@@ -134,7 +132,7 @@ const ItemList = () => {
           body: JSON.stringify({ ...newItem, categoryId }),
         });
 
-        console.log('Add item response:', response); // Debugging response
+        console.log('Add item response:', response);
 
         if (!response.ok) {
           const errorData = await response.json();
@@ -143,14 +141,14 @@ const ItemList = () => {
         }
 
         const addedItem = await response.json();
-        console.log('Item added successfully:', addedItem); // Debugging added item
+        console.log('Item added successfully:', addedItem);
         setItems([...items, addedItem]);
         setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '', variations: [] });
         setShowVariations(false);
         await fetchItems(bestTimeToken);
         showNotification("Item added successfully");
       } catch (error) {
-        console.error('Error adding item:', error);
+        console.error('Error adding item:', error.message);
         showNotification(error.message);
       }
     } else {
@@ -158,9 +156,8 @@ const ItemList = () => {
     }
   };
 
-  // Edit an existing item
   const handleEditItem = (item) => {
-    console.log('Editing item:', item); // Debugging item to edit
+    console.log('Editing item:', item);
     setEditingItem(item);
     setNewItem({
       name: item.name,
@@ -175,9 +172,8 @@ const ItemList = () => {
     formRef.current.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Update an existing item
   const handleUpdateItem = async () => {
-    console.log('Updating item:', newItem); // Debugging updated item data
+    console.log('Updating item:', newItem);
     if (!bestTimeToken) {
       showNotification('No token available, unable to update item.');
       return;
@@ -194,7 +190,7 @@ const ItemList = () => {
           body: JSON.stringify({ ...newItem, categoryId }),
         });
 
-        console.log('Update item response:', response); // Debugging response
+        console.log('Update item response:', response);
 
         if (!response.ok) {
           const errorData = await response.json();
@@ -203,7 +199,7 @@ const ItemList = () => {
         }
 
         const updatedItems = items.map(item => (item._id === editingItem._id ? { ...newItem, _id: editingItem._id } : item));
-        console.log('Updated items list:', updatedItems); // Debugging updated items list
+        console.log('Updated items list:', updatedItems);
         setItems(updatedItems);
         setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '', variations: [] });
         setEditingItem(null);
@@ -211,7 +207,7 @@ const ItemList = () => {
         await fetchItems(bestTimeToken);
         showNotification("Item updated successfully");
       } catch (error) {
-        console.error('Error updating item:', error);
+        console.error('Error updating item:', error.message);
         showNotification(error.message);
       }
     } else {
@@ -219,9 +215,8 @@ const ItemList = () => {
     }
   };
 
-  // Delete an existing item
   const handleDeleteItem = async () => {
-    console.log('Deleting item:', itemToDelete); // Debugging item to delete
+    console.log('Deleting item:', itemToDelete);
     if (!bestTimeToken) {
       showNotification('No token available, unable to delete item.');
       return;
@@ -236,7 +231,7 @@ const ItemList = () => {
           },
         });
 
-        console.log('Delete item response:', response); // Debugging response
+        console.log('Delete item response:', response);
 
         if (!response.ok) {
           const errorData = await response.json();
@@ -249,25 +244,22 @@ const ItemList = () => {
         setItemToDelete(null);
         showNotification("Item deleted successfully");
       } catch (error) {
-        console.error('Error deleting item:', error);
+        console.error('Error deleting item:', error.message);
         showNotification(error.message);
       }
     }
   };
 
-  // Confirm deletion of an item
   const confirmDeleteItem = (item) => {
     setItemToDelete(item);
     setShowDeleteConfirmation(true);
   };
 
-  // Cancel the deletion process
   const cancelDeleteItem = () => {
     setItemToDelete(null);
     setShowDeleteConfirmation(false);
   };
 
-  // Toggle the description view for an item
   const toggleDescription = (id) => {
     setExpandedDescriptions(prevState => ({
       ...prevState,
@@ -275,12 +267,10 @@ const ItemList = () => {
     }));
   };
 
-  // Handle navigation back to categories
   const handleBack = () => {
     navigate(-1);
   };
 
-  // Show notifications
   const showNotification = (message) => {
     setNotification(message);
     setTimeout(() => setNotification(null), 3000);

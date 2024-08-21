@@ -13,7 +13,7 @@ const ItemList = () => {
   const [showVariations, setShowVariations] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
-  const [bestTimeToken, setBestTimeToken] = useState(null); // <-- Add this line to store the token
+  const [bestTimeToken, setBestTimeToken] = useState(null);
   const apiBaseUrl = import.meta.env.VITE_BACKEND_API;
   const formRef = useRef(null);
 

@@ -1,13 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { getAuth } from 'firebase/auth'; // Import Firebase authentication
 import './ItemList.css';
 
 const ItemList = () => {
   const { categoryId } = useParams();
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
-  const [newItem, setNewItem] = useState({ name: '', price: '', description: '', image: '', weight: '', unit: '', variations: [] });
-  const [newVariation, setNewVariation] = useState({ name: '', price: '', weight: '', unit: '' });
+  const [newItem, setNewItem] = useState({
+    name: '',
+    price: '',
+    description: '',
+    image: '',
+    weight: '',
+    unit: '',
+    variations: [],
+  });
+  const [newVariation, setNewVariation] = useState({
+    name: '',
+    price: '',
+    weight: '',
+    unit: '',
+  });
   const [editingItem, setEditingItem] = useState(null);
   const [notification, setNotification] = useState(null);
   const [showVariations, setShowVariations] = useState(false);
@@ -17,11 +31,12 @@ const ItemList = () => {
   const apiBaseUrl = import.meta.env.VITE_BACKEND_API;
   const formRef = useRef(null);
 
+  const auth = getAuth(); // Initialize auth
+
   useEffect(() => {
     const fetchTokenAndItems = async () => {
       try {
-        // Replace this with your logic to get the user's UID
-        const uid = auth.currentUser?.uid; 
+        const uid = auth.currentUser?.uid; // Get current user's UID
 
         if (!uid) {
           throw new Error('User UID not found. Ensure the user is authenticated.');
@@ -39,7 +54,6 @@ const ItemList = () => {
         }
 
         const { bestTimeToken } = await response.json();
-        console.log(`Fetched bestTimeToken: ${bestTimeToken}`);
 
         if (bestTimeToken) {
           setBestTimeToken(bestTimeToken);
@@ -58,24 +72,20 @@ const ItemList = () => {
   }, [categoryId]);
 
   const fetchItems = async (token) => {
-    console.log('Fetching items with token:', token);
     try {
       const response = await fetch(`${apiBaseUrl}/items/${categoryId}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Failed to fetch items:', errorData);
-        throw new Error(errorData.error || 'Failed to fetch items');
+        throw new Error('Failed to fetch items');
       }
 
       const data = await response.json();
-      console.log('Fetched items:', data);
       setItems(data);
     } catch (error) {
       console.error('Error fetching items:', error.message);
@@ -95,9 +105,9 @@ const ItemList = () => {
 
   const handleAddVariation = () => {
     if (newVariation.name && newVariation.price && newVariation.weight && newVariation.unit) {
-      setNewItem(prevState => ({
+      setNewItem((prevState) => ({
         ...prevState,
-        variations: [...prevState.variations, newVariation]
+        variations: [...prevState.variations, newVariation],
       }));
       setNewVariation({ name: '', price: '', weight: '', unit: '' });
     }
@@ -115,7 +125,6 @@ const ItemList = () => {
   };
 
   const handleAddItem = async () => {
-    console.log('Attempting to add item:', newItem);
     if (!bestTimeToken) {
       showNotification('No token available, unable to add item.');
       return;
@@ -127,37 +136,31 @@ const ItemList = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${bestTimeToken}`,
+            Authorization: `Bearer ${bestTimeToken}`,
           },
           body: JSON.stringify({ ...newItem, categoryId }),
         });
 
-        console.log('Add item response:', response);
-
         if (!response.ok) {
-          const errorData = await response.json();
-          console.error('Failed to save item:', errorData);
-          throw new Error(errorData.error || 'Failed to save item');
+          throw new Error('Failed to save item');
         }
 
         const addedItem = await response.json();
-        console.log('Item added successfully:', addedItem);
         setItems([...items, addedItem]);
         setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '', variations: [] });
         setShowVariations(false);
         await fetchItems(bestTimeToken);
-        showNotification("Item added successfully");
+        showNotification('Item added successfully');
       } catch (error) {
         console.error('Error adding item:', error.message);
         showNotification(error.message);
       }
     } else {
-      showNotification("Name is required and variations must be added if enabled.");
+      showNotification('Name is required and variations must be added if enabled.');
     }
   };
 
   const handleEditItem = (item) => {
-    console.log('Editing item:', item);
     setEditingItem(item);
     setNewItem({
       name: item.name,
@@ -166,14 +169,13 @@ const ItemList = () => {
       image: item.image,
       weight: item.weight,
       unit: item.unit,
-      variations: item.variations || []
+      variations: item.variations || [],
     });
     setShowVariations(item.variations && item.variations.length > 0);
     formRef.current.scrollIntoView({ behavior: 'smooth' });
   };
 
   const handleUpdateItem = async () => {
-    console.log('Updating item:', newItem);
     if (!bestTimeToken) {
       showNotification('No token available, unable to update item.');
       return;
@@ -185,38 +187,34 @@ const ItemList = () => {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${bestTimeToken}`,
+            Authorization: `Bearer ${bestTimeToken}`,
           },
           body: JSON.stringify({ ...newItem, categoryId }),
         });
 
-        console.log('Update item response:', response);
-
         if (!response.ok) {
-          const errorData = await response.json();
-          console.error('Failed to update item:', errorData);
-          throw new Error(errorData.error || 'Failed to update item');
+          throw new Error('Failed to update item');
         }
 
-        const updatedItems = items.map(item => (item._id === editingItem._id ? { ...newItem, _id: editingItem._id } : item));
-        console.log('Updated items list:', updatedItems);
+        const updatedItems = items.map((item) =>
+          item._id === editingItem._id ? { ...newItem, _id: editingItem._id } : item
+        );
         setItems(updatedItems);
         setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '', variations: [] });
         setEditingItem(null);
         setShowVariations(false);
         await fetchItems(bestTimeToken);
-        showNotification("Item updated successfully");
+        showNotification('Item updated successfully');
       } catch (error) {
         console.error('Error updating item:', error.message);
         showNotification(error.message);
       }
     } else {
-      showNotification("Name is required and variations must be added if enabled.");
+      showNotification('Name is required and variations must be added if enabled.');
     }
   };
 
   const handleDeleteItem = async () => {
-    console.log('Deleting item:', itemToDelete);
     if (!bestTimeToken) {
       showNotification('No token available, unable to delete item.');
       return;
@@ -227,22 +225,18 @@ const ItemList = () => {
         const response = await fetch(`${apiBaseUrl}/items/${itemToDelete._id}`, {
           method: 'DELETE',
           headers: {
-            'Authorization': `Bearer ${bestTimeToken}`,
+            Authorization: `Bearer ${bestTimeToken}`,
           },
         });
 
-        console.log('Delete item response:', response);
-
         if (!response.ok) {
-          const errorData = await response.json();
-          console.error('Failed to delete item:', errorData);
-          throw new Error(errorData.error || 'Failed to delete item');
+          throw new Error('Failed to delete item');
         }
 
-        setItems(items.filter(item => item._id !== itemToDelete._id));
+        setItems(items.filter((item) => item._id !== itemToDelete._id));
         setShowDeleteConfirmation(false);
         setItemToDelete(null);
-        showNotification("Item deleted successfully");
+        showNotification('Item deleted successfully');
       } catch (error) {
         console.error('Error deleting item:', error.message);
         showNotification(error.message);
@@ -258,13 +252,6 @@ const ItemList = () => {
   const cancelDeleteItem = () => {
     setItemToDelete(null);
     setShowDeleteConfirmation(false);
-  };
-
-  const toggleDescription = (id) => {
-    setExpandedDescriptions(prevState => ({
-      ...prevState,
-      [id]: !prevState[id]
-    }));
   };
 
   const handleBack = () => {
@@ -327,19 +314,7 @@ const ItemList = () => {
             <div className="item-details">
               <h2>{item.name}</h2>
               <p>Price: {item.price}</p>
-              <p>
-                Description: 
-                {expandedDescriptions[item._id] ? (
-                  <>
-                    {item.description} <span onClick={() => toggleDescription(item._id)} className="toggle-description">Show less</span>
-                  </>
-                ) : (
-                  <>
-                    {item.description.length > 100 ? `${item.description.slice(0, 100)}...` : item.description} 
-                    {item.description.length > 100 && <span onClick={() => toggleDescription(item._id)} className="toggle-description">Read more</span>}
-                  </>
-                )}
-              </p>
+              <p>Description: {item.description}</p>
               <p>Weight: {item.weight} {item.unit}</p>
               <div className="item-variations">
                 <h4>Variations:</h4>

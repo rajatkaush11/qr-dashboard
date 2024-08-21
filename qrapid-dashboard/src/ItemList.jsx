@@ -31,12 +31,12 @@ const ItemList = () => {
 
   // Fetch items from the backend using the bestTimeToken
   const fetchItems = async (token) => {
-    console.log('Fetching items with token:', token); // Debugging token
+    console.log('Fetching items with token:', token);
     try {
       const response = await fetch(`${apiBaseUrl}/items/${categoryId}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`, // Use bestTimeToken here
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -48,7 +48,7 @@ const ItemList = () => {
       }
 
       const data = await response.json();
-      console.log('Fetched items:', data); // Debugging fetched items
+      console.log('Fetched items:', data);
       setItems(data);
     } catch (error) {
       console.error('Error fetching items:', error);
@@ -88,19 +88,19 @@ const ItemList = () => {
   };
 
   const handleAddItem = async () => {
-    console.log('Attempting to add item:', newItem); // Debugging new item data
+    console.log('Attempting to add item:', newItem);
     if (newItem.name && (!showVariations || newItem.variations.length > 0)) {
       try {
         const response = await fetch(`${apiBaseUrl}/items`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${bestTimeToken}`, // Use bestTimeToken here
+            'Authorization': `Bearer ${bestTimeToken}`,
           },
           body: JSON.stringify({ ...newItem, categoryId }),
         });
 
-        console.log('Add item response:', response); // Debugging response
+        console.log('Add item response:', response);
 
         if (!response.ok) {
           const errorData = await response.json();
@@ -109,11 +109,10 @@ const ItemList = () => {
         }
 
         const addedItem = await response.json();
-        console.log('Item added successfully:', addedItem); // Debugging added item
+        console.log('Item added successfully:', addedItem);
         setItems([...items, addedItem]);
         setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '', variations: [] });
         setShowVariations(false);
-        fetchItems(bestTimeToken);
         showNotification("Item added successfully");
       } catch (error) {
         console.error('Error adding item:', error);
@@ -125,7 +124,7 @@ const ItemList = () => {
   };
 
   const handleEditItem = (item) => {
-    console.log('Editing item:', item); // Debugging item to edit
+    console.log('Editing item:', item);
     setEditingItem(item);
     setNewItem({ 
       name: item.name, 
@@ -141,19 +140,19 @@ const ItemList = () => {
   };
 
   const handleUpdateItem = async () => {
-    console.log('Updating item:', newItem); // Debugging updated item data
+    console.log('Updating item:', newItem);
     if (newItem.name && editingItem && (!showVariations || newItem.variations.length > 0)) {
       try {
         const response = await fetch(`${apiBaseUrl}/items/${editingItem._id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${bestTimeToken}`, // Use bestTimeToken here
+            'Authorization': `Bearer ${bestTimeToken}`,
           },
           body: JSON.stringify({ ...newItem, categoryId }),
         });
 
-        console.log('Update item response:', response); // Debugging response
+        console.log('Update item response:', response);
 
         if (!response.ok) {
           const errorData = await response.json();
@@ -162,12 +161,11 @@ const ItemList = () => {
         }
 
         const updatedItems = items.map(item => (item._id === editingItem._id ? { ...newItem, _id: editingItem._id } : item));
-        console.log('Updated items list:', updatedItems); // Debugging updated items list
+        console.log('Updated items list:', updatedItems);
         setItems(updatedItems);
         setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '', variations: [] });
         setEditingItem(null);
         setShowVariations(false);
-        fetchItems(bestTimeToken);
         showNotification("Item updated successfully");
       } catch (error) {
         console.error('Error updating item:', error);
@@ -179,17 +177,17 @@ const ItemList = () => {
   };
 
   const handleDeleteItem = async () => {
-    console.log('Deleting item:', itemToDelete); // Debugging item to delete
+    console.log('Deleting item:', itemToDelete);
     if (itemToDelete) {
       try {
         const response = await fetch(`${apiBaseUrl}/items/${itemToDelete._id}`, {
           method: 'DELETE',
           headers: {
-            'Authorization': `Bearer ${bestTimeToken}`, // Use bestTimeToken here
+            'Authorization': `Bearer ${bestTimeToken}`,
           },
         });
 
-        console.log('Delete item response:', response); // Debugging response
+        console.log('Delete item response:', response);
 
         if (!response.ok) {
           const errorData = await response.json();

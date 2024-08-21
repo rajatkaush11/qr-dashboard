@@ -17,7 +17,6 @@ const ItemList = () => {
   const apiBaseUrl = import.meta.env.VITE_BACKEND_API;
   const formRef = useRef(null);
 
-  // Fetch token and items when the component mounts or categoryId changes
   useEffect(() => {
     const fetchTokenAndItems = async () => {
       const token = localStorage.getItem('bestTimeToken');

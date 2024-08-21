@@ -17,16 +17,35 @@ const ItemList = () => {
   const apiBaseUrl = import.meta.env.VITE_BACKEND_API;
   const formRef = useRef(null);
 
+  // Fetch bestTimeToken and items when the component mounts or categoryId changes
   useEffect(() => {
     const fetchTokenAndItems = async () => {
-      const token = localStorage.getItem('bestTimeToken');
-      console.log(`Fetched bestTimeToken: ${token}`); // Debug log
+      try {
+        const uid = 'user-uid'; // Replace with actual UID retrieval logic
+        const response = await fetch(`${apiBaseUrl}/restaurant/${uid}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
 
-      if (token) {
-        setBestTimeToken(token);
-        await fetchItems(token);
-      } else {
-        console.warn('Failed to retrieve bestTimeToken from local storage.');
+        if (!response.ok) {
+          throw new Error('Failed to fetch bestTimeToken');
+        }
+
+        const { bestTimeToken } = await response.json();
+        console.log(`Fetched bestTimeToken: ${bestTimeToken}`); // Debug log
+
+        if (bestTimeToken) {
+          setBestTimeToken(bestTimeToken);
+          localStorage.setItem('bestTimeToken', bestTimeToken); // Store token for later use
+          await fetchItems(bestTimeToken);
+        } else {
+          console.warn('bestTimeToken is missing from the response.');
+          showNotification('Failed to retrieve token.');
+        }
+      } catch (error) {
+        console.error('Error fetching bestTimeToken:', error);
         showNotification('Failed to retrieve token.');
       }
     };

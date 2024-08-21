@@ -11,6 +11,8 @@ const ItemList = () => {
   const [editingItem, setEditingItem] = useState(null);
   const [notification, setNotification] = useState(null);
   const [showVariations, setShowVariations] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false); // <-- Added state for delete confirmation dialog
+  const [itemToDelete, setItemToDelete] = useState(null); // <-- Added state to track the item to be deleted
   const apiBaseUrl = import.meta.env.VITE_BACKEND_API;
   const formRef = useRef(null);
 
@@ -38,8 +40,7 @@ const ItemList = () => {
         console.error('Error fetching items:', error);
         showNotification(error.message);
     }
-};
-
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

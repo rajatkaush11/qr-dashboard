@@ -18,7 +18,6 @@ const ItemList = () => {
   const formRef = useRef(null);
 
   useEffect(() => {
-    // Fetch the token when the component mounts
     const token = localStorage.getItem('bestTimeToken');
     console.log(`Fetched bestTimeToken: ${token}`); // Debug log
     setBestTimeToken(token);
@@ -30,14 +29,13 @@ const ItemList = () => {
     }
   }, [categoryId]);
 
-  // Fetch items from the backend using the bestTimeToken
   const fetchItems = async (token) => {
     console.log('Fetching items with token:', token); // Debugging token
     try {
       const response = await fetch(`${apiBaseUrl}/items/${categoryId}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`, // Use bestTimeToken here
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -96,7 +94,7 @@ const ItemList = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${bestTimeToken}`, // Use bestTimeToken here
+            'Authorization': `Bearer ${bestTimeToken}`,
           },
           body: JSON.stringify({ ...newItem, categoryId }),
         });
@@ -149,7 +147,7 @@ const ItemList = () => {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${bestTimeToken}`, // Use bestTimeToken here
+            'Authorization': `Bearer ${bestTimeToken}`,
           },
           body: JSON.stringify({ ...newItem, categoryId }),
         });
@@ -186,7 +184,7 @@ const ItemList = () => {
         const response = await fetch(`${apiBaseUrl}/items/${itemToDelete._id}`, {
           method: 'DELETE',
           headers: {
-            'Authorization': `Bearer ${bestTimeToken}`, // Use bestTimeToken here
+            'Authorization': `Bearer ${bestTimeToken}`,
           },
         });
 

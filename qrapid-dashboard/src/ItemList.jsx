@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import './ItemList.css';
 
 const ItemList = () => {
@@ -10,9 +9,6 @@ const ItemList = () => {
   const [newItem, setNewItem] = useState({ name: '', price: '', description: '', image: '', weight: '', unit: '', variations: [] });
   const [newVariation, setNewVariation] = useState({ name: '', price: '', weight: '', unit: '' });
   const [editingItem, setEditingItem] = useState(null);
-  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState(null);
-  const [expandedDescriptions, setExpandedDescriptions] = useState({});
   const [notification, setNotification] = useState(null);
   const [showVariations, setShowVariations] = useState(false);
   const apiBaseUrl = import.meta.env.VITE_BACKEND_API;
@@ -22,8 +18,8 @@ const ItemList = () => {
     fetchItems();
   }, [categoryId]);
 
+  // Fetch items from the backend
   const fetchItems = async () => {
-    console.log(`Fetching items for category ID: ${categoryId}`);
     try {
       const response = await fetch(`${apiBaseUrl}/items/${categoryId}`, {
         method: 'GET',
@@ -36,10 +32,11 @@ const ItemList = () => {
         const data = await response.json();
         setItems(data);
       } else {
-        console.error('Failed to fetch items from MongoDB');
+        throw new Error('Failed to fetch items');
       }
     } catch (error) {
       console.error('Error fetching items:', error);
+      showNotification(error.message);
     }
   };
 
@@ -87,14 +84,14 @@ const ItemList = () => {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to save item in MongoDB');
+          throw new Error('Failed to save item');
         }
 
         const addedItem = await response.json();
         setItems([...items, addedItem]);
         setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '', variations: [] });
         setShowVariations(false);
-        fetchItems(); // Re-fetch items to update UI
+        fetchItems();
         showNotification("Item added successfully");
       } catch (error) {
         console.error('Error adding item:', error);
@@ -107,7 +104,15 @@ const ItemList = () => {
 
   const handleEditItem = (item) => {
     setEditingItem(item);
-    setNewItem({ name: item.name, price: item.price, description: item.description, image: item.image, weight: item.weight, unit: item.unit, variations: item.variations || [] });
+    setNewItem({ 
+      name: item.name, 
+      price: item.price, 
+      description: item.description, 
+      image: item.image, 
+      weight: item.weight, 
+      unit: item.unit, 
+      variations: item.variations || [] 
+    });
     setShowVariations(item.variations && item.variations.length > 0);
     formRef.current.scrollIntoView({ behavior: 'smooth' });
   };
@@ -125,7 +130,7 @@ const ItemList = () => {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to update item in MongoDB');
+          throw new Error('Failed to update item');
         }
 
         const updatedItems = items.map(item => (item._id === editingItem._id ? { ...newItem, _id: editingItem._id } : item));
@@ -133,7 +138,7 @@ const ItemList = () => {
         setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '', variations: [] });
         setEditingItem(null);
         setShowVariations(false);
-        fetchItems(); // Re-fetch items to update UI
+        fetchItems();
         showNotification("Item updated successfully");
       } catch (error) {
         console.error('Error updating item:', error);
@@ -155,7 +160,7 @@ const ItemList = () => {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to delete item in MongoDB');
+          throw new Error('Failed to delete item');
         }
 
         setItems(items.filter(item => item._id !== itemToDelete._id));
@@ -188,14 +193,6 @@ const ItemList = () => {
 
   const handleBack = () => {
     navigate(-1);
-  };
-
-  const onDragEnd = (result) => {
-    if (!result.destination) return;
-    const reorderedItems = Array.from(items);
-    const [movedItem] = reorderedItems.splice(result.source.index, 1);
-    reorderedItems.splice(result.destination.index, 0, movedItem);
-    setItems(reorderedItems);
   };
 
   const showNotification = (message) => {
@@ -246,65 +243,51 @@ const ItemList = () => {
           {editingItem ? 'Update Item' : 'Add Item'}
         </button>
       </div>
-      <DragDropContext onDragEnd={onDragEnd}>
-        <Droppable droppableId="itemList">
-          {(provided) => (
-            <div className="item-list" {...provided.droppableProps} ref={provided.innerRef}>
-              {items.map((item, index) => (
-                <Draggable key={item._id} draggableId={item._id} index={index}>
-                  {(provided) => (
-                    <div
-                      className="item"
-                      ref={provided.innerRef}
-                      {...provided.draggableProps}
-                      {...provided.dragHandleProps}
-                    >
-                      <img src={item.image} alt={item.name} />
-                      <div className="item-details">
-                        <h2>{item.name}</h2>
-                        <p>Price: {item.price}</p>
-                        <p>
-                          Description: 
-                          {expandedDescriptions[item._id] ? (
-                            <>
-                              {item.description} <span onClick={() => toggleDescription(item._id)} className="toggle-description">Show less</span>
-                            </>
-                          ) : (
-                            <>
-                              {item.description.length > 100 ? `${item.description.slice(0, 100)}...` : item.description} 
-                              {item.description.length > 100 && <span onClick={() => toggleDescription(item._id)} className="toggle-description">Read more</span>}
-                            </>
-                          )}
-                        </p>
-                        <p>Weight: {item.weight} {item.unit}</p>
-                        <div className="item-variations">
-                          <h4>Variations:</h4>
-                          {item.variations && item.variations.length > 0 ? (
-                            item.variations.map((variation, index) => (
-                              <div key={index} className="variation">
-                                <p>Name: {variation.name}</p>
-                                <p>Price: {variation.price}</p>
-                                <p>Weight: {variation.weight} {variation.unit}</p>
-                              </div>
-                            ))
-                          ) : (
-                            <p>No variations</p>
-                          )}
-                        </div>
-                        <div className="item-actions">
-                          <button onClick={() => handleEditItem(item)}>Edit</button>
-                          <button onClick={() => confirmDeleteItem(item)}>Delete</button>
-                        </div>
-                      </div>
+
+      <div className="item-list">
+        {items.map((item) => (
+          <div className="item" key={item._id}>
+            <img src={item.image} alt={item.name} />
+            <div className="item-details">
+              <h2>{item.name}</h2>
+              <p>Price: {item.price}</p>
+              <p>
+                Description: 
+                {expandedDescriptions[item._id] ? (
+                  <>
+                    {item.description} <span onClick={() => toggleDescription(item._id)} className="toggle-description">Show less</span>
+                  </>
+                ) : (
+                  <>
+                    {item.description.length > 100 ? `${item.description.slice(0, 100)}...` : item.description} 
+                    {item.description.length > 100 && <span onClick={() => toggleDescription(item._id)} className="toggle-description">Read more</span>}
+                  </>
+                )}
+              </p>
+              <p>Weight: {item.weight} {item.unit}</p>
+              <div className="item-variations">
+                <h4>Variations:</h4>
+                {item.variations && item.variations.length > 0 ? (
+                  item.variations.map((variation, index) => (
+                    <div key={index} className="variation">
+                      <p>Name: {variation.name}</p>
+                      <p>Price: {variation.price}</p>
+                      <p>Weight: {variation.weight} {variation.unit}</p>
                     </div>
-                  )}
-                </Draggable>
-              ))}
-              {provided.placeholder}
+                  ))
+                ) : (
+                  <p>No variations</p>
+                )}
+              </div>
+              <div className="item-actions">
+                <button onClick={() => handleEditItem(item)}>Edit</button>
+                <button onClick={() => confirmDeleteItem(item)}>Delete</button>
+              </div>
             </div>
-          )}
-        </Droppable>
-      </DragDropContext>
+          </div>
+        ))}
+      </div>
+
       {notification && (
         <div className="notification">
           {notification}

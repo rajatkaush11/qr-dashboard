@@ -22,7 +22,6 @@ const ItemList = () => {
     fetchItems();
   }, [categoryId]);
 
-  // Fetch items from MongoDB
   const fetchItems = async () => {
     console.log(`Fetching items for category ID: ${categoryId}`);
     try {
@@ -75,7 +74,6 @@ const ItemList = () => {
     }
   };
 
-  // Add new item to MongoDB
   const handleAddItem = async () => {
     if (newItem.name && (!showVariations || newItem.variations.length > 0)) {
       try {
@@ -107,7 +105,6 @@ const ItemList = () => {
     }
   };
 
-  // Edit item in MongoDB
   const handleEditItem = (item) => {
     setEditingItem(item);
     setNewItem({ name: item.name, price: item.price, description: item.description, image: item.image, weight: item.weight, unit: item.unit, variations: item.variations || [] });
@@ -147,7 +144,6 @@ const ItemList = () => {
     }
   };
 
-  // Delete item from MongoDB
   const handleDeleteItem = async () => {
     if (itemToDelete) {
       try {

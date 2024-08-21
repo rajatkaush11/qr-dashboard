@@ -11,38 +11,47 @@ const ItemList = () => {
   const [editingItem, setEditingItem] = useState(null);
   const [notification, setNotification] = useState(null);
   const [showVariations, setShowVariations] = useState(false);
-  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false); // <-- Added state for delete confirmation dialog
-  const [itemToDelete, setItemToDelete] = useState(null); // <-- Added state to track the item to be deleted
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [bestTimeToken, setBestTimeToken] = useState(null); // <-- Add this line to store the token
   const apiBaseUrl = import.meta.env.VITE_BACKEND_API;
   const formRef = useRef(null);
 
   useEffect(() => {
-    fetchItems();
+    // Fetch the token when the component mounts
+    const token = localStorage.getItem('bestTimeToken'); // Assuming it's stored in localStorage
+    setBestTimeToken(token);
+
+    if (token) {
+      fetchItems(token);
+    } else {
+      showNotification('Failed to retrieve token.');
+    }
   }, [categoryId]);
 
-  // Fetch items from the backend
-  const fetchItems = async () => {
+  // Fetch items from the backend using the bestTimeToken
+  const fetchItems = async (token) => {
     try {
-        const response = await fetch(`${apiBaseUrl}/items/${categoryId}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                'Content-Type': 'application/json', // Ensure the content type is correct
-            },
-        });
+      const response = await fetch(`${apiBaseUrl}/items/${categoryId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`, // Use bestTimeToken here
+          'Content-Type': 'application/json',
+        },
+      });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to fetch items');
-        }
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch items');
+      }
 
-        const data = await response.json();
-        setItems(data);
+      const data = await response.json();
+      setItems(data);
     } catch (error) {
-        console.error('Error fetching items:', error);
-        showNotification(error.message);
+      console.error('Error fetching items:', error);
+      showNotification(error.message);
     }
-};
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -82,7 +91,7 @@ const ItemList = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Authorization': `Bearer ${bestTimeToken}`, // Use bestTimeToken here
           },
           body: JSON.stringify({ ...newItem, categoryId }),
         });
@@ -95,7 +104,7 @@ const ItemList = () => {
         setItems([...items, addedItem]);
         setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '', variations: [] });
         setShowVariations(false);
-        fetchItems();
+        fetchItems(bestTimeToken);
         showNotification("Item added successfully");
       } catch (error) {
         console.error('Error adding item:', error);
@@ -128,7 +137,7 @@ const ItemList = () => {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Authorization': `Bearer ${bestTimeToken}`, // Use bestTimeToken here
           },
           body: JSON.stringify({ ...newItem, categoryId }),
         });
@@ -142,7 +151,7 @@ const ItemList = () => {
         setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '', variations: [] });
         setEditingItem(null);
         setShowVariations(false);
-        fetchItems();
+        fetchItems(bestTimeToken);
         showNotification("Item updated successfully");
       } catch (error) {
         console.error('Error updating item:', error);
@@ -159,7 +168,7 @@ const ItemList = () => {
         const response = await fetch(`${apiBaseUrl}/items/${itemToDelete._id}`, {
           method: 'DELETE',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Authorization': `Bearer ${bestTimeToken}`, // Use bestTimeToken here
           },
         });
 

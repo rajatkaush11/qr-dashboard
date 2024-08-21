@@ -52,34 +52,29 @@ const Menu = () => {
   // Fetch categories after bestTimeToken is set
   useEffect(() => {
     const fetchCategories = async () => {
-      if (!bestTimeToken) {
-        console.log("bestTimeToken not available, skipping category fetch."); // Debug log
-        return;
-      }
-
-      console.log("Fetching categories with bestTimeToken:", bestTimeToken); // Debug log
-
+      if (!bestTimeToken) return;
+  
       try {
-        const response = await fetch(`${apiBaseUrl}/categories/${auth.currentUser?.uid}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${bestTimeToken}`, // Use bestTimeToken here
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch categories');
-        }
-
-        const categoriesData = await response.json();
-        console.log("Fetched categories:", categoriesData); // Debug log
-        setCategories(categoriesData);
+          const response = await fetch(`${apiBaseUrl}/categories/${auth.currentUser?.uid}`, {
+              method: 'GET',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${bestTimeToken}`,
+              },
+          });
+  
+          if (response.ok) {
+              const categoriesData = await response.json();
+              setCategories(categoriesData);
+          } else {
+              throw new Error('Failed to fetch categories');
+          }
       } catch (error) {
-        console.error('Error fetching categories:', error);
-        setNotification('Failed to fetch categories');
+          console.error('Error fetching categories:', error);
+          setNotification('Failed to fetch categories');
       }
-    };
+  };
+  
 
     if (auth.currentUser?.uid && bestTimeToken) {
       fetchCategories();

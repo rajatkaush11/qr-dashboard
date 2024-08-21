@@ -21,24 +21,25 @@ const ItemList = () => {
   // Fetch items from the backend
   const fetchItems = async () => {
     try {
-      const response = await fetch(`${apiBaseUrl}/items/${categoryId}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+        const response = await fetch(`${apiBaseUrl}/items/${categoryId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+        });
 
-      if (response.ok) {
-        const data = await response.json();
-        setItems(data);
-      } else {
-        throw new Error('Failed to fetch items');
-      }
+        if (response.ok) {
+            const data = await response.json();
+            setItems(data);
+        } else {
+            throw new Error('Failed to fetch items');
+        }
     } catch (error) {
-      console.error('Error fetching items:', error);
-      showNotification(error.message);
+        console.error('Error fetching items:', error);
+        showNotification(error.message);
     }
-  };
+};
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

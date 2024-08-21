@@ -17,18 +17,25 @@ const ItemList = () => {
   const apiBaseUrl = import.meta.env.VITE_BACKEND_API;
   const formRef = useRef(null);
 
+  // Fetch token and items when the component mounts or categoryId changes
   useEffect(() => {
-    const token = localStorage.getItem('bestTimeToken');
-    console.log(`Fetched bestTimeToken: ${token}`); // Debug log
-    setBestTimeToken(token);
+    const fetchTokenAndItems = async () => {
+      const token = localStorage.getItem('bestTimeToken');
+      console.log(`Fetched bestTimeToken: ${token}`); // Debug log
 
-    if (token) {
-      fetchItems(token);
-    } else {
-      showNotification('Failed to retrieve token.');
-    }
+      if (token) {
+        setBestTimeToken(token);
+        await fetchItems(token);
+      } else {
+        console.warn('Failed to retrieve bestTimeToken from local storage.');
+        showNotification('Failed to retrieve token.');
+      }
+    };
+
+    fetchTokenAndItems();
   }, [categoryId]);
 
+  // Fetch items based on the token and category ID
   const fetchItems = async (token) => {
     console.log('Fetching items with token:', token); // Debugging token
     try {
@@ -55,16 +62,19 @@ const ItemList = () => {
     }
   };
 
+  // Handle input changes for item form fields
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewItem({ ...newItem, [name]: value });
   };
 
+  // Handle input changes for variation fields
   const handleVariationChange = (e) => {
     const { name, value } = e.target;
     setNewVariation({ ...newVariation, [name]: value });
   };
 
+  // Add a new variation to the item
   const handleAddVariation = () => {
     if (newVariation.name && newVariation.price && newVariation.weight && newVariation.unit) {
       setNewItem(prevState => ({
@@ -75,6 +85,7 @@ const ItemList = () => {
     }
   };
 
+  // Handle file selection and convert it to base64
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -86,8 +97,14 @@ const ItemList = () => {
     }
   };
 
+  // Add a new item
   const handleAddItem = async () => {
     console.log('Attempting to add item:', newItem); // Debugging new item data
+    if (!bestTimeToken) {
+      showNotification('No token available, unable to add item.');
+      return;
+    }
+
     if (newItem.name && (!showVariations || newItem.variations.length > 0)) {
       try {
         const response = await fetch(`${apiBaseUrl}/items`, {
@@ -112,7 +129,7 @@ const ItemList = () => {
         setItems([...items, addedItem]);
         setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '', variations: [] });
         setShowVariations(false);
-        fetchItems(bestTimeToken);
+        await fetchItems(bestTimeToken);
         showNotification("Item added successfully");
       } catch (error) {
         console.error('Error adding item:', error);
@@ -123,24 +140,31 @@ const ItemList = () => {
     }
   };
 
+  // Edit an existing item
   const handleEditItem = (item) => {
     console.log('Editing item:', item); // Debugging item to edit
     setEditingItem(item);
-    setNewItem({ 
-      name: item.name, 
-      price: item.price, 
-      description: item.description, 
-      image: item.image, 
-      weight: item.weight, 
-      unit: item.unit, 
-      variations: item.variations || [] 
+    setNewItem({
+      name: item.name,
+      price: item.price,
+      description: item.description,
+      image: item.image,
+      weight: item.weight,
+      unit: item.unit,
+      variations: item.variations || []
     });
     setShowVariations(item.variations && item.variations.length > 0);
     formRef.current.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Update an existing item
   const handleUpdateItem = async () => {
     console.log('Updating item:', newItem); // Debugging updated item data
+    if (!bestTimeToken) {
+      showNotification('No token available, unable to update item.');
+      return;
+    }
+
     if (newItem.name && editingItem && (!showVariations || newItem.variations.length > 0)) {
       try {
         const response = await fetch(`${apiBaseUrl}/items/${editingItem._id}`, {
@@ -166,7 +190,7 @@ const ItemList = () => {
         setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '', variations: [] });
         setEditingItem(null);
         setShowVariations(false);
-        fetchItems(bestTimeToken);
+        await fetchItems(bestTimeToken);
         showNotification("Item updated successfully");
       } catch (error) {
         console.error('Error updating item:', error);
@@ -177,8 +201,14 @@ const ItemList = () => {
     }
   };
 
+  // Delete an existing item
   const handleDeleteItem = async () => {
     console.log('Deleting item:', itemToDelete); // Debugging item to delete
+    if (!bestTimeToken) {
+      showNotification('No token available, unable to delete item.');
+      return;
+    }
+
     if (itemToDelete) {
       try {
         const response = await fetch(`${apiBaseUrl}/items/${itemToDelete._id}`, {
@@ -207,16 +237,19 @@ const ItemList = () => {
     }
   };
 
+  // Confirm deletion of an item
   const confirmDeleteItem = (item) => {
     setItemToDelete(item);
     setShowDeleteConfirmation(true);
   };
 
+  // Cancel the deletion process
   const cancelDeleteItem = () => {
     setItemToDelete(null);
     setShowDeleteConfirmation(false);
   };
 
+  // Toggle the description view for an item
   const toggleDescription = (id) => {
     setExpandedDescriptions(prevState => ({
       ...prevState,
@@ -224,10 +257,12 @@ const ItemList = () => {
     }));
   };
 
+  // Handle navigation back to categories
   const handleBack = () => {
     navigate(-1);
   };
 
+  // Show notifications
   const showNotification = (message) => {
     setNotification(message);
     setTimeout(() => setNotification(null), 3000);

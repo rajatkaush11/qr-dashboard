@@ -13,7 +13,7 @@ const ItemList = () => {
   const [showVariations, setShowVariations] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
-  const [bestTimeToken, setBestTimeToken] = useState(null);
+  const [bestTimeToken, setBestTimeToken] = useState(null); // <-- Add this line to store the token
   const apiBaseUrl = import.meta.env.VITE_BACKEND_API;
   const formRef = useRef(null);
 
@@ -31,6 +31,7 @@ const ItemList = () => {
 
   // Fetch items from the backend using the bestTimeToken
   const fetchItems = async (token) => {
+    console.log('Fetching items with token:', token); // Debugging token
     try {
       const response = await fetch(`${apiBaseUrl}/items/${categoryId}`, {
         method: 'GET',
@@ -42,10 +43,12 @@ const ItemList = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('Failed to fetch items:', errorData);
         throw new Error(errorData.error || 'Failed to fetch items');
       }
 
       const data = await response.json();
+      console.log('Fetched items:', data); // Debugging fetched items
       setItems(data);
     } catch (error) {
       console.error('Error fetching items:', error);
@@ -85,6 +88,7 @@ const ItemList = () => {
   };
 
   const handleAddItem = async () => {
+    console.log('Attempting to add item:', newItem); // Debugging new item data
     if (newItem.name && (!showVariations || newItem.variations.length > 0)) {
       try {
         const response = await fetch(`${apiBaseUrl}/items`, {
@@ -96,11 +100,16 @@ const ItemList = () => {
           body: JSON.stringify({ ...newItem, categoryId }),
         });
 
+        console.log('Add item response:', response); // Debugging response
+
         if (!response.ok) {
-          throw new Error('Failed to save item');
+          const errorData = await response.json();
+          console.error('Failed to save item:', errorData);
+          throw new Error(errorData.error || 'Failed to save item');
         }
 
         const addedItem = await response.json();
+        console.log('Item added successfully:', addedItem); // Debugging added item
         setItems([...items, addedItem]);
         setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '', variations: [] });
         setShowVariations(false);
@@ -116,6 +125,7 @@ const ItemList = () => {
   };
 
   const handleEditItem = (item) => {
+    console.log('Editing item:', item); // Debugging item to edit
     setEditingItem(item);
     setNewItem({ 
       name: item.name, 
@@ -131,6 +141,7 @@ const ItemList = () => {
   };
 
   const handleUpdateItem = async () => {
+    console.log('Updating item:', newItem); // Debugging updated item data
     if (newItem.name && editingItem && (!showVariations || newItem.variations.length > 0)) {
       try {
         const response = await fetch(`${apiBaseUrl}/items/${editingItem._id}`, {
@@ -142,11 +153,16 @@ const ItemList = () => {
           body: JSON.stringify({ ...newItem, categoryId }),
         });
 
+        console.log('Update item response:', response); // Debugging response
+
         if (!response.ok) {
-          throw new Error('Failed to update item');
+          const errorData = await response.json();
+          console.error('Failed to update item:', errorData);
+          throw new Error(errorData.error || 'Failed to update item');
         }
 
         const updatedItems = items.map(item => (item._id === editingItem._id ? { ...newItem, _id: editingItem._id } : item));
+        console.log('Updated items list:', updatedItems); // Debugging updated items list
         setItems(updatedItems);
         setNewItem({ name: '', price: '', description: '', image: '', weight: '', unit: '', variations: [] });
         setEditingItem(null);
@@ -163,6 +179,7 @@ const ItemList = () => {
   };
 
   const handleDeleteItem = async () => {
+    console.log('Deleting item:', itemToDelete); // Debugging item to delete
     if (itemToDelete) {
       try {
         const response = await fetch(`${apiBaseUrl}/items/${itemToDelete._id}`, {
@@ -172,8 +189,12 @@ const ItemList = () => {
           },
         });
 
+        console.log('Delete item response:', response); // Debugging response
+
         if (!response.ok) {
-          throw new Error('Failed to delete item');
+          const errorData = await response.json();
+          console.error('Failed to delete item:', errorData);
+          throw new Error(errorData.error || 'Failed to delete item');
         }
 
         setItems(items.filter(item => item._id !== itemToDelete._id));

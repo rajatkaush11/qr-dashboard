@@ -170,11 +170,10 @@ const Menu = () => {
   };
 
   const handleDeleteCategory = async (categoryId) => {
-    const confirmed = window.confirm('Are you sure you want to delete this category?');
-    if (confirmed && bestTimeToken) {
+    if (bestTimeToken) {
       console.log("Preparing to delete category with ID:", categoryId); // Debug log
       console.log("Using bestTimeToken:", bestTimeToken); // Debug log
-
+  
       try {
         const response = await fetch(`${apiBaseUrl}/category/${categoryId}`, {
           method: 'DELETE',
@@ -183,13 +182,13 @@ const Menu = () => {
             'Authorization': `Bearer ${bestTimeToken}`, // Use bestTimeToken here
           },
         });
-
+  
         console.log("Delete category response status:", response.status); // Debug log
-
+  
         if (!response.ok) {
           throw new Error('Failed to delete category in MongoDB');
         }
-
+  
         console.log("Category deleted successfully"); // Debug log
         setCategories((prevCategories) =>
           prevCategories.filter((category) => category._id !== categoryId)
@@ -203,6 +202,7 @@ const Menu = () => {
       console.log("Category ID or bestTimeToken is missing, or delete was not confirmed."); // Debug log
     }
   };
+  
 
   const handleCategoryClick = (categoryId) => {
     navigate(`/category/${categoryId}/items`);

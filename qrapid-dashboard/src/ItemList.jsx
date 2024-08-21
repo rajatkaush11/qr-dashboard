@@ -27,20 +27,22 @@ const ItemList = () => {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json', // Ensure the content type is correct
             },
         });
 
-        if (response.ok) {
-            const data = await response.json();
-            setItems(data);
-        } else {
-            throw new Error('Failed to fetch items');
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to fetch items');
         }
+
+        const data = await response.json();
+        setItems(data);
     } catch (error) {
         console.error('Error fetching items:', error);
         showNotification(error.message);
     }
-  };
+};
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

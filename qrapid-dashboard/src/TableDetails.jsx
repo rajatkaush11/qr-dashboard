@@ -386,6 +386,13 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const handleCompleteOrder = async () => {
     try {
       const filteredOrders = [...orders, ...temporaryOrders].filter(order => !completedOrderIds.includes(order.id));
+      
+      if (filteredOrders.length === 0) {
+        console.log('No orders to complete');
+        return;
+      }
+
+      // Move orders to 'completed' and update Firestore
       const batch = writeBatch(db);
       filteredOrders.forEach(order => {
         const billRef = doc(collection(db, 'bills'));
@@ -393,10 +400,13 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       });
       await batch.commit();
       await updateOrderStatus(filteredOrders, 'completed');
+
+      // Update UI and clear orders
       setCompletedOrderIds([...completedOrderIds, ...filteredOrders.map(order => order.id)]);
       setOrders(prevOrders => prevOrders.filter(order => !filteredOrders.map(o => o.id).includes(order.id)));
       await updateTableColor(tableNumber, 'blank');
 
+      // Remove temporary orders from Firestore
       const tempOrderIds = filteredOrders.filter(order => order.id.startsWith('temp-')).map(order => order.id);
       const batchDelete = writeBatch(backendDb);
       tempOrderIds.forEach(id => {
@@ -404,6 +414,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       });
       await batchDelete.commit();
       setTemporaryOrders(prev => prev.filter(order => !tempOrderIds.includes(order.id)));
+
       console.log('Order completed successfully');
     } catch (error) {
       console.error('Error completing order:', error);

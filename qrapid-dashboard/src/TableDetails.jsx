@@ -219,57 +219,44 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const handleGenerateKOT = async () => {
     try {
-      const filteredOrders = [...orders, ...temporaryOrders].filter(order => !completedOrderIds.includes(order.id));
-      if (filteredOrders.length === 0 && currentOrder.length === 0) {
-        console.log('No orders to generate KOT');
-        return;
-      }
-
-      if (currentOrder.length > 0) {
         const now = new Date();
         const istTime = Timestamp.fromDate(new Date(now.getTime() + 5.5 * 60 * 60 * 1000));
-
+        
+        // Create a new order from the current order
         const newOrder = {
-          id: `temp-${Date.now()}`,
-          tableNo: tableNumber.slice(1),
-          items: currentOrder,
-          status: 'KOT',
-          createdAt: Timestamp.fromDate(now),
-          istTime,
-          name: 'Temporary Order',
+            id: `temp-${Date.now()}`,
+            tableNo: tableNumber.slice(1),
+            items: currentOrder,
+            status: 'KOT',
+            createdAt: Timestamp.fromDate(now),
+            istTime,
+            name: 'Temporary Order',
         };
+
+        // Add the new order to the database
         await setDoc(doc(collection(backendDb, 'manual-orders'), newOrder.id), newOrder);
+
+        // Add the new order to the KOT section
         setTemporaryOrders(prev => [...prev, newOrder]);
-        filteredOrders.push(newOrder);
-        setOrders([...orders, newOrder]);
+        setOrders(prevOrders => [...prevOrders, newOrder]);
+
+        // Clear the current order
         setCurrentOrder([]);
-        setKotTime(istTime.toDate().toLocaleTimeString('en-IN', {
-          hour: '2-digit',
-          minute: '2-digit',
-          timeZone: 'Asia/Kolkata',
-        }));
-        console.log('Temporary order created:', newOrder);
-      }
 
-      populateKOTPrintSection(filteredOrders);
-      setKotReady(true);
+        // Prepare KOT for printing
+        populateKOTPrintSection([newOrder]);
 
-      for (const order of filteredOrders) {
-        printKOT(order);
-        await updateOrderStatus([order], 'KOT');
-      }
+        // Open the print dialog
+        kotRef.current.style.display = 'block';
+        const printPromise = kotRef.current ? window.print() : null;
+        if (printPromise) {
+            await printPromise;
+        }
+        kotRef.current.style.display = 'none';
 
-      updateTableColor(tableNumber, 'orange');
-      setOrders(prevOrders =>
-        prevOrders.map(order =>
-          filteredOrders.some(filteredOrder => filteredOrder.id === order.id)
-            ? { ...order, status: 'KOT' }
-            : order
-        )
-      );
-      console.log('KOT generated and printed successfully');
+        console.log('KOT generated and printed successfully');
     } catch (error) {
-      console.error('Error generating KOT:', error);
+        console.error('Error generating KOT:', error);
     }
   };
 

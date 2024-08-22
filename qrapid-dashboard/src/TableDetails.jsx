@@ -18,6 +18,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [kotTime, setKotTime] = useState('');
   const [totalAmount, setTotalAmount] = useState(0);
   const [kotReady, setKotReady] = useState(false);
+  const [bestTimeToken, setBestTimeToken] = useState(null); // New state to store bestTimeToken
 
   const kotRef = useRef();
   const billRef = useRef();
@@ -49,14 +50,48 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   useEffect(() => {
+    const fetchBestTimeToken = async () => {
+      try {
+        const uid = auth.currentUser?.uid;
+
+        if (uid) {
+          console.log("Fetching bestTimeToken for UID:", uid);
+
+          const response = await fetch(`${import.meta.env.VITE_BACKEND_API}/restaurant/${uid}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${auth.currentUser?.accessToken}`,
+            },
+          });
+
+          const data = await response.json();
+          if (data.bestTimeToken) {
+            console.log("Fetched bestTimeToken:", data.bestTimeToken);
+            setBestTimeToken(data.bestTimeToken);
+          } else {
+            console.error('bestTimeToken not found in the response');
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching bestTimeToken:', error);
+      }
+    };
+
+    fetchBestTimeToken();
+  }, []);
+
+  useEffect(() => {
     const fetchCategories = async () => {
+      if (!bestTimeToken) return;
+
       try {
         const userId = auth.currentUser ? auth.currentUser.uid : null;
         console.log("Fetching categories from backend for user:", userId);
 
         const response = await fetch(`${import.meta.env.VITE_BACKEND_API}/categories/${userId}`, {
           headers: {
-            Authorization: `Bearer ${auth.currentUser ? await auth.currentUser.getIdToken() : ''}`,
+            Authorization: `Bearer ${bestTimeToken}`,
           },
         });
         const categoriesData = await response.json();
@@ -72,8 +107,10 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       }
     };
 
-    fetchCategories();
-  }, []);
+    if (bestTimeToken) {
+      fetchCategories();
+    }
+  }, [bestTimeToken]);
 
   useEffect(() => {
     if (selectedCategory) {
@@ -83,7 +120,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
           const response = await fetch(`${import.meta.env.VITE_BACKEND_API}/items/${selectedCategory.id}`, {
             headers: {
-              Authorization: `Bearer ${auth.currentUser ? await auth.currentUser.getIdToken() : ''}`,
+              Authorization: `Bearer ${bestTimeToken}`,
             },
           });
           const itemsData = await response.json();
@@ -101,7 +138,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
       fetchItems();
     }
-  }, [selectedCategory]);
+  }, [selectedCategory, bestTimeToken]);
 
   useEffect(() => {
     const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;

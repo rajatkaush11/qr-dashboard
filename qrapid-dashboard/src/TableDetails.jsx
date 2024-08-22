@@ -219,44 +219,58 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const handleGenerateKOT = async () => {
     try {
-        const now = new Date();
-        const istTime = Timestamp.fromDate(new Date(now.getTime() + 5.5 * 60 * 60 * 1000));
-        
-        // Create a new order from the current order
+      const now = new Date();
+      const istTime = Timestamp.fromDate(new Date(now.getTime() + 5.5 * 60 * 60 * 1000));
+      
+      const filteredOrders = orders.filter(order => order.status !== 'KOT' && order.status !== 'completed');
+      
+      // Update status for digital orders and move them to KOT generated section
+      if (filteredOrders.length > 0) {
+        for (const order of filteredOrders) {
+          const updatedOrder = { ...order, status: 'KOT', istTime };
+          const orderRef = doc(collection(backendDb, 'orders'), order.id);
+          await setDoc(orderRef, updatedOrder);
+        }
+        setOrders(prevOrders => prevOrders.map(order =>
+          filteredOrders.some(filteredOrder => filteredOrder.id === order.id)
+            ? { ...order, status: 'KOT' }
+            : order
+        ));
+      }
+
+      // Create a new order from the current order and add it to the KOT generated section
+      if (currentOrder.length > 0) {
         const newOrder = {
-            id: `temp-${Date.now()}`,
-            tableNo: tableNumber.slice(1),
-            items: currentOrder,
-            status: 'KOT',
-            createdAt: Timestamp.fromDate(now),
-            istTime,
-            name: 'Temporary Order',
+          id: `temp-${Date.now()}`,
+          tableNo: tableNumber.slice(1),
+          items: currentOrder,
+          status: 'KOT',
+          createdAt: Timestamp.fromDate(now),
+          istTime,
+          name: 'Temporary Order',
         };
 
-        // Add the new order to the database
         await setDoc(doc(collection(backendDb, 'manual-orders'), newOrder.id), newOrder);
-
-        // Add the new order to the KOT section
         setTemporaryOrders(prev => [...prev, newOrder]);
         setOrders(prevOrders => [...prevOrders, newOrder]);
-
-        // Clear the current order
         setCurrentOrder([]);
+      }
 
-        // Prepare KOT for printing
-        populateKOTPrintSection([newOrder]);
+      // Collect all KOT orders for printing
+      const allKotOrders = [...filteredOrders, ...temporaryOrders];
+      populateKOTPrintSection(allKotOrders);
+      
+      // Open the print dialog
+      kotRef.current.style.display = 'block';
+      const printPromise = kotRef.current ? window.print() : null;
+      if (printPromise) {
+          await printPromise;
+      }
+      kotRef.current.style.display = 'none';
 
-        // Open the print dialog
-        kotRef.current.style.display = 'block';
-        const printPromise = kotRef.current ? window.print() : null;
-        if (printPromise) {
-            await printPromise;
-        }
-        kotRef.current.style.display = 'none';
-
-        console.log('KOT generated and printed successfully');
+      console.log('KOT generated and printed successfully');
     } catch (error) {
-        console.error('Error generating KOT:', error);
+      console.error('Error generating KOT:', error);
     }
   };
 

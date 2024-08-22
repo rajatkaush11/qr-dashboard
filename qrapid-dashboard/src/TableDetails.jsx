@@ -138,7 +138,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
       fetchItems();
     }
-  }, [selectedCategory, bestTimeToken]);
+  }, []);
 
   useEffect(() => {
     const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;

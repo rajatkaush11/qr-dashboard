@@ -25,25 +25,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   let printer = null;
 
-  useEffect(() => {
-    const ePosDevice = new window.epson.ePOSDevice();
-    ePosDevice.connect('192.168.29.12', window.epson.ePOSDevice.DEVICE_TYPE_PRINTER, {
-      success: (device) => {
-        printer = device;
-        printer.onreceive = (response) => {
-          if (response.success) {
-            console.log('Print successful');
-          } else {
-            console.log('Print failed');
-          }
-        };
-      },
-      error: (error) => {
-        console.log('Failed to connect:', error);
-      }
-    });
-  }, []);
-
   const playSound = () => {
     const audio = new Audio(successSound);
     audio.play().catch(error => console.error('Error playing sound:', error));
@@ -138,7 +119,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
       fetchItems();
     }
-  }, []);
+  }, [selectedCategory, bestTimeToken]);
 
   useEffect(() => {
     const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
@@ -151,6 +132,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     const unsubscribeOrders = onSnapshot(q, (querySnapshot) => {
       const ordersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setOrders(ordersData);
+      console.log('Orders fetched and set:', ordersData);
     });
 
     const tempOrdersRef = collection(backendDb, 'manual-orders');
@@ -159,12 +141,14 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         .map(doc => ({ id: doc.id, ...doc.data() }))
         .filter(order => order.tableNo === normalizedTableNumber);
       setTemporaryOrders(tempOrdersData);
+      console.log('Temporary orders fetched and set:', tempOrdersData);
     });
 
     const billsRef = collection(db, 'bills');
     const unsubscribeCompletedOrderIds = onSnapshot(billsRef, (querySnapshot) => {
       const ids = querySnapshot.docs.map(doc => doc.data().orderId);
       setCompletedOrderIds(ids);
+      console.log('Completed Order IDs fetched and set:', ids);
     });
 
     return () => {
@@ -177,6 +161,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   useEffect(() => {
     const allOrders = [...orders, ...temporaryOrders];
     const kotOrders = allOrders.filter(order => order.status === 'KOT');
+
     if (kotOrders.length > 0) {
       updateTableColor(tableNumber, 'orange');
       if (!kotTime) {
@@ -226,7 +211,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       builder.addText(formatKOTContent(order));
       builder.addCut(window.epson.ePOSBuilder.CUT_FEED);
 
-      // Debugging: Log the content before printing
       console.log('KOT content to be printed:', formatKOTContent(order));
 
       printer.send(builder.toString());
@@ -374,38 +358,37 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         ${kotContent}
       </div>
     `;
-};
+  };
 
-const populateBillPrintSection = (filteredOrders, totalAmount) => {
-  const billContent = filteredOrders.map(order =>
-    order.items.map(item => `
-      <div style="font-size: 18px; margin-bottom: 3px;">
-        ${item.name} - ₹${item.price.toFixed(2)} x ${item.quantity}
-      </div>`
-    ).join('')
-  ).join('');
+  const populateBillPrintSection = (filteredOrders, totalAmount) => {
+    const billContent = filteredOrders.map(order =>
+      order.items.map(item => `
+        <div style="font-size: 18px; margin-bottom: 3px;">
+          ${item.name} - ₹${item.price.toFixed(2)} x ${item.quantity}
+        </div>`
+      ).join('')
+    ).join('');
 
-  billRef.current.innerHTML = `
-    <div style="font-family: Arial, sans-serif; font-size: 20px; margin-bottom: 10px;">
-      <strong>Bill for Table ${tableNumber}</strong>
-    </div>
-    <div style="font-family: Arial, sans-serif; font-size: 18px;">
-      ${billContent}
-    </div>
-    <hr style="border: 0; border-top: 2px solid #000; margin: 10px 0;" />
-    <div style="font-family: Arial, sans-serif; font-size: 20px; font-weight: bold;">
-      Total: ₹${totalAmount.toFixed(2)}
-    </div>
-  `;
+    billRef.current.innerHTML = `
+      <div style="font-family: Arial, sans-serif; font-size: 20px; margin-bottom: 10px;">
+        <strong>Bill for Table ${tableNumber}</strong>
+      </div>
+      <div style="font-family: Arial, sans-serif; font-size: 18px;">
+        ${billContent}
+      </div>
+      <hr style="border: 0; border-top: 2px solid #000; margin: 10px 0;" />
+      <div style="font-family: Arial, sans-serif; font-size: 20px; font-weight: bold;">
+        Total: ₹${totalAmount.toFixed(2)}
+      </div>
+    `;
 
-  console.log("Bill content populated: ", billRef.current.innerHTML);
-};
-
+    console.log("Bill content populated: ", billRef.current.innerHTML);
+  };
 
   const handleCompleteOrder = async () => {
     try {
       const filteredOrders = [...orders, ...temporaryOrders].filter(order => !completedOrderIds.includes(order.id));
-      
+
       if (filteredOrders.length === 0) {
         console.log('No orders to complete');
         return;
@@ -423,16 +406,9 @@ const populateBillPrintSection = (filteredOrders, totalAmount) => {
       // Update UI and clear orders
       setCompletedOrderIds([...completedOrderIds, ...filteredOrders.map(order => order.id)]);
       setOrders(prevOrders => prevOrders.filter(order => !filteredOrders.map(o => o.id).includes(order.id)));
-      await updateTableColor(tableNumber, 'blank');
+      setTemporaryOrders(prev => prev.filter(order => !filteredOrders.map(o => o.id).includes(order.id)));
 
-      // Remove temporary orders from Firestore
-      const tempOrderIds = filteredOrders.filter(order => order.id.startsWith('temp-')).map(order => order.id);
-      const batchDelete = writeBatch(backendDb);
-      tempOrderIds.forEach(id => {
-        batchDelete.delete(doc(backendDb, 'manual-orders', id));
-      });
-      await batchDelete.commit();
-      setTemporaryOrders(prev => prev.filter(order => !tempOrderIds.includes(order.id)));
+      await updateTableColor(tableNumber, 'blank');
 
       console.log('Order completed successfully');
     } catch (error) {

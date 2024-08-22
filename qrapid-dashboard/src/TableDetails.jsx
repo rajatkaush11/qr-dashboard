@@ -18,7 +18,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [kotTime, setKotTime] = useState('');
   const [totalAmount, setTotalAmount] = useState(0);
   const [kotReady, setKotReady] = useState(false);
-  const [bestTimeToken, setBestTimeToken] = useState(null);
 
   const kotRef = useRef();
   const billRef = useRef();
@@ -29,69 +28,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     const audio = new Audio(successSound);
     audio.play().catch(error => console.error('Error playing sound:', error));
   };
-
-  useEffect(() => {
-    const fetchBestTimeToken = async () => {
-      try {
-        const uid = auth.currentUser?.uid;
-
-        if (uid) {
-          console.log("Fetching bestTimeToken for UID:", uid);
-
-          const response = await fetch(`${import.meta.env.VITE_BACKEND_API}/restaurant/${uid}`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${auth.currentUser?.accessToken}`,
-            },
-          });
-
-          const data = await response.json();
-          if (data.bestTimeToken) {
-            console.log("Fetched bestTimeToken:", data.bestTimeToken);
-            setBestTimeToken(data.bestTimeToken);
-          } else {
-            console.error('bestTimeToken not found in the response');
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching bestTimeToken:', error);
-      }
-    };
-
-    fetchBestTimeToken();
-  }, []);
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      if (!bestTimeToken) return;
-
-      try {
-        const userId = auth.currentUser ? auth.currentUser.uid : null;
-        console.log("Fetching categories from backend for user:", userId);
-
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_API}/categories/${userId}`, {
-          headers: {
-            Authorization: `Bearer ${bestTimeToken}`,
-          },
-        });
-        const categoriesData = await response.json();
-
-        if (response.ok) {
-          setCategories(categoriesData);
-          console.log("Fetched categories successfully:", categoriesData);
-        } else {
-          console.error("Failed to fetch categories:", categoriesData);
-        }
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-      }
-    };
-
-    if (bestTimeToken) {
-      fetchCategories();
-    }
-  }, [bestTimeToken]);
 
   useEffect(() => {
     const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
@@ -128,7 +64,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       unsubscribeTemporaryOrders();
       unsubscribeCompletedOrderIds();
     };
-  }, [tableNumber, updateTableColor]);
+  }, [tableNumber]);
 
   useEffect(() => {
     const allOrders = [...orders, ...temporaryOrders];
@@ -145,11 +81,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         });
         setKotTime(istTime);
       }
-      // Pre-generate KOT content
       populateKOTPrintSection(kotOrders);
     } else if (allOrders.length > 0 && allOrders.every(order => order.status === 'billed')) {
       updateTableColor(tableNumber, 'green');
-      // Pre-generate bill content
       const amount = calculateTotalAmount(allOrders);
       setTotalAmount(amount);
       populateBillPrintSection(allOrders, amount);
@@ -157,7 +91,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       updateTableColor(tableNumber, 'blank');
       setKotTime('');
     }
-  }, [orders, temporaryOrders, tableNumber, updateTableColor, kotTime]);
+  }, [orders, temporaryOrders, tableNumber, kotTime]);
 
   const calculateTotalAmount = (orders) => {
     return orders.reduce((total, order) => {
@@ -191,26 +125,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
       console.log('KOT content to be printed:', formatKOTContent(order));
 
-      printer.send(builder.toString());
-    } else {
-      console.log('Printer not connected');
-    }
-  };
-
-  const printBill = (order) => {
-    if (printer) {
-      const builder = new window.epson.ePOSBuilder();
-      builder.addTextAlign(builder.ALIGN_CENTER);
-      builder.addText(`BILL\n`);
-      builder.addText(`Table No: ${tableNumber}\n`);
-      let total = 0;
-      order.items.forEach(item => {
-        builder.addText(`${item.quantity} x ${item.name} - ${item.price * item.quantity}\n`);
-        total += item.price * item.quantity;
-      });
-      builder.addText(`------------------------------\n`);
-      builder.addText(`Total: ${total.toFixed(2)}\n`);
-      builder.addCut(window.epson.ePOSBuilder.CUT_FEED);
       printer.send(builder.toString());
     } else {
       console.log('Printer not connected');
@@ -273,30 +187,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     }
   };
 
-  const handleGenerateBill = async () => {
-    try {
-      const filteredOrders = [...orders, ...temporaryOrders].filter(order => !completedOrderIds.includes(order.id));
-      if (filteredOrders.length === 0) {
-        console.log('No orders to generate Bill');
-        return;
-      }
-
-      const amount = calculateTotalAmount(filteredOrders);
-      setTotalAmount(amount);
-      populateBillPrintSection(filteredOrders, amount);
-
-      for (const order of filteredOrders) {
-        printBill(order);
-        await updateOrderStatus([order], 'billed');
-      }
-
-      updateTableColor(tableNumber, 'green');
-      console.log('Bill generated and printed successfully');
-    } catch (error) {
-      console.error('Error generating Bill:', error);
-    }
-  };
-
   const populateKOTPrintSection = (filteredOrders) => {
     const kotContent = filteredOrders.map(order => {
         const formattedItems = order.items.map(item => 
@@ -336,72 +226,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         ${kotContent}
       </div>
     `;
-  };
-
-  const populateBillPrintSection = (filteredOrders, totalAmount) => {
-    const billContent = filteredOrders.map(order =>
-      order.items.map(item => `
-        <div style="font-size: 18px; margin-bottom: 3px;">
-          ${item.name} - ₹${item.price.toFixed(2)} x ${item.quantity}
-        </div>`
-      ).join('')
-    ).join('');
-
-    billRef.current.innerHTML = `
-      <div style="font-family: Arial, sans-serif; font-size: 20px; margin-bottom: 10px;">
-        <strong>Bill for Table ${tableNumber}</strong>
-      </div>
-      <div style="font-family: Arial, sans-serif; font-size: 18px;">
-        ${billContent}
-      </div>
-      <hr style="border: 0; border-top: 2px solid #000; margin: 10px 0;" />
-      <div style="font-family: Arial, sans-serif; font-size: 20px; font-weight: bold;">
-        Total: ₹${totalAmount.toFixed(2)}
-      </div>
-    `;
-
-    console.log("Bill content populated: ", billRef.current.innerHTML);
-  };
-
-  const handleCompleteOrder = async () => {
-    try {
-      const filteredOrders = [...orders, ...temporaryOrders].filter(order => !completedOrderIds.includes(order.id));
-
-      if (filteredOrders.length === 0) {
-        console.log('No orders to complete');
-        return;
-      }
-
-      // Move orders to 'completed' and update Firestore
-      const batch = writeBatch(db);
-      filteredOrders.forEach(order => {
-        const billRef = doc(collection(db, 'bills'));
-        batch.set(billRef, { orderId: order.id, ...order });
-      });
-      await batch.commit();
-      await updateOrderStatus(filteredOrders, 'completed');
-
-      // Update UI and clear orders
-      setCompletedOrderIds([...completedOrderIds, ...filteredOrders.map(order => order.id)]);
-      setOrders(prevOrders => prevOrders.filter(order => !filteredOrders.map(o => o.id).includes(order.id)));
-      setTemporaryOrders(prev => prev.filter(order => !filteredOrders.map(o => o.id).includes(order.id)));
-
-      await updateTableColor(tableNumber, 'blank');
-
-      console.log('Order completed successfully');
-    } catch (error) {
-      console.error('Error completing order:', error);
-    }
-  };
-
-  const updateOrderStatus = async (orders, status) => {
-    const batch = writeBatch(backendDb);
-    orders.forEach(order => {
-      const orderRef = doc(backendDb, 'orders', order.id);
-      batch.update(orderRef, { status });
-    });
-    await batch.commit();
-    console.log(`Order status updated to ${status}`);
   };
 
   const handleItemClick = (item) => {
@@ -521,7 +345,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         </div>
         <div className="action-buttons">
           <ReactToPrint
-            trigger={() => <button className="action-button generate-kot">Generate KOT</button>}
+            trigger={() => <button className="action-button generate-kot" onClick={handleGenerateKOT}>Generate KOT</button>}
             content={() => kotRef.current}
             onBeforeGetContent={() => {
               kotRef.current.style.display = 'block'; // Make sure the content is visible
@@ -546,7 +370,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
               console.log('Bill print completed.');
             }}
           />
-          <button onClick={handleCompleteOrder} className="action-button complete">Complete Order</button>
         </div>
       </div>
       <div className="left-menu">

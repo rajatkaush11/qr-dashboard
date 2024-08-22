@@ -18,7 +18,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [kotTime, setKotTime] = useState('');
   const [totalAmount, setTotalAmount] = useState(0);
   const [kotReady, setKotReady] = useState(false);
-  const [bestTimeToken, setBestTimeToken] = useState(null); // New state to store bestTimeToken
+  const [bestTimeToken, setBestTimeToken] = useState(null);
 
   const kotRef = useRef();
   const billRef = useRef();

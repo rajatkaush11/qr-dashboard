@@ -49,28 +49,57 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   };
 
   useEffect(() => {
-    const userId = auth.currentUser ? auth.currentUser.uid : null;
-    const categoriesRef = collection(db, 'restaurants', userId, 'categories');
-    
-    const unsubscribe = onSnapshot(categoriesRef, (querySnapshot) => {
-      const categoriesData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-      setCategories(categoriesData);
-    });
+    const fetchCategories = async () => {
+      try {
+        const userId = auth.currentUser ? auth.currentUser.uid : null;
+        console.log("Fetching categories from backend for user:", userId);
 
-    return () => unsubscribe();
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_API}/categories/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${auth.currentUser ? await auth.currentUser.getIdToken() : ''}`,
+          },
+        });
+        const categoriesData = await response.json();
+
+        if (response.ok) {
+          setCategories(categoriesData);
+          console.log("Fetched categories successfully:", categoriesData);
+        } else {
+          console.error("Failed to fetch categories:", categoriesData);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+
+    fetchCategories();
   }, []);
 
   useEffect(() => {
     if (selectedCategory) {
-      const userId = auth.currentUser ? auth.currentUser.uid : null;
-      const itemsRef = collection(db, 'restaurants', userId, 'categories', selectedCategory.id, 'items');
-      
-      const unsubscribe = onSnapshot(itemsRef, (querySnapshot) => {
-        const itemsData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-        setItems(itemsData);
-      });
+      const fetchItems = async () => {
+        try {
+          console.log("Fetching items for category:", selectedCategory.id);
 
-      return () => unsubscribe();
+          const response = await fetch(`${import.meta.env.VITE_BACKEND_API}/items/${selectedCategory.id}`, {
+            headers: {
+              Authorization: `Bearer ${auth.currentUser ? await auth.currentUser.getIdToken() : ''}`,
+            },
+          });
+          const itemsData = await response.json();
+
+          if (response.ok) {
+            setItems(itemsData);
+            console.log("Fetched items successfully:", itemsData);
+          } else {
+            console.error("Failed to fetch items:", itemsData);
+          }
+        } catch (error) {
+          console.error("Error fetching items:", error);
+        }
+      };
+
+      fetchItems();
     }
   }, [selectedCategory]);
 

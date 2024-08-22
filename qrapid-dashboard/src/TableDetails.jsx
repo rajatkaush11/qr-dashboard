@@ -338,50 +338,69 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const populateKOTPrintSection = (filteredOrders) => {
     const kotContent = filteredOrders.map(order => {
         const formattedItems = order.items.map(item => 
-          `<div style="font-size: 18px; margin-bottom: 2px;">${item.quantity.toString().padEnd(3)} ${item.name}</div>`
+          `<div style="font-size: 20px; margin-bottom: 5px;">
+             <strong>${item.quantity.toString().padEnd(3)}</strong> ${item.name}
+           </div>`
         ).join('');
 
         return `
           <div style="margin-top: 0; padding: 0;">
-            <strong style="font-size: 16px;">Table No: ${order.tableNo}</strong>
-            <span style="float: right; font-size: 18px;">
-              ${new Date(order.createdAt.toDate()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-              ${new Date(order.createdAt.toDate()).toLocaleTimeString('en-IN', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  hour12: true,
-                  timeZone: 'Asia/Kolkata'
-              })}
-            </span>
+            <div style="font-size: 22px; font-weight: bold;">Running KOT</div>
+            <div style="display: flex; justify-content: space-between;">
+              <strong style="font-size: 18px;">Table No: ${order.tableNo}</strong>
+              <span style="font-size: 18px;">
+                ${new Date(order.createdAt.toDate()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                ${new Date(order.createdAt.toDate()).toLocaleTimeString('en-IN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true,
+                    timeZone: 'Asia/Kolkata'
+                })}
+              </span>
+            </div>
           </div>
-          <div style="margin-top: 2px; padding: 0;">
+          <div style="margin-top: 5px; padding: 0;">
             ${formattedItems}
           </div>
-          <div style="margin-top: 2px; padding: 0;">
-            <strong style="font-size: 18px;">Total Items: ${order.items.reduce((total, item) => total + item.quantity, 0)}</strong>
+          <div style="margin-top: 5px; padding: 0;">
+            <strong style="font-size: 20px;">Total Items: ${order.items.reduce((total, item) => total + item.quantity, 0)}</strong>
           </div>
-          <hr style="border: 0; border-top: 1px solid #000; margin: 2px 0;" />
+          <hr style="border: 0; border-top: 2px solid #000; margin: 5px 0;" />
         `;
     }).join('');
     
     kotRef.current.innerHTML = `
-      <div style="font-family: monospace; white-space: pre; font-size: 14px; line-height: 1.1; margin: 0; padding: 0;">
+      <div style="font-family: monospace; white-space: pre; font-size: 16px; line-height: 1.3; margin: 0; padding: 0;">
         ${kotContent}
       </div>
     `;
-  };
+};
 
-  const populateBillPrintSection = (filteredOrders, totalAmount) => {
-    const billContent = filteredOrders.map(order =>
-      order.items.map(item => `<li>${item.name} - ${item.price} x ${item.quantity}</li>`).join('')
-    ).join('');
-    billRef.current.innerHTML = `
-      <h1>Bill for Table ${tableNumber}</h1>
-      <ul>${billContent}</ul>
-      <h2>Total: ₹${totalAmount.toFixed(2)}</h2>
-    `;
-    console.log("Bill content populated: ", billRef.current.innerHTML);
-  };
+const populateBillPrintSection = (filteredOrders, totalAmount) => {
+  const billContent = filteredOrders.map(order =>
+    order.items.map(item => `
+      <div style="font-size: 18px; margin-bottom: 3px;">
+        ${item.name} - ₹${item.price.toFixed(2)} x ${item.quantity}
+      </div>`
+    ).join('')
+  ).join('');
+
+  billRef.current.innerHTML = `
+    <div style="font-family: Arial, sans-serif; font-size: 20px; margin-bottom: 10px;">
+      <strong>Bill for Table ${tableNumber}</strong>
+    </div>
+    <div style="font-family: Arial, sans-serif; font-size: 18px;">
+      ${billContent}
+    </div>
+    <hr style="border: 0; border-top: 2px solid #000; margin: 10px 0;" />
+    <div style="font-family: Arial, sans-serif; font-size: 20px; font-weight: bold;">
+      Total: ₹${totalAmount.toFixed(2)}
+    </div>
+  `;
+
+  console.log("Bill content populated: ", billRef.current.innerHTML);
+};
+
 
   const handleCompleteOrder = async () => {
     try {

@@ -94,34 +94,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   }, [bestTimeToken]);
 
   useEffect(() => {
-    if (selectedCategory) {
-      const fetchItems = async () => {
-        try {
-          console.log("Fetching items for category:", selectedCategory.id);
-
-          const response = await fetch(`${import.meta.env.VITE_BACKEND_API}/items/${selectedCategory.id}`, {
-            headers: {
-              Authorization: `Bearer ${bestTimeToken}`,
-            },
-          });
-          const itemsData = await response.json();
-
-          if (response.ok) {
-            setItems(itemsData);
-            console.log("Fetched items successfully:", itemsData);
-          } else {
-            console.error("Failed to fetch items:", itemsData);
-          }
-        } catch (error) {
-          console.error("Error fetching items:", error);
-        }
-      };
-
-      fetchItems();
-    }
-  }, [selectedCategory, bestTimeToken]);
-
-  useEffect(() => {
     const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
     const q = query(
       collection(backendDb, 'orders'),
@@ -173,8 +145,14 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         });
         setKotTime(istTime);
       }
+      // Pre-generate KOT content
+      populateKOTPrintSection(kotOrders);
     } else if (allOrders.length > 0 && allOrders.every(order => order.status === 'billed')) {
       updateTableColor(tableNumber, 'green');
+      // Pre-generate bill content
+      const amount = calculateTotalAmount(allOrders);
+      setTotalAmount(amount);
+      populateBillPrintSection(allOrders, amount);
     } else {
       updateTableColor(tableNumber, 'blank');
       setKotTime('');
@@ -545,11 +523,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           <ReactToPrint
             trigger={() => <button className="action-button generate-kot">Generate KOT</button>}
             content={() => kotRef.current}
-            onBeforeGetContent={async () => {
-              await handleGenerateKOT();
-              await new Promise(resolve => setTimeout(resolve, 500));
-              console.log('KOT content before print:', kotRef.current.innerHTML);
-              kotRef.current.style.display = 'block'; // Ensure kotRef content is available for printing
+            onBeforeGetContent={() => {
+              console.log('KOT content ready for printing:', kotRef.current.innerHTML);
+              return Promise.resolve();
             }}
             onAfterPrint={() => {
               kotRef.current.style.display = 'none'; // Hide after printing
@@ -559,11 +535,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           <ReactToPrint
             trigger={() => <button className="action-button generate-bill">Generate Bill</button>}
             content={() => billRef.current}
-            onBeforeGetContent={async () => {
-              await handleGenerateBill();
-              await new Promise(resolve => setTimeout(resolve, 500));
-              console.log('Bill content before print:', billRef.current.innerHTML);
-              billRef.current.style.display = 'block'; // Ensure billRef content is available for printing
+            onBeforeGetContent={() => {
+              console.log('Bill content ready for printing:', billRef.current.innerHTML);
+              return Promise.resolve();
             }}
             onAfterPrint={() => {
               billRef.current.style.display = 'none'; // Hide after printing

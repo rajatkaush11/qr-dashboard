@@ -524,6 +524,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
             trigger={() => <button className="action-button generate-kot">Generate KOT</button>}
             content={() => kotRef.current}
             onBeforeGetContent={() => {
+              kotRef.current.style.display = 'block'; // Make sure the content is visible
               console.log('KOT content ready for printing:', kotRef.current.innerHTML);
               return Promise.resolve();
             }}
@@ -536,6 +537,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
             trigger={() => <button className="action-button generate-bill">Generate Bill</button>}
             content={() => billRef.current}
             onBeforeGetContent={() => {
+              billRef.current.style.display = 'block'; // Make sure the content is visible
               console.log('Bill content ready for printing:', billRef.current.innerHTML);
               return Promise.resolve();
             }}

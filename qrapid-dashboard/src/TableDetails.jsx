@@ -17,6 +17,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [temporaryOrders, setTemporaryOrders] = useState([]);
   const [kotTime, setKotTime] = useState('');
   const [totalAmount, setTotalAmount] = useState(0);
+  const [kotReady, setKotReady] = useState(false);
   const [bestTimeToken, setBestTimeToken] = useState(null);
 
   const kotRef = useRef();
@@ -216,91 +217,86 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     }
   };
 
-  // const handleGenerateKOT = async () => {
-  //   try {
-  //     const now = new Date();
-  //     const istTime = Timestamp.fromDate(new Date(now.getTime() + 5.5 * 60 * 60 * 1000));
-      
-  //     const filteredOrders = orders.filter(order => order.status !== 'KOT' && order.status !== 'completed');
-      
-  //     // Update status for digital orders and move them to KOT generated section
-  //     if (filteredOrders.length > 0) {
-  //       for (const order of filteredOrders) {
-  //         const updatedOrder = { ...order, status: 'KOT', istTime };
-  //         const orderRef = doc(collection(backendDb, 'orders'), order.id);
-  //         await setDoc(orderRef, updatedOrder);
-  //       }
-  //       setOrders(prevOrders => prevOrders.map(order =>
-  //         filteredOrders.some(filteredOrder => filteredOrder.id === order.id)
-  //           ? { ...order, status: 'KOT' }
-  //           : order
-  //       ));
-  //     }
-
-  //     // Create a new order from the current order and add it to the KOT generated section
-  //     if (currentOrder.length > 0) {
-  //       const newOrder = {
-  //         id: `temp-${Date.now()}`,
-  //         tableNo: tableNumber.slice(1),
-  //         items: currentOrder,
-  //         status: 'KOT',
-  //         createdAt: Timestamp.fromDate(now),
-  //         istTime,
-  //         name: 'Temporary Order',
-  //       };
-
-  //       await setDoc(doc(collection(backendDb, 'manual-orders'), newOrder.id), newOrder);
-  //       setTemporaryOrders(prev => [...prev, newOrder]);
-  //       setOrders(prevOrders => [...prevOrders, newOrder]);
-  //       setCurrentOrder([]);
-  //     }
-
-  //     // Collect all KOT orders for printing
-  //     const allKotOrders = [...filteredOrders, ...temporaryOrders];
-  //     populateKOTPrintSection(allKotOrders);
-      
-  //     // Open the print dialog
-  //     kotRef.current.style.display = 'block';
-  //     const printPromise = kotRef.current ? window.print() : null;
-  //     if (printPromise) {
-  //         await printPromise;
-  //     }
-  //     kotRef.current.style.display = 'none';
-
-  //     console.log('KOT generated and printed successfully');
-  //   } catch (error) {
-  //     console.error('Error generating KOT:', error);
-  //   }
-  // };
-
-  // const handleGenerateBill = async () => {
-  //   try {
-  //     const filteredOrders = [...orders, ...temporaryOrders].filter(order => !completedOrderIds.includes(order.id));
-  //     if (filteredOrders.length === 0) {
-  //       console.log('No orders to generate Bill');
-  //       return;
-  //     }
-
-  //     const amount = calculateTotalAmount(filteredOrders);
-  //     setTotalAmount(amount);
-  //     populateBillPrintSection(filteredOrders, amount);
-
-  //     for (const order of filteredOrders) {
-  //       printBill(order);
-  //       await updateOrderStatus([order], 'billed');
-  //     }
-
-  //     updateTableColor(tableNumber, 'green');
-  //     console.log('Bill generated and printed successfully');
-  //   } catch (error) {
-  //     console.error('Error generating Bill:', error);
-  //   }
-  // };
   const handleGenerateKOT = async () => {
+    try {
+      const filteredOrders = [...orders, ...temporaryOrders].filter(order => !completedOrderIds.includes(order.id));
+      if (filteredOrders.length === 0 && currentOrder.length === 0) {
+        console.log('No orders to generate KOT');
+        return;
+      }
+
+      if (currentOrder.length > 0) {
+        const now = new Date();
+        const istTime = Timestamp.fromDate(new Date(now.getTime() + 5.5 * 60 * 60 * 1000));
+
+        const newOrder = {
+          id: `temp-${Date.now()}`,
+          tableNo: tableNumber.slice(1),
+          items: currentOrder,
+          status: 'KOT',
+          createdAt: Timestamp.fromDate(now),
+          istTime,
+          name: 'Temporary Order',
+        };
+        await setDoc(doc(collection(backendDb, 'manual-orders'), newOrder.id), newOrder);
+        setTemporaryOrders(prev => [...prev, newOrder]);
+        filteredOrders.push(newOrder);
+        setOrders([...orders, newOrder]);
+        setCurrentOrder([]);
+        setKotTime(istTime.toDate().toLocaleTimeString('en-IN', {
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: 'Asia/Kolkata',
+        }));
+        console.log('Temporary order created:', newOrder);
+      }
+
+      populateKOTPrintSection(filteredOrders);
+      setKotReady(true);
+
+      for (const order of filteredOrders) {
+        printKOT(order);
+        await updateOrderStatus([order], 'KOT');
+      }
+
+      updateTableColor(tableNumber, 'orange');
+      setOrders(prevOrders =>
+        prevOrders.map(order =>
+          filteredOrders.some(filteredOrder => filteredOrder.id === order.id)
+            ? { ...order, status: 'KOT' }
+            : order
+        )
+      );
+      console.log('KOT generated and printed successfully');
+    } catch (error) {
+      console.error('Error generating KOT:', error);
+    }
   };
 
   const handleGenerateBill = async () => {
+    try {
+      const filteredOrders = [...orders, ...temporaryOrders].filter(order => !completedOrderIds.includes(order.id));
+      if (filteredOrders.length === 0) {
+        console.log('No orders to generate Bill');
+        return;
+      }
+
+      const amount = calculateTotalAmount(filteredOrders);
+      setTotalAmount(amount);
+      populateBillPrintSection(filteredOrders, amount);
+
+      for (const order of filteredOrders) {
+        printBill(order);
+        await updateOrderStatus([order], 'billed');
+      }
+
+      updateTableColor(tableNumber, 'green');
+      console.log('Bill generated and printed successfully');
+    } catch (error) {
+      console.error('Error generating Bill:', error);
+    }
   };
+
   const populateKOTPrintSection = (filteredOrders) => {
     const kotContent = filteredOrders.map(order => {
         const formattedItems = order.items.map(item => 
@@ -527,11 +523,10 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           <ReactToPrint
             trigger={() => <button className="action-button generate-kot">Generate KOT</button>}
             content={() => kotRef.current}
-            onBeforeGetContent={async () => {
-              await handleGenerateKOT();
-              await new Promise(resolve => setTimeout(resolve, 500));
-              console.log('KOT content before print:', kotRef.current.innerHTML);
-              kotRef.current.style.display = 'block'; // Ensure kotRef content is available for printing
+            onBeforeGetContent={() => {
+              kotRef.current.style.display = 'block'; // Make sure the content is visible
+              console.log('KOT content ready for printing:', kotRef.current.innerHTML);
+              return Promise.resolve();
             }}
             onAfterPrint={() => {
               kotRef.current.style.display = 'none'; // Hide after printing
@@ -541,11 +536,10 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           <ReactToPrint
             trigger={() => <button className="action-button generate-bill">Generate Bill</button>}
             content={() => billRef.current}
-            onBeforeGetContent={async () => {
-              await handleGenerateBill();
-              await new Promise(resolve => setTimeout(resolve, 500));
-              console.log('Bill content before print:', billRef.current.innerHTML);
-              billRef.current.style.display = 'block'; // Ensure billRef content is available for printing
+            onBeforeGetContent={() => {
+              billRef.current.style.display = 'block'; // Make sure the content is visible
+              console.log('Bill content ready for printing:', billRef.current.innerHTML);
+              return Promise.resolve();
             }}
             onAfterPrint={() => {
               billRef.current.style.display = 'none'; // Hide after printing

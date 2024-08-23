@@ -542,24 +542,10 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           )}
         </div>
         <div className="action-buttons">
-          <ReactToPrint
-            trigger={() => <button className="action-button generate-kot">Generate KOT</button>}
-            content={() => kotRef.current}
-            onBeforeGetContent={async () => {
-              await handleGenerateKOT();
-              await new Promise(resolve => setTimeout(resolve, 500));
-              console.log('KOT content before print:', kotRef.current.innerHTML);
-              kotRef.current.style.display = 'block'; // Ensure kotRef content is available for printing
-            }}
-            onAfterPrint={() => {
-              kotRef.current.style.display = 'none'; // Hide after printing
-              console.log('KOT print completed.');
-            }}
-          />
-          <ReactToPrint
-          trigger={() => <button className="action-button generate-kot">Generate KOT</button>}
-          content={() => kotRef.current}
-      onBeforeGetContent={async () => {
+        <ReactToPrint
+  trigger={() => <button className="action-button generate-kot">Generate KOT</button>}
+  content={() => kotRef.current}
+  onBeforeGetContent={async () => {
     await handleGenerateKOT();
     // Reduced delay to 100ms
     await new Promise(resolve => setTimeout(resolve, 100));

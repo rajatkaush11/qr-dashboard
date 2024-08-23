@@ -545,7 +545,12 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           <ReactToPrint
             trigger={() => <button className="action-button generate-kot">Generate KOT</button>}
             content={() => kotRef.current}
-            onBeforeGetContent={handleGenerateKOT} // Directly trigger the function here
+            onBeforeGetContent={async () => {
+              await handleGenerateKOT();
+              await new Promise(resolve => setTimeout(resolve, 200));
+              console.log('KOT content before print:', kotRef.current.innerHTML);
+              kotRef.current.style.display = 'block'; // Ensure kotRef content is available for printing
+            }}
             onAfterPrint={() => {
               kotRef.current.style.display = 'none'; // Hide after printing
               console.log('KOT print completed.');
@@ -554,7 +559,12 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           <ReactToPrint
             trigger={() => <button className="action-button generate-bill">Generate Bill</button>}
             content={() => billRef.current}
-            onBeforeGetContent={handleGenerateBill} // Directly trigger the function here
+            onBeforeGetContent={async () => {
+              await handleGenerateBill();
+              await new Promise(resolve => setTimeout(resolve, 200));
+              console.log('Bill content before print:', billRef.current.innerHTML);
+              billRef.current.style.display = 'block'; // Ensure billRef content is available for printing
+            }}
             onAfterPrint={() => {
               billRef.current.style.display = 'none'; // Hide after printing
               console.log('Bill print completed.');

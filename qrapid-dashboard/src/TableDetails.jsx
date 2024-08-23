@@ -14,10 +14,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [items, setItems] = useState([]);
-  const [temporaryOrders, setTemporaryOrders] = useState([]);
   const [kotTime, setKotTime] = useState('');
   const [totalAmount, setTotalAmount] = useState(0);
-  const [kotReady, setKotReady] = useState(false);
   const [bestTimeToken, setBestTimeToken] = useState(null);
 
   const kotRef = useRef();
@@ -34,8 +32,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         const uid = auth.currentUser?.uid;
 
         if (uid) {
-          console.log("Fetching bestTimeToken for UID:", uid);
-
           const response = await fetch(`${import.meta.env.VITE_BACKEND_API}/restaurant/${uid}`, {
             method: 'GET',
             headers: {
@@ -46,7 +42,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
           const data = await response.json();
           if (data.bestTimeToken) {
-            console.log("Fetched bestTimeToken:", data.bestTimeToken);
             setBestTimeToken(data.bestTimeToken);
           } else {
             console.error('bestTimeToken not found in the response');
@@ -66,8 +61,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
       try {
         const userId = auth.currentUser ? auth.currentUser.uid : null;
-        console.log("Fetching categories from backend for user:", userId);
-
         const response = await fetch(`${import.meta.env.VITE_BACKEND_API}/categories/${userId}`, {
           headers: {
             Authorization: `Bearer ${bestTimeToken}`,
@@ -77,7 +70,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
         if (response.ok) {
           setCategories(categoriesData);
-          console.log("Fetched categories successfully:", categoriesData);
         } else {
           console.error("Failed to fetch categories:", categoriesData);
         }
@@ -92,34 +84,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   }, [bestTimeToken]);
 
   useEffect(() => {
-    if (selectedCategory) {
-      const fetchItems = async () => {
-        try {
-          console.log("Fetching items for category:", selectedCategory.id);
-
-          const response = await fetch(`${import.meta.env.VITE_BACKEND_API}/items/${selectedCategory.id}`, {
-            headers: {
-              Authorization: `Bearer ${bestTimeToken}`,
-            },
-          });
-          const itemsData = await response.json();
-
-          if (response.ok) {
-            setItems(itemsData);
-            console.log("Fetched items successfully:", itemsData);
-          } else {
-            console.error("Failed to fetch items:", itemsData);
-          }
-        } catch (error) {
-          console.error("Error fetching items:", error);
-        }
-      };
-
-      fetchItems();
-    }
-  }, [selectedCategory, bestTimeToken]);
-
-  useEffect(() => {
     const normalizedTableNumber = tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber;
     const q = query(
       collection(backendDb, 'orders'),
@@ -130,34 +94,22 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     const unsubscribeOrders = onSnapshot(q, (querySnapshot) => {
       const ordersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setOrders(ordersData);
-      console.log('Orders fetched and set:', ordersData);
-    });
-
-    const tempOrdersRef = collection(backendDb, 'manual-orders');
-    const unsubscribeTemporaryOrders = onSnapshot(tempOrdersRef, (querySnapshot) => {
-      const tempOrdersData = querySnapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter(order => order.tableNo === normalizedTableNumber);
-      setTemporaryOrders(tempOrdersData);
-      console.log('Temporary orders fetched and set:', tempOrdersData);
     });
 
     const billsRef = collection(db, 'bills');
     const unsubscribeCompletedOrderIds = onSnapshot(billsRef, (querySnapshot) => {
       const ids = querySnapshot.docs.map(doc => doc.data().orderId);
       setCompletedOrderIds(ids);
-      console.log('Completed Order IDs fetched and set:', ids);
     });
 
     return () => {
       unsubscribeOrders();
-      unsubscribeTemporaryOrders();
       unsubscribeCompletedOrderIds();
     };
   }, [tableNumber, updateTableColor]);
 
   useEffect(() => {
-    const allOrders = [...orders, ...temporaryOrders];
+    const allOrders = [...orders];
     const kotOrders = allOrders.filter(order => order.status === 'KOT');
 
     if (kotOrders.length > 0) {
@@ -177,7 +129,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       updateTableColor(tableNumber, 'blank');
       setKotTime('');
     }
-  }, [orders, temporaryOrders, tableNumber, updateTableColor, kotTime]);
+  }, [orders, tableNumber, updateTableColor, kotTime]);
 
   const calculateTotalAmount = (orders) => {
     return orders.reduce((total, order) => {
@@ -226,67 +178,41 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     `;
   };
 
-  const populateBillPrintSection = (filteredOrders, totalAmount) => {
-    const billContent = filteredOrders.map(order =>
-      order.items.map(item => `
-        <div style="font-size: 18px; margin-bottom: 3px;">
-          ${item.name} - ₹${item.price.toFixed(2)} x ${item.quantity}
-        </div>`
-      ).join('')
-    ).join('');
-
-    billRef.current.innerHTML = `
-      <div style="font-family: Arial, sans-serif; font-size: 20px; margin-bottom: 10px;">
-        <strong>Bill for Table ${tableNumber}</strong>
-      </div>
-      <div style="font-family: Arial, sans-serif; font-size: 18px;">
-        ${billContent}
-      </div>
-      <hr style="border: 0; border-top: 2px solid #000; margin: 10px 0;" />
-      <div style="font-family: Arial, sans-serif; font-size: 20px; font-weight: bold;">
-        Total: ₹${totalAmount.toFixed(2)}
-      </div>
-    `;
-
-    console.log("Bill content populated: ", billRef.current.innerHTML);
-  };
-
   const handleGenerateKOT = async () => {
     try {
-      const filteredOrders = [...orders, ...temporaryOrders].filter(order => !completedOrderIds.includes(order.id));
-      if (filteredOrders.length === 0 && currentOrder.length === 0) {
+      const allOrders = [...orders, ...currentOrder];
+      const filteredOrders = allOrders.filter(order => !completedOrderIds.includes(order.id));
+      
+      if (filteredOrders.length === 0) {
         console.log('No orders to generate KOT');
         return;
       }
 
-      if (currentOrder.length > 0) {
-        const now = new Date();
-        const istTime = Timestamp.fromDate(new Date(now.getTime() + 5.5 * 60 * 60 * 1000));
+      // Add currentOrder to orders list before moving to KOT
+      const now = new Date();
+      const istTime = Timestamp.fromDate(new Date(now.getTime() + 5.5 * 60 * 60 * 1000));
+      const newOrders = currentOrder.map(item => ({
+        id: `temp-${Date.now()}-${item.id}`,
+        tableNo: tableNumber.slice(1),
+        items: [item],
+        status: 'KOT',
+        createdAt: Timestamp.fromDate(now),
+        istTime,
+      }));
 
-        const newOrder = {
-          id: `temp-${Date.now()}`,
-          tableNo: tableNumber.slice(1),
-          items: currentOrder,
-          status: 'KOT',
-          createdAt: Timestamp.fromDate(now),
-          istTime,
-          name: 'Temporary Order',
-        };
-        await setDoc(doc(collection(backendDb, 'manual-orders'), newOrder.id), newOrder);
-        setTemporaryOrders(prev => [...prev, newOrder]);
-        filteredOrders.push(newOrder);
-        setOrders([...orders, newOrder]);
-        setCurrentOrder([]);
-        setKotTime(istTime.toDate().toLocaleTimeString('en-IN', {
-          hour: '2-digit',
-          minute: '2-digit',
-          timeZone: 'Asia/Kolkata',
-        }));
-        console.log('Temporary order created:', newOrder);
+      for (const order of newOrders) {
+        await setDoc(doc(collection(backendDb, 'manual-orders'), order.id), order);
       }
 
-      populateKOTPrintSection(filteredOrders);
-      setKotReady(true);
+      setOrders([...orders, ...newOrders]);
+      setCurrentOrder([]);
+      setKotTime(istTime.toDate().toLocaleTimeString('en-IN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Asia/Kolkata',
+      }));
+
+      populateKOTPrintSection(filteredOrders.concat(newOrders));
 
       await new Promise(resolve => setTimeout(resolve, 100)); // Short delay to ensure content is ready for printing
 
@@ -298,7 +224,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const handleGenerateBill = async () => {
     try {
-      const filteredOrders = [...orders, ...temporaryOrders].filter(order => !completedOrderIds.includes(order.id));
+      const filteredOrders = [...orders].filter(order => !completedOrderIds.includes(order.id));
       if (filteredOrders.length === 0) {
         console.log('No orders to generate Bill');
         return;
@@ -306,7 +232,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
       const amount = calculateTotalAmount(filteredOrders);
       setTotalAmount(amount);
-      populateBillPrintSection(filteredOrders, amount);
 
       await new Promise(resolve => setTimeout(resolve, 100)); // Short delay to ensure content is ready for printing
 
@@ -318,7 +243,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const handleCompleteOrder = async () => {
     try {
-      const filteredOrders = [...orders, ...temporaryOrders].filter(order => !completedOrderIds.includes(order.id));
+      const filteredOrders = [...orders].filter(order => !completedOrderIds.includes(order.id));
 
       if (filteredOrders.length === 0) {
         console.log('No orders to complete');
@@ -332,12 +257,11 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         batch.set(billRef, { orderId: order.id, ...order });
       });
       await batch.commit();
-      await updateOrderStatus(filteredOrders, 'completed');
 
       // Update UI and clear orders
       setCompletedOrderIds([...completedOrderIds, ...filteredOrders.map(order => order.id)]);
       setOrders(prevOrders => prevOrders.filter(order => !filteredOrders.map(o => o.id).includes(order.id)));
-      setTemporaryOrders(prev => prev.filter(order => !filteredOrders.map(o => o.id).includes(order.id)));
+      setCurrentOrder([]);
 
       await updateTableColor(tableNumber, 'blank');
 
@@ -345,16 +269,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     } catch (error) {
       console.error('Error completing order:', error);
     }
-  };
-
-  const updateOrderStatus = async (orders, status) => {
-    const batch = writeBatch(backendDb);
-    orders.forEach(order => {
-      const orderRef = doc(backendDb, 'orders', order.id);
-      batch.update(orderRef, { status });
-    });
-    await batch.commit();
-    console.log(`Order status updated to ${status}`);
   };
 
   const handleItemClick = (item) => {
@@ -395,12 +309,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       if (reason) {
         setCurrentOrder((prevOrder) => prevOrder.filter((orderItem) => orderItem.id !== itemId));
       }
-    } else {
-      const reason = prompt('Please provide a reason for deleting this order:');
-      if (reason) {
-        await deleteDoc(doc(collection(backendDb, 'manual-orders'), itemId));
-        setTemporaryOrders((prevOrders) => prevOrders.filter(order => order.id !== itemId));
-      }
     }
   };
 
@@ -423,7 +331,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         <div className="table-title">Table {tableNumber}</div>
         <div className="kot-generated">
           <h3>KOT Generated <span>{kotTime}</span></h3>
-          {[...orders, ...temporaryOrders].filter(order => order.status === 'KOT').map((order, orderIndex) => (
+          {orders.filter(order => order.status === 'KOT').map((order, orderIndex) => (
             <div className="order-item" key={orderIndex}>
               <FontAwesomeIcon icon={faTrash} className="delete-button" onClick={() => handleDelete(order.id)} />
               <p><strong>{order.name}</strong></p>
@@ -434,10 +342,10 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         </div>
         <div className="current-orders">
           <h3>Current Orders</h3>
-          {orders.length === 0 ? (
-            <p>No digital orders.</p>
+          {orders.concat(currentOrder).length === 0 ? (
+            <p>No orders.</p>
           ) : (
-            orders
+            orders.concat(currentOrder)
               .filter(order => order.status !== 'completed' && order.status !== 'KOT')
               .map((order, orderIndex) => (
                 <div className="order-item" key={orderIndex}>
@@ -450,26 +358,6 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
                   </ul>
                 </div>
               ))
-          )}
-          {currentOrder.length === 0 ? (
-            <p>No items in current order.</p>
-          ) : (
-            currentOrder.map((item, index) => (
-              <div className="current-order-item" key={index}>
-                <div className="order-text">
-                  <p>{item.name}</p>
-                  <p>{item.price * item.quantity}</p>
-                </div>
-                <div className="order-actions">
-                  <button className="action-button decrement" onClick={() => handleDecrement(item.id)}>-</button>
-                  <span>{item.quantity}</span>
-                  <button className="action-button increment" onClick={() => handleIncrement(item.id)}>+</button>
-                  <button className="action-button delete" onClick={() => handleDelete(item.id)}>
-                    <FontAwesomeIcon icon={faTrash} />
-                  </button>
-                </div>
-              </div>
-            ))
           )}
         </div>
         <div className="action-buttons">

@@ -139,38 +139,38 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const populateKOTPrintSection = (filteredOrders) => {
     const kotContent = filteredOrders.map(order => {
-        const formattedItems = order.items.map(item => 
-          `<div style="font-size: 20px; margin-bottom: 5px;">
-             <strong>${item.quantity.toString().padEnd(3)}</strong> ${item.name}
-           </div>`
-        ).join('');
+      const formattedItems = order.items.map(item =>
+        `<div style="font-size: 20px; margin-bottom: 5px;">
+          <strong>${item.quantity.toString().padEnd(3)}</strong> ${item.name}
+        </div>`
+      ).join('');
 
-        return `
-          <div style="margin-top: 0; padding: 0;">
-            <div style="font-size: 22px; font-weight: bold;">Running KOT</div>
-            <div style="display: flex; justify-content: space-between;">
-              <strong style="font-size: 18px;">Table No: ${order.tableNo}</strong>
-              <span style="font-size: 18px;">
-                ${new Date(order.createdAt.toDate()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-                ${new Date(order.createdAt.toDate()).toLocaleTimeString('en-IN', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: true,
-                    timeZone: 'Asia/Kolkata'
-                })}
-              </span>
-            </div>
+      return `
+        <div style="margin-top: 0; padding: 0;">
+          <div style="font-size: 22px; font-weight: bold;">Running KOT</div>
+          <div style="display: flex; justify-content: space-between;">
+            <strong style="font-size: 18px;">Table No: ${order.tableNo}</strong>
+            <span style="font-size: 18px;">
+              ${new Date(order.createdAt.toDate()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+              ${new Date(order.createdAt.toDate()).toLocaleTimeString('en-IN', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: true,
+                  timeZone: 'Asia/Kolkata'
+              })}
+            </span>
           </div>
-          <div style="margin-top: 5px; padding: 0;">
-            ${formattedItems}
-          </div>
-          <div style="margin-top: 5px; padding: 0;">
-            <strong style="font-size: 20px;">Total Items: ${order.items.reduce((total, item) => total + item.quantity, 0)}</strong>
-          </div>
-          <hr style="border: 0; border-top: 2px solid #000; margin: 5px 0;" />
-        `;
+        </div>
+        <div style="margin-top: 5px; padding: 0;">
+          ${formattedItems}
+        </div>
+        <div style="margin-top: 5px; padding: 0;">
+          <strong style="font-size: 20px;">Total Items: ${order.items.reduce((total, item) => total + item.quantity, 0)}</strong>
+        </div>
+        <hr style="border: 0; border-top: 2px solid #000; margin: 5px 0;" />
+      `;
     }).join('');
-    
+
     kotRef.current.innerHTML = `
       <div style="font-family: monospace; white-space: pre; font-size: 16px; line-height: 1.3; margin: 0; padding: 0;">
         ${kotContent}
@@ -180,58 +180,63 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const handleGenerateKOT = async () => {
     try {
-      // Combine all current orders with new items
+      // Combine all current orders (including manual) with new items
       const allOrders = [...orders, ...currentOrder];
-  
+
       // Filter orders that are not completed
       const filteredOrders = allOrders.filter(order => !completedOrderIds.includes(order.id));
-    
+
       if (filteredOrders.length === 0) {
         console.log('No orders to generate KOT');
         return;
       }
-    
-      // Generate KOT time and move orders to KOT Generated section
+
+      // Generate KOT time and move all orders to KOT Generated section
       const now = new Date();
       const istTime = Timestamp.fromDate(new Date(now.getTime() + 5.5 * 60 * 60 * 1000));
-      
+
       const newOrders = currentOrder.map(item => ({
         id: `temp-${Date.now()}-${item.id}`,
-        tableNo: tableNumber.slice(1),
+        tableNo: tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber,
         items: [item],
         status: 'KOT',
         createdAt: Timestamp.fromDate(now),
         istTime,
         name: item.name, // Ensure the name is preserved
       }));
-    
+
+      // Save new orders to Firestore and update local state
       for (const order of newOrders) {
         await setDoc(doc(collection(backendDb, 'manual-orders'), order.id), order);
       }
-    
-      // Update the orders state and clear the currentOrder state
-      setOrders([...orders, ...newOrders]);
+
+      // Move all orders (digital + manual) to KOT and clear currentOrder
+      const updatedOrders = filteredOrders.map(order => ({
+        ...order,
+        status: 'KOT',
+        istTime: order.istTime || istTime // Use existing istTime for digital, or set new one
+      }));
+
+      setOrders(updatedOrders.concat(newOrders));
       setCurrentOrder([]);
-    
+
       // Update the KOT time display
       setKotTime(istTime.toDate().toLocaleTimeString('en-IN', {
         hour: '2-digit',
         minute: '2-digit',
         timeZone: 'Asia/Kolkata',
       }));
-    
+
       // Populate the KOT section for printing
-      populateKOTPrintSection([...orders, ...newOrders]);
-  
-      console.log('KOT generated and order moved to KOT Generated section.');
-  
+      populateKOTPrintSection(updatedOrders.concat(newOrders));
+
+      console.log('KOT generated and orders moved to KOT Generated section.');
+
     } catch (error) {
       console.error('Error generating KOT:', error);
     }
   };
-  
-  
-  
+
   const handleGenerateBill = async () => {
     try {
       const filteredOrders = [...orders].filter(order => !completedOrderIds.includes(order.id));
@@ -319,6 +324,12 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       if (reason) {
         setCurrentOrder((prevOrder) => prevOrder.filter((orderItem) => orderItem.id !== itemId));
       }
+    } else {
+      const reason = prompt('Please provide a reason for deleting this order:');
+      if (reason) {
+        await deleteDoc(doc(collection(backendDb, 'manual-orders'), itemId));
+        setOrders(prevOrders => prevOrders.filter(order => order.id !== itemId));
+      }
     }
   };
 
@@ -371,27 +382,26 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           )}
         </div>
         <div className="action-buttons">
-  <ReactToPrint
-    trigger={() => <button className="action-button generate-kot">Generate KOT</button>}
-    content={() => kotRef.current}
-    onBeforeGetContent={handleGenerateKOT}
-    onAfterPrint={() => {
-      kotRef.current.style.display = 'none'; // Hide after printing
-      console.log('KOT print completed.');
-    }}
-  />
-  <ReactToPrint
-    trigger={() => <button className="action-button generate-bill">Generate Bill</button>}
-    content={() => billRef.current}
-    onBeforeGetContent={handleGenerateBill}
-    onAfterPrint={() => {
-      billRef.current.style.display = 'none'; // Hide after printing
-      console.log('Bill print completed.');
-    }}
-  />
-  <button onClick={handleCompleteOrder} className="action-button complete">Complete Order</button>
-</div>
-
+          <ReactToPrint
+            trigger={() => <button className="action-button generate-kot">Generate KOT</button>}
+            content={() => kotRef.current}
+            onBeforeGetContent={handleGenerateKOT}
+            onAfterPrint={() => {
+              kotRef.current.style.display = 'none'; // Hide after printing
+              console.log('KOT print completed.');
+            }}
+          />
+          <ReactToPrint
+            trigger={() => <button className="action-button generate-bill">Generate Bill</button>}
+            content={() => billRef.current}
+            onBeforeGetContent={handleGenerateBill}
+            onAfterPrint={() => {
+              billRef.current.style.display = 'none'; // Hide after printing
+              console.log('Bill print completed.');
+            }}
+          />
+          <button onClick={handleCompleteOrder} className="action-button complete">Complete Order</button>
+        </div>
       </div>
       <div className="left-menu">
         <div className="item-list">

@@ -180,44 +180,37 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const handleGenerateKOT = async () => {
     try {
-      // Combine all current orders (including manual) with new items
-      const allOrders = [...orders, ...currentOrder];
-
-      // Filter orders that are not completed
+      // Filter current orders and manually added orders
+      const allOrders = [...orders];
       const filteredOrders = allOrders.filter(order => !completedOrderIds.includes(order.id));
 
-      if (filteredOrders.length === 0) {
+      if (filteredOrders.length === 0 && currentOrder.length === 0) {
         console.log('No orders to generate KOT');
         return;
       }
 
-      // Generate KOT time and move all orders to KOT Generated section
+      // Generate KOT time and move currentOrder to KOT Generated section
       const now = new Date();
       const istTime = Timestamp.fromDate(new Date(now.getTime() + 5.5 * 60 * 60 * 1000));
 
-      const newOrders = currentOrder.map(item => ({
+      // Map currentOrder items to KOT orders
+      const newKOTOrders = currentOrder.map(item => ({
         id: `temp-${Date.now()}-${item.id}`,
         tableNo: tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber,
         items: [item],
         status: 'KOT',
         createdAt: Timestamp.fromDate(now),
         istTime,
-        name: item.name, // Ensure the name is preserved
+        name: item.name,
       }));
 
-      // Save new orders to Firestore and update local state
-      for (const order of newOrders) {
+      // Save new KOT orders to Firestore and update local state
+      for (const order of newKOTOrders) {
         await setDoc(doc(collection(backendDb, 'manual-orders'), order.id), order);
       }
 
-      // Move all orders (digital + manual) to KOT and clear currentOrder
-      const updatedOrders = filteredOrders.map(order => ({
-        ...order,
-        status: 'KOT',
-        istTime: order.istTime || istTime // Use existing istTime for digital, or set new one
-      }));
-
-      setOrders(updatedOrders.concat(newOrders));
+      // Update orders to include KOT orders and clear currentOrder
+      setOrders(prevOrders => prevOrders.concat(newKOTOrders));
       setCurrentOrder([]);
 
       // Update the KOT time display
@@ -228,7 +221,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       }));
 
       // Populate the KOT section for printing
-      populateKOTPrintSection(updatedOrders.concat(newOrders));
+      populateKOTPrintSection(newKOTOrders);
 
       console.log('KOT generated and orders moved to KOT Generated section.');
 
@@ -239,7 +232,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const handleGenerateBill = async () => {
     try {
-      const filteredOrders = [...orders].filter(order => !completedOrderIds.includes(order.id));
+      const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
       if (filteredOrders.length === 0) {
         console.log('No orders to generate Bill');
         return;
@@ -258,7 +251,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const handleCompleteOrder = async () => {
     try {
-      const filteredOrders = [...orders].filter(order => !completedOrderIds.includes(order.id));
+      const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
 
       if (filteredOrders.length === 0) {
         console.log('No orders to complete');
@@ -273,9 +266,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       });
       await batch.commit();
 
-      // Update UI and clear orders
+      // Update UI and clear completed orders from orders state
       setCompletedOrderIds([...completedOrderIds, ...filteredOrders.map(order => order.id)]);
-      setOrders(prevOrders => prevOrders.filter(order => !filteredOrders.map(o => o.id).includes(order.id)));
+      setOrders(prevOrders => prevOrders.filter(order => !completedOrderIds.includes(order.id)));
       setCurrentOrder([]);
 
       await updateTableColor(tableNumber, 'blank');

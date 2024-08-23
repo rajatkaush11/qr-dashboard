@@ -557,9 +557,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
             }}
           />
           <ReactToPrint
-  trigger={() => <button className="action-button generate-kot">Generate KOT</button>}
-  content={() => kotRef.current}
-  onBeforeGetContent={async () => {
+          trigger={() => <button className="action-button generate-kot">Generate KOT</button>}
+          content={() => kotRef.current}
+      onBeforeGetContent={async () => {
     await handleGenerateKOT();
     // Reduced delay to 100ms
     await new Promise(resolve => setTimeout(resolve, 100));

@@ -22,8 +22,8 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const kotRef = useRef();
   const billRef = useRef();
-
-  let printer = null;
+  const printKOTRef = useRef(null);
+  const printBillRef = useRef(null);
 
   const playSound = () => {
     const audio = new Audio(successSound);
@@ -473,6 +473,14 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     }
   };
 
+  // Custom print function to ensure that the content is fully ready before printing
+  const triggerPrint = async (printRef, generateFunction) => {
+    await generateFunction(); // Generate content (KOT or Bill)
+    setTimeout(() => {
+      printRef.current.handlePrint(); // Trigger the print
+    }, 500); // Delay for content rendering (adjust this if necessary)
+  };
+
   return (
     <div className="table-details">
       <div className="right-content">
@@ -545,31 +553,15 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           <ReactToPrint
             trigger={() => <button className="action-button generate-kot">Generate KOT</button>}
             content={() => kotRef.current}
-            onBeforeGetContent={async () => {
-              await handleGenerateKOT();
-              await new Promise(resolve => setTimeout(resolve, 200));
-              console.log('KOT content before print:', kotRef.current.innerHTML);
-              kotRef.current.style.display = 'block'; // Ensure kotRef content is available for printing
-            }}
-            onAfterPrint={() => {
-              kotRef.current.style.display = 'none'; // Hide after printing
-              console.log('KOT print completed.');
-            }}
+            ref={printKOTRef}
           />
           <ReactToPrint
             trigger={() => <button className="action-button generate-bill">Generate Bill</button>}
             content={() => billRef.current}
-            onBeforeGetContent={async () => {
-              await handleGenerateBill();
-              await new Promise(resolve => setTimeout(resolve, 200));
-              console.log('Bill content before print:', billRef.current.innerHTML);
-              billRef.current.style.display = 'block'; // Ensure billRef content is available for printing
-            }}
-            onAfterPrint={() => {
-              billRef.current.style.display = 'none'; // Hide after printing
-              console.log('Bill print completed.');
-            }}
+            ref={printBillRef}
           />
+          <button onClick={() => triggerPrint(printKOTRef, handleGenerateKOT)} className="action-button generate-kot">Print KOT</button>
+          <button onClick={() => triggerPrint(printBillRef, handleGenerateBill)} className="action-button generate-bill">Print Bill</button>
           <button onClick={handleCompleteOrder} className="action-button complete">Complete Order</button>
         </div>
       </div>

@@ -182,12 +182,12 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
     try {
       const allOrders = [...orders, ...currentOrder];
       const filteredOrders = allOrders.filter(order => !completedOrderIds.includes(order.id));
-      
+  
       if (filteredOrders.length === 0) {
         console.log('No orders to generate KOT');
         return;
       }
-
+  
       // Add currentOrder to orders list before moving to KOT
       const now = new Date();
       const istTime = Timestamp.fromDate(new Date(now.getTime() + 5.5 * 60 * 60 * 1000));
@@ -199,11 +199,11 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         createdAt: Timestamp.fromDate(now),
         istTime,
       }));
-
+  
       for (const order of newOrders) {
         await setDoc(doc(collection(backendDb, 'manual-orders'), order.id), order);
       }
-
+  
       setOrders([...orders, ...newOrders]);
       setCurrentOrder([]);
       setKotTime(istTime.toDate().toLocaleTimeString('en-IN', {
@@ -211,17 +211,23 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         minute: '2-digit',
         timeZone: 'Asia/Kolkata',
       }));
-
+  
       populateKOTPrintSection(filteredOrders.concat(newOrders));
-
+  
       await new Promise(resolve => setTimeout(resolve, 100)); // Short delay to ensure content is ready for printing
-
+  
+      // Trigger print window
+      if (kotRef.current) {
+        kotRef.current.style.display = 'block'; // Ensure content is available for printing
+        window.print();
+      }
+  
       console.log('KOT generated successfully');
     } catch (error) {
       console.error('Error generating KOT:', error);
     }
   };
-
+  
   const handleGenerateBill = async () => {
     try {
       const filteredOrders = [...orders].filter(order => !completedOrderIds.includes(order.id));

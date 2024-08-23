@@ -180,17 +180,21 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const handleGenerateKOT = async () => {
     try {
+      // Combine all current orders with new items
       const allOrders = [...orders, ...currentOrder];
-      const filteredOrders = allOrders.filter(order => !completedOrderIds.includes(order.id));
   
+      // Filter orders that are not completed
+      const filteredOrders = allOrders.filter(order => !completedOrderIds.includes(order.id));
+    
       if (filteredOrders.length === 0) {
         console.log('No orders to generate KOT');
         return;
       }
-  
-      // Add currentOrder to orders list before moving to KOT
+    
+      // Generate KOT time and move orders to KOT Generated section
       const now = new Date();
       const istTime = Timestamp.fromDate(new Date(now.getTime() + 5.5 * 60 * 60 * 1000));
+      
       const newOrders = currentOrder.map(item => ({
         id: `temp-${Date.now()}-${item.id}`,
         tableNo: tableNumber.slice(1),
@@ -198,31 +202,34 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         status: 'KOT',
         createdAt: Timestamp.fromDate(now),
         istTime,
+        name: item.name, // Ensure the name is preserved
       }));
-  
+    
       for (const order of newOrders) {
         await setDoc(doc(collection(backendDb, 'manual-orders'), order.id), order);
       }
-  
+    
+      // Update the orders state and clear the currentOrder state
       setOrders([...orders, ...newOrders]);
       setCurrentOrder([]);
+    
+      // Update the KOT time display
       setKotTime(istTime.toDate().toLocaleTimeString('en-IN', {
         hour: '2-digit',
         minute: '2-digit',
         timeZone: 'Asia/Kolkata',
       }));
+    
+      // Populate the KOT section for printing
+      populateKOTPrintSection([...orders, ...newOrders]);
   
-      populateKOTPrintSection(filteredOrders.concat(newOrders));
+      console.log('KOT generated and order moved to KOT Generated section.');
   
-      await new Promise(resolve => setTimeout(resolve, 100)); // Short delay to ensure content is ready for printing
-  
-      // Removed the manual window.print() here
-  
-      console.log('KOT generated successfully');
     } catch (error) {
       console.error('Error generating KOT:', error);
     }
   };
+  
   
   
   const handleGenerateBill = async () => {

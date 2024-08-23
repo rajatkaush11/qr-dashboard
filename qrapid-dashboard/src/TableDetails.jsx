@@ -216,17 +216,14 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
   
       await new Promise(resolve => setTimeout(resolve, 100)); // Short delay to ensure content is ready for printing
   
-      // Trigger print window
-      // if (kotRef.current) {
-      //   kotRef.current.style.display = 'block'; // Ensure content is available for printing
-      //   window.print();
-      // }
+      // Removed the manual window.print() here
   
       console.log('KOT generated successfully');
     } catch (error) {
       console.error('Error generating KOT:', error);
     }
   };
+  
   
   const handleGenerateBill = async () => {
     try {
@@ -367,26 +364,27 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
           )}
         </div>
         <div className="action-buttons">
-          <ReactToPrint
-            trigger={() => <button className="action-button generate-kot">Generate KOT</button>}
-            content={() => kotRef.current}
-            onBeforeGetContent={handleGenerateKOT}
-            onAfterPrint={() => {
-              kotRef.current.style.display = 'none'; // Hide after printing
-              console.log('KOT print completed.');
-            }}
-          />
-          <ReactToPrint
-            trigger={() => <button className="action-button generate-bill">Generate Bill</button>}
-            content={() => billRef.current}
-            onBeforeGetContent={handleGenerateBill}
-            onAfterPrint={() => {
-              billRef.current.style.display = 'none'; // Hide after printing
-              console.log('Bill print completed.');
-            }}
-          />
-          <button onClick={handleCompleteOrder} className="action-button complete">Complete Order</button>
-        </div>
+  <ReactToPrint
+    trigger={() => <button className="action-button generate-kot">Generate KOT</button>}
+    content={() => kotRef.current}
+    onBeforeGetContent={handleGenerateKOT}
+    onAfterPrint={() => {
+      kotRef.current.style.display = 'none'; // Hide after printing
+      console.log('KOT print completed.');
+    }}
+  />
+  <ReactToPrint
+    trigger={() => <button className="action-button generate-bill">Generate Bill</button>}
+    content={() => billRef.current}
+    onBeforeGetContent={handleGenerateBill}
+    onAfterPrint={() => {
+      billRef.current.style.display = 'none'; // Hide after printing
+      console.log('Bill print completed.');
+    }}
+  />
+  <button onClick={handleCompleteOrder} className="action-button complete">Complete Order</button>
+</div>
+
       </div>
       <div className="left-menu">
         <div className="item-list">

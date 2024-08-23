@@ -22,6 +22,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const kotRef = useRef();
   const billRef = useRef();
+  const kotPrintTriggerRef = useRef(); // Reference to trigger KOT print
 
   const playSound = () => {
     const audio = new Audio(successSound);
@@ -246,6 +247,9 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
             : order
         )
       );
+
+      // Trigger the print dialog immediately after generating the KOT
+      kotPrintTriggerRef.current.click();
     } catch (error) {
       console.error('Error generating KOT:', error);
     }
@@ -490,7 +494,7 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
         </div>
         <div className="action-buttons">
           <ReactToPrint
-            trigger={() => <button className="action-button generate-kot">Generate KOT</button>}
+            trigger={() => <button className="action-button generate-kot" ref={kotPrintTriggerRef}>Generate KOT</button>}
             content={() => kotRef.current}
             onBeforeGetContent={() => {
               kotRef.current.style.display = 'block'; // Make sure the content is visible

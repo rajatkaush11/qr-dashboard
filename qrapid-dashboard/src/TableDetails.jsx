@@ -180,11 +180,11 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
 
   const handleGenerateKOT = async () => {
     try {
-      // Filter current orders and manually added orders
-      const allOrders = [...orders];
-      const filteredOrders = allOrders.filter(order => !completedOrderIds.includes(order.id));
+      // Filter orders that are not completed
+      const filteredOrders = orders.filter(order => !completedOrderIds.includes(order.id));
+      const allOrders = [...filteredOrders, ...currentOrder];
 
-      if (filteredOrders.length === 0 && currentOrder.length === 0) {
+      if (allOrders.length === 0) {
         console.log('No orders to generate KOT');
         return;
       }
@@ -194,10 +194,10 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       const istTime = Timestamp.fromDate(new Date(now.getTime() + 5.5 * 60 * 60 * 1000));
 
       // Map currentOrder items to KOT orders
-      const newKOTOrders = currentOrder.map(item => ({
+      const newKOTOrders = allOrders.map(item => ({
         id: `temp-${Date.now()}-${item.id}`,
         tableNo: tableNumber.startsWith('T') ? tableNumber.slice(1) : tableNumber,
-        items: [item],
+        items: item.items ? item.items : [item],
         status: 'KOT',
         createdAt: Timestamp.fromDate(now),
         istTime,

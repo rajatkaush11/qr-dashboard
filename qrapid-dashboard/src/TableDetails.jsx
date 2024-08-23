@@ -217,10 +217,10 @@ const TableDetails = ({ tableNumber, onBackClick, updateTableColor }) => {
       await new Promise(resolve => setTimeout(resolve, 100)); // Short delay to ensure content is ready for printing
   
       // Trigger print window
-      if (kotRef.current) {
-        kotRef.current.style.display = 'block'; // Ensure content is available for printing
-        window.print();
-      }
+      // if (kotRef.current) {
+      //   kotRef.current.style.display = 'block'; // Ensure content is available for printing
+      //   window.print();
+      // }
   
       console.log('KOT generated successfully');
     } catch (error) {
